@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 
 // Kita pakai gambar yang sudah ada sebagai placeholder
-import sectionBg from './assets/hero-bg.png';
-import cardImage from './assets/rectangle.png';
+import sectionBg from '../assets/hero-bg.png';
+import cardImage from '../assets/rectangle.png';
 
 // Data untuk setiap slide
 const slidesData = [

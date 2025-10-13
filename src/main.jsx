@@ -1,13 +1,12 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
-import Header from './header.jsx'
-import Hero from './hero.jsx'
-import Profile from './profile.jsx'
-import Berita from './berita.jsx'
-import Stakeholder from './stakeholder.jsx'
-import Bisnis from './Bisnis.jsx'
-
+import Header from './landingpage/header.jsx'
+import Hero from './landingpage/hero.jsx'
+import Profile from './landingpage/profile.jsx'
+import Berita from './landingpage/berita.jsx'
+import Stakeholder from './landingpage/stakeholder.jsx'
+import Bisnis from './landingpage/Bisnis.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

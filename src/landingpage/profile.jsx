@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import profileImage from './assets/rectangle.png';
+import profileImage from '../assets/rectangle.png';
 
 const Profile = () => {
   const sectionRef = useRef(null);
