@@ -1,5 +1,5 @@
 import React from 'react';
-import stakeholderLogo from '../assets/logo.webp';
+import stakeholderLogo from '../../assets/logo.webp';
 
 const Stakeholder = () => {
   const stakeholders = [

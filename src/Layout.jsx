@@ -1,7 +1,7 @@
 // src/Layout.jsx
 import React from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
-import Header from './landingpage/header.jsx'; // Path header sudah benar
+import Header from './pages/landingpage/header.jsx'; // Path header sudah benar
 import Footer from './Footer'; // Kita akan buat komponen Footer
 
 const Layout = () => {

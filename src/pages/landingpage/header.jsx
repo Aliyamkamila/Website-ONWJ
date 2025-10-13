@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import logo from '../assets/logo.webp';
+import logo from '../../assets/logo.webp';
 
 const Header = () => {
   const [isOpen, setIsOpen] = useState(false);

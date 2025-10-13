@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import beritaImage from '../assets/rectangle.png';
+import beritaImage from '../../assets/rectangle.png';
 
 // Component Card Berita
 const NewsCard = ({ title, image, date, category, instagramLink, delay }) => {

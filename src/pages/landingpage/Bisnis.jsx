@@ -2,16 +2,16 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 
 // Import background images
-import bisnisBackground from '../assets/contoh1.png';
-import monitoringBackground from '../assets/contoh2.png';
-import lokasiBackground from '../assets/contoh3.png';
-import tjslBackground from '../assets/contoh4.png';
+import bisnisBackground from '../../assets/contoh1.png';
+import monitoringBackground from '../../assets/contoh2.png';
+import lokasiBackground from '../../assets/contoh3.png';
+import tjslBackground from '../../assets/contoh4.png';
 
 // Import card images
-import bisnisCard from '../assets/contoh4.png';
-import monitoringCard from '../assets/contoh3.png';
-import lokasiCard from '../assets/contoh2.png';
-import tjslCard from '../assets/contoh1.png';
+import bisnisCard from '../../assets/contoh4.png';
+import monitoringCard from '../../assets/contoh3.png';
+import lokasiCard from '../../assets/contoh2.png';
+import tjslCard from '../../assets/contoh1.png';
 
 // Data Slide dengan background dan card image yang berbeda
 const slidesData = [

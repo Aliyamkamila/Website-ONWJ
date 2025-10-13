@@ -11,6 +11,8 @@ import './index.css';
 import Layout from './Layout';
 import HomePage from './pages/HomePage';
 import TJSLPage from './pages/TJSLPage'; 
+import Tentang from './pages/company/tentang';
+import TataKelola from './pages/kelola/tatakelola';
 
 const router = createBrowserRouter([
   {
@@ -29,6 +31,14 @@ const router = createBrowserRouter([
       {
         path: 'tjsl',
         element: <TJSLPage />,
+      },
+      {
+        path: 'tentang',
+        element: <Tentang />,
+      },
+      {
+        path: 'kelola',
+        element: <TataKelola />,
       },
     ],
   },
