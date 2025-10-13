@@ -1,24 +1,42 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import './index.css'
-import Header from './landingpage/header.jsx'
-import Hero from './landingpage/hero.jsx'
-import Profile from './landingpage/profile.jsx'
-import Berita from './landingpage/berita.jsx'
-import Stakeholder from './landingpage/stakeholder.jsx'
-import Bisnis from './landingpage/Bisnis.jsx'
+// src/main.jsx
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import {
+  createBrowserRouter,
+  RouterProvider,
+  ScrollRestoration,
+} from 'react-router-dom';
+import './index.css';
+
+import Layout from './Layout';
+import HomePage from './pages/HomePage';
+import TJSLPage from './pages/TJSLPage'; 
+
+const router = createBrowserRouter([
+  {
+    path: '/',
+    element: (
+      <>
+        <ScrollRestoration /> {/* biar scroll balik ke atas pas ganti halaman */}
+        <Layout />
+      </>
+    ),
+    children: [
+      {
+        index: true,
+        element: <HomePage />,
+      },
+      {
+        path: 'tjsl',
+        element: <TJSLPage />,
+      },
+    ],
+  },
+]);
+
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <div className='relative w-screen min-h-screen overflow-x-hidden'>
-      <Header />
-      <Hero />
-      <main className='relative bg-white'>
-        <Profile />
-        <Bisnis />
-        <Berita />
-        <Stakeholder />
-      </main>
-    </div>
-  </StrictMode>,
-)
+    <RouterProvider router={router} />
+  </StrictMode>
+);
