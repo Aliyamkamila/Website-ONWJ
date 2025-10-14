@@ -46,9 +46,9 @@ const TJSLPage = () => {
 
   // Responsive items per view
   const getItemsPerView = () => {
-    if (windowWidth < 768) return 1; // Mobile: 1 item
-    if (windowWidth < 1024) return 2; // Tablet: 2 items
-    return 3; // Desktop: 3 items
+    if (windowWidth < 768) return 1;
+    if (windowWidth < 1024) return 2;
+    return 3;
   };
 
   const itemsPerView = getItemsPerView();
@@ -69,7 +69,7 @@ const TJSLPage = () => {
   // Auto-play effect
   useEffect(() => {
     if (!isAutoPlaying) return;
-    const interval = setInterval(goNext, 3000); // 3 seconds
+    const interval = setInterval(goNext, 3000);
     return () => clearInterval(interval);
   }, [goNext, isAutoPlaying]);
 
@@ -90,7 +90,7 @@ const TJSLPage = () => {
     };
   }, []);
 
-  // Handle resize for responsive
+  // Handle resize
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
     window.addEventListener('resize', handleResize);
@@ -101,7 +101,7 @@ const TJSLPage = () => {
 
   return (
     <div className="bg-white min-h-screen">
-      {/* Banner Section - Improved height and overlay */}
+      {/* Banner Section */}
       <div className="relative h-screen w-full overflow-hidden">
         <img
           src={bannerImage}
@@ -118,7 +118,6 @@ const TJSLPage = () => {
         <div className="absolute bottom-8 left-0 right-0 container mx-auto px-4 md:px-8 lg:px-16 text-center">
           <h1 className="text-white text-4xl md:text-6xl font-bold relative inline-block leading-tight">
             Tanggung Jawab Sosial Dan Lingkungan
-            <span className="absolute -bottom-2 left-0 w-full h-1 bg-blue-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></span>
           </h1>
           <p className="text-white/90 text-lg md:text-xl mt-4 max-w-2xl mx-auto opacity-0 animate-fade-in">
             Committed to sustainability through ESG principles.
@@ -126,7 +125,7 @@ const TJSLPage = () => {
         </div>
       </div>
 
-      {/* Intro Section - Added fade-in animation */}
+      {/* Intro Section */}
       <section className="py-16 md:py-24 animate-fade-in">
         <div className="container mx-auto px-4 md:px-8 lg:px-16 grid lg:grid-cols-12 gap-8 items-start lg:items-center">
           <div className="lg:col-span-5 order-2 lg:order-1">
@@ -143,7 +142,7 @@ const TJSLPage = () => {
         </div>
       </section>
 
-      {/* Image Carousel Section - Responsive & Auto-play */}
+      {/* Carousel Section */}
       <section className="py-16 md:pb-24 relative">
         <div className="container mx-auto px-4 md:px-8 lg:px-16">
           <h3 className="text-2xl md:text-3xl font-bold text-gray-900 text-center mb-8">Our Initiatives in Action</h3>
@@ -161,11 +160,13 @@ const TJSLPage = () => {
                     alt={img.alt}
                     className="w-full h-64 md:h-80 object-cover rounded-lg"
                     loading="lazy"
-                    onError={(e) => { e.target.src = '/fallback-image.jpg'; }} // Fallback image
+                    onError={(e) => { e.target.src = '/fallback-image.jpg'; }}
                   />
                 </div>
               ))}
             </div>
+
+            {/* Controls */}
             <button
               onClick={goPrev}
               className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-2 md:p-3 rounded-full shadow-lg transition-all duration-200 z-10"
@@ -175,6 +176,7 @@ const TJSLPage = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
             </button>
+
             <button
               onClick={goNext}
               className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-2 md:p-3 rounded-full shadow-lg transition-all duration-200 z-10"
@@ -184,6 +186,8 @@ const TJSLPage = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </button>
+
+            {/* Dots */}
             <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 flex space-x-2 pt-4">
               {Array.from({ length: totalSlides }).map((_, index) => (
                 <button
@@ -200,21 +204,27 @@ const TJSLPage = () => {
         </div>
       </section>
 
-      {/* Program Berkelanjutan Section - Added descriptions & better cards */}
+      {/* Program Berkelanjutan Section */}
       <section className="bg-gray-50 py-16 md:py-24">
         <div className="container mx-auto px-4 md:px-8 lg:px-16">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-4">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900">Program Berkelanjutan</h2>
+
+            {/* ✅ UPDATED BUTTON */}
             <Link
-              to="/all-programs"
+              to="/berita-tjsl"
               className="font-semibold text-blue-600 hover:text-blue-700 transition-colors inline-flex items-center gap-1"
             >
               See All <span aria-hidden="true">→</span>
             </Link>
           </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
             {sustainablePrograms.map((prog, index) => (
-              <article key={index} className="bg-white rounded-xl shadow-sm overflow-hidden group transition-all duration-300 hover:shadow-xl hover:-translate-y-1 animate-fade-in">
+              <article
+                key={index}
+                className="bg-white rounded-xl shadow-sm overflow-hidden group transition-all duration-300 hover:shadow-xl hover:-translate-y-1 animate-fade-in"
+              >
                 <img
                   src={prog.image}
                   alt={`${prog.title} program image`}
