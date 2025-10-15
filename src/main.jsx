@@ -15,8 +15,9 @@ import Manajemen from './pages/manajemen/mmanajemen';
 import Mainbisnis from './pages/bisnis/mainbisnis';
 import Mainwk from './pages/wk/mainwk';
 
-// --- Tambahan baru ---
+// --- 1. Import halaman media & penghargaan ---
 import MediaInformasiPage from './pages/media/MediaInformasiPage';
+import PenghargaanPage from './pages/media/PenghargaanPage';
 
 const router = createBrowserRouter([
   {
@@ -38,8 +39,9 @@ const router = createBrowserRouter([
       { path: 'berita-tjsl', element: <BeritaTJSLPage /> },
       { path: 'artikel/:slug', element: <ArtikelPage /> },
 
-      // --- Rute baru yang ditambahkan ---
+      // --- 2. Tambahkan rute baru di sini ---
       { path: 'media-informasi', element: <MediaInformasiPage /> },
+      { path: 'penghargaan', element: <PenghargaanPage /> },
     ],
   },
 ]);
@@ -49,3 +51,4 @@ createRoot(document.getElementById('root')).render(
     <RouterProvider router={router} />
   </StrictMode>
 );
+  
