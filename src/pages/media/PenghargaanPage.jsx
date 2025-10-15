@@ -31,21 +31,33 @@ const AwardCard = ({ award }) => (
   </div>
 );
 
-
 const PenghargaanPage = () => {
   return (
     <div className="bg-gray-50">
       {/* Banner */}
       <section className="relative h-72 md:h-80 w-full">
-        <img src={bannerImage} alt="Banner Penghargaan" className="w-full h-full object-cover" />
+        {/* Gambar banner */}
+        <img
+          src={bannerImage}
+          alt="Banner Penghargaan"
+          className="w-full h-full object-cover"
+        />
         <div className="absolute inset-0 bg-black/50" />
-        <div className="container mx-auto px-8 lg:px-16 h-full flex items-center justify-start">
-          <h1 className="text-white text-5xl font-bold relative inline-block pb-4">
+
+        {/* Teks di tengah */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+          <h1 className="text-white text-4xl md:text-5xl font-bold relative inline-block pb-4">
             Penghargaan
-            <span className="absolute bottom-0 left-0 w-full h-1 bg-blue-500"></span>
+            <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-24 h-1 bg-blue-500"></span>
           </h1>
         </div>
-        <img src={logo} alt="Logo" className="h-10 absolute top-8 right-8 lg:right-16" />
+
+        {/* Logo pojok kanan atas */}
+        <img
+          src={logo}
+          alt="Logo"
+          className="h-10 absolute top-8 right-8 lg:right-16"
+        />
       </section>
 
       {/* Konten Utama */}
