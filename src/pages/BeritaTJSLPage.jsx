@@ -9,24 +9,10 @@ import logo from '../assets/logo.webp';
 
 // --- DATA DUMMY ---
 const articlesData = [
-  {
-    id: 1,
-    slug: 'social-impact-assessment-and-community-involvement',
-    category: 'Community Development',
-    date: 'January 15, 2025',
-    title: 'Social Impact Assessment and Community Involvement',
-    description: 'We are committed to drive positive impact and creating shared value consistently in our operations...',
-    image: articleImage,
-  },
-  {
-    id: 2,
-    slug: 'new-tree-planting-initiative-for-greener-future',
-    category: 'Environment',
-    date: 'December 22, 2024',
-    title: 'New Tree Planting Initiative for a Greener Future',
-    description: 'A new initiative focused on environmental sustainability through large-scale tree planting...',
-    image: articleImage,
-  },
+    { id: 1, slug: 'social-impact-assessment-and-community-involvement', category: 'Community Development', date: 'January 15, 2025', title: 'Social Impact Assessment and Community Involvement', description: 'We are committed to drive positive impact and creating shared value consistently in our operations...', image: articleImage },
+    { id: 2, slug: 'new-tree-planting-initiative-for-greener-future', category: 'Environment', date: 'December 22, 2024', title: 'New Tree Planting Initiative for a Greener Future', description: 'A new initiative focused on environmental sustainability through large-scale tree planting...', image: articleImage },
+    { id: 3, slug: 'artikel-ketiga-yang-baru', category: 'Environment', date: 'December 22, 2024', title: 'New Tree Planting Initiative for a Greener Future', description: 'A new initiative focused on environmental sustainability through large-scale tree planting...', image: articleImage },
+    { id: 4, slug: 'artikel-keempat-yang-baru', category: 'Community Development', date: 'January 15, 2025', title: 'Social Impact Assessment and Community Involvement', description: 'We are committed to drive positive impact and creating shared value consistently in our operations...', image: articleImage },
 ];
 
 const recentPosts = articlesData.slice(0, 4);
@@ -45,7 +31,6 @@ const events = [
 
 // --- SUB-KOMPONEN ---
 
-// ## PERUBAHAN 1: Kartu Artikel menjadi Horizontal & Ringkas
 const ArticleCard = ({ article }) => (
     <article className="group bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden transition-all duration-300 hover:shadow-lg">
         <div className="grid grid-cols-1 md:grid-cols-5">
@@ -56,15 +41,14 @@ const ArticleCard = ({ article }) => (
             </div>
             <div className="md:col-span-3 p-6 flex flex-col">
                 <p className="text-sm mb-2">
-                    <span className="font-semibold text-red-600">{article.category}</span>
+                    <span className="font-semibold text-blue-600">{article.category}</span>
                     <time dateTime={article.date} className="text-gray-400 ml-3">{article.date}</time>
                 </p>
                 <h2 className="text-xl font-bold text-gray-800 mb-2 leading-tight">
-                    <Link to={`/artikel/${article.slug}`} className="hover:text-red-600 transition-colors">{article.title}</Link>
+                    <Link to={`/artikel/${article.slug}`} className="hover:text-blue-600 transition-colors">{article.title}</Link>
                 </h2>
-                {/* PERUBAHAN: Jarak deskripsi didekatkan */}
                 <p className="text-gray-600 text-sm mb-4 flex-grow">{article.description}</p>
-                <Link to={`/artikel/${article.slug}`} className="font-semibold text-red-600 flex items-center group self-start mt-auto">
+                <Link to={`/artikel/${article.slug}`} className="font-semibold text-blue-600 flex items-center group self-start mt-auto">
                     Read More <span className="ml-2 transform group-hover:translate-x-1 transition-transform">→</span>
                 </Link>
             </div>
@@ -79,12 +63,11 @@ const SidebarCard = ({ title, children, ariaId }) => (
     </section>
 );
 
-
 const RecentPostItem = ({ post }) => (
   <div className="flex items-start space-x-4">
     <img src={post.image} alt={post.title} className="w-16 h-16 object-cover rounded-md flex-shrink-0" loading="lazy" />
     <div className="flex-1 min-w-0">
-      <Link to={`/artikel/${post.slug}`} className="font-semibold text-sm leading-tight text-gray-800 hover:text-red-600 transition-colors block" title={post.title}>
+      <Link to={`/artikel/${post.slug}`} className="font-semibold text-sm leading-tight text-gray-800 hover:text-blue-600 transition-colors block" title={post.title}>
         {post.title}
       </Link>
       <p className="text-xs text-gray-400 mt-1"><time dateTime={post.date}>{post.date}</time></p>
@@ -144,11 +127,12 @@ const Pagination = () => (
 
 const SearchInput = () => (
   <div className="relative">
-    <input type="search" placeholder="Search Articles..." className="w-full pl-4 pr-10 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500" aria-label="Search articles" />
+    <input type="search" placeholder="Search Articles..." className="w-full pl-4 pr-10 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Search articles" />
     <svg className="w-5 h-5 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
   </div>
 );
 
+// --- MAIN COMPONENT ---
 const BeritaTJSLPage = () => {
   return (
     <div className="bg-gray-50">
@@ -156,8 +140,11 @@ const BeritaTJSLPage = () => {
       <section className="relative h-72 md:h-80 w-full">
         <img src={bannerImage} alt="Banner TJSL" className="w-full h-full object-cover" />
         <div className="absolute inset-0 bg-black/50" />
-        {/* ## PERUBAHAN 3: Container untuk Judul di Banner */}
         <div className="container mx-auto px-8 lg:px-16 h-full flex items-center justify-start">
+          <h1 className="text-white text-5xl font-bold relative inline-block pb-4">
+            Berita TJSL
+            <span className="absolute bottom-0 left-0 w-full h-1 bg-blue-500"></span>
+          </h1>
         </div>
         <img src={logo} alt="Logo" className="h-10 absolute top-8 right-8 lg:right-16" />
       </section>

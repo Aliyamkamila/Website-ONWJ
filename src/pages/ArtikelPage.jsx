@@ -1,4 +1,3 @@
-// src/pages/ArtikelPage.jsx
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 
@@ -7,7 +6,6 @@ import bannerImage from '../assets/hero-bg.png';
 import articleImage from '../assets/rectangle.png';
 import logo from '../assets/logo.webp';
 
-// --- STATIC DATA ---
 const articlesData = [
   {
     id: 1,
@@ -36,68 +34,58 @@ const articlesData = [
     `,
     image: articleImage,
   },
+  {
+    id: 3,
+    slug: 'artikel-ketiga-yang-baru',
+    category: 'Environment',
+    date: 'December 22, 2024',
+    title: 'New Tree Planting Initiative for a Greener Future',
+    excerpt: 'A new initiative focused on environmental sustainability through large-scale tree planting...',
+    fullContent: `<p>Ini adalah konten lengkap untuk artikel ketiga tentang inisiatif penanaman pohon. Kami memperluas jangkauan kami ke area baru untuk restorasi ekosistem.</p>`,
+    image: articleImage,
+  },
+  {
+    id: 4,
+    slug: 'artikel-keempat-yang-baru',
+    category: 'Community Development',
+    date: 'January 15, 2025',
+    title: 'Social Impact Assessment and Community Involvement',
+    excerpt: 'We are committed to drive positive impact and creating shared value consistently in our operations...',
+    fullContent: `<p>Ini adalah konten lengkap untuk artikel keempat mengenai Social Impact. Kami menjelaskan metodologi baru yang kami terapkan tahun ini.</p>`,
+    image: articleImage,
+  },
 ];
 
 // Initial dummy comments
 const initialComments = [
-  {
-    id: 1,
-    author: 'Budi Santoso',
-    avatar: 'https://via.placeholder.com/48?text=BS',
-    content: 'Lorem ipsum is simply dummy text of the printing and typesetting industry.',
-    date: 'January 10, 2025',
-  },
-  {
-    id: 2,
-    author: 'Siti Aminah',
-    avatar: 'https://via.placeholder.com/48?text=SA',
-    content: 'Nunc lacinia ex eu feugiat egestas. Maecenas sed nisi massa.',
-    date: 'January 12, 2025',
-  },
+  { id: 1, author: 'Budi Santoso', avatar: 'https://via.placeholder.com/48?text=BS', content: 'Lorem ipsum is simply dummy text...', date: 'January 10, 2025' },
+  { id: 2, author: 'Siti Aminah', avatar: 'https://via.placeholder.com/48?text=SA', content: 'Nunc lacinia ex eu feugiat egestas.', date: 'January 12, 2025' },
 ];
 
-// --- SUB-COMPONENTS ---
-// Article Header Component
 const ArticleHeader = ({ article }) => (
   <header className="container max-w-4xl mx-auto px-4 lg:px-16 pt-16 pb-8 text-center">
-    <p className="text-sm font-semibold text-red-600 mb-2" aria-label={`Category: ${article.category}`}>
-      {article.category}
-    </p>
-    <h1 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight mb-4">
-      {article.title}
-    </h1>
-    <time dateTime={article.date} className="text-gray-500 block">
-      Published on {article.date}
-    </time>
+    <p className="text-sm font-semibold text-blue-600 mb-2">{article.category}</p>
+    <h1 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight mb-4">{article.title}</h1>
+    <time dateTime={article.date} className="text-gray-500 block">{article.date}</time>
   </header>
 );
 
-// Article Image Component
 const ArticleImage = ({ image, alt }) => (
   <div className="container max-w-5xl mx-auto px-4 lg:px-16 my-8">
-    <img
-      src={image}
-      alt={alt}
-      className="w-full h-96 object-cover rounded-lg shadow-lg"
-      loading="lazy"
-    />
+    <img src={image} alt={alt} className="w-full h-96 object-cover rounded-lg shadow-lg" loading="lazy" />
   </div>
 );
 
-// Article Content Component
 const ArticleContent = ({ content }) => (
-  <section className="container max-w-4xl mx-auto px-4 lg:px-16 prose prose-lg max-w-none">
-    <div
-      className="prose prose-gray"
-      dangerouslySetInnerHTML={{ __html: content }}
-    />
+  <section className="container max-w-4xl mx-auto px-4 lg:px-16 prose prose-lg">
+    <div className="prose prose-gray" dangerouslySetInnerHTML={{ __html: content }} />
   </section>
 );
 
-// Comment Form Component with state
 const CommentForm = ({ onSubmit }) => {
   const [formData, setFormData] = useState({ name: '', email: '', comment: '' });
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -106,127 +94,73 @@ const CommentForm = ({ onSubmit }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!formData.name || !formData.email || !formData.comment.trim()) {
-      alert('Please fill in all fields.');
+      setError('Please fill in all fields.');
       return;
     }
+    if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      setError('Please enter a valid email address.');
+      return;
+    }
+    setError('');
     setSubmitting(true);
-    onSubmit(formData);  // Pass data to parent for handling
-    setFormData({ name: '', email: '', comment: '' });  // Reset form
-    setSubmitting(false);  // Reset submitting state
+    onSubmit(formData);
+    setFormData({ name: '', email: '', comment: '' });
+    setSubmitting(false);
   };
 
   return (
-    <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 text-left">
+    <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 text-left" aria-labelledby="comment-form">
+      {error && <p className="md:col-span-2 text-red-500">{error}</p>}
       <div>
-        <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1" aria-describedby="name-desc">
-          Name *
-        </label>
-        <input
-          id="name"
-          name="name"
-          type="text"
-          value={formData.name}
-          onChange={handleChange}
-          placeholder="Your name"
-          required
-          className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
-        />
+        <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+        <input id="name" name="name" type="text" value={formData.name} onChange={handleChange} placeholder="Your name" required className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
       </div>
       <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1" aria-describedby="email-desc">
-          Email *
-        </label>
-        <input
-          id="email"
-          name="email"
-          type="email"
-          value={formData.email}
-          onChange={handleChange}
-          placeholder="your.email@example.com"
-          required
-          className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
-        />
+        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+        <input id="email" name="email" type="email" value={formData.email} onChange={handleChange} placeholder="your.email@example.com" required className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
       </div>
       <div className="md:col-span-2">
-        <label htmlFor="comment" className="block text-sm font-medium text-gray-700 mb-1" aria-describedby="comment-desc">
-          Comment *
-        </label>
-        <textarea
-          id="comment"
-          name="comment"
-          value={formData.comment}
-          onChange={handleChange}
-          placeholder="Share your thoughts..."
-          rows="5"
-          required
-          className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all resize-vertical"
-        />
+        <label htmlFor="comment" className="block text-sm font-medium text-gray-700 mb-1">Comment *</label>
+        <textarea id="comment" name="comment" value={formData.comment} onChange={handleChange} placeholder="Share your thoughts..." rows="5" required className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-vertical" />
       </div>
-      <button
-        type="submit"
-        disabled={submitting}
-        className="md:col-span-2 bg-red-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors disabled:opacity-50"
-      >
+      <button type="submit" disabled={submitting} className="md:col-span-2 bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 transition disabled:opacity-50">
         {submitting ? 'Posting...' : 'Post Comment'}
       </button>
     </form>
   );
 };
 
-// Comment Item Component
 const CommentItem = ({ comment }) => (
-  <article className="flex items-start gap-4 text-left">
-    <img
-      src={comment.avatar}
-      alt={`Avatar of ${comment.author}`}
-      className="w-12 h-12 rounded-full object-cover flex-shrink-0"
-      loading="lazy"
-    />
-    <div className="flex-1 min-w-0">
+  <article className="flex items-start gap-4 text-left border-b border-gray-200 py-4">
+    <img src={comment.avatar} alt={`Avatar of ${comment.author}`} className="w-12 h-12 rounded-full" loading="lazy" />
+    <div className="flex-1">
       <div className="flex items-center gap-2 mb-1">
         <cite className="font-bold text-gray-900 not-italic">{comment.author}</cite>
-        <time dateTime={comment.date} className="text-sm text-gray-500">
-          {comment.date}
-        </time>
+        <time dateTime={comment.date} className="text-sm text-gray-500">{comment.date}</time>
       </div>
-      <p className="text-gray-600 leading-relaxed">{comment.content}</p>
+      <p className="text-gray-600">{comment.content}</p>
     </div>
   </article>
 );
 
-// Comments Section Component
 const CommentsSection = ({ comments }) => (
   <section aria-labelledby="comments-heading" className="text-left">
-    <h3 id="comments-heading" className="text-2xl font-bold mb-6">
-      Comments ({comments.length})
-    </h3>
-    <div className="space-y-6">
-      {comments.map((comment) => (
-        <CommentItem key={comment.id} comment={comment} />
-      ))}
-    </div>
+    <h3 id="comments-heading" className="text-2xl font-bold mb-6">Comments ({comments.length})</h3>
+    <div className="space-y-6">{comments.map((comment) => (<CommentItem key={comment.id} comment={comment} />))}</div>
   </section>
 );
 
-// Not Found Component
 const NotFound = () => (
   <div className="container mx-auto px-4 lg:px-16 py-16 text-center">
-    <h1 className="text-4xl font-bold text-gray-900 mb-4">Artikel Tidak Ditemukan</h1>
+    <h1 className="text-4xl font-bold mb-4">Artikel Tidak Ditemukan</h1>
     <p className="text-gray-600 mb-8">Maaf, artikel yang Anda cari tidak tersedia.</p>
-    <Link
-      to="/berita-tjsl"
-      className="inline-block bg-red-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-red-700 transition-colors"
-    >
-      Kembali ke Daftar Berita
-    </Link>
+    <Link to="/berita-tjsl" className="inline-block bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700">Kembali ke Daftar Berita</Link>
   </div>
 );
 
-// --- MAIN COMPONENT ---
 const ArtikelPage = () => {
   const { slug } = useParams();
   const [comments, setComments] = useState(initialComments);
-
   const article = articlesData.find((a) => a.slug === slug);
 
   if (!article) {
@@ -234,50 +168,42 @@ const ArtikelPage = () => {
   }
 
   const handleCommentSubmit = (formData) => {
-    // Simulate adding a new comment
-    const newComment = {
-      id: Date.now(),
-      author: formData.name,
-      avatar: 'https://via.placeholder.com/48?text=' + formData.name.charAt(0).toUpperCase(),
-      content: formData.comment,
-      date: new Date().toLocaleDateString(),
-    };
+    const newComment = { id: Date.now(), author: formData.name, avatar: 'https://via.placeholder.com/48?text=' + formData.name.charAt(0).toUpperCase(), content: formData.comment, date: new Date().toLocaleDateString() };
     setComments([newComment, ...comments]);
   };
 
   return (
     <div className="bg-white min-h-screen">
-      {/* Optional Banner */}
       <section className="relative h-64 w-full overflow-hidden mb-8">
-        <img
-          src={bannerImage}
-          alt="TJSL Banner - Article Background"
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-          <img
-            src={logo}
-            alt="TJSL Logo"
-            className="h-8 absolute top-4 right-4 lg:right-16 z-10"
-          />
+        <img src={bannerImage} alt="Article Background" className="w-full h-full object-cover" loading="lazy" />
+        <div className="absolute inset-0 bg-black/40">
         </div>
+        <img src={logo} alt="Logo" className="h-8 absolute top-4 right-4 lg:right-16 z-10" />
       </section>
 
-      {/* Article Content */}
-      <ArticleHeader article={article} />
-      <ArticleImage image={article.image} alt={article.title} />
-      <ArticleContent content={article.fullContent} />
-
-      {/* Comments Section - Aligned to left */}
-      <section className="bg-gray-50 py-16" aria-labelledby="comments-section-heading">
-        <div className="container max-w-4xl px-4 lg:px-16">  {/* Removed mx-auto to align left */}
-          <h2 id="comments-section-heading" className="text-3xl font-bold mb-8 text-gray-900 text-left">
-            Diskusi & Komentar
-          </h2>
-          <CommentForm onSubmit={handleCommentSubmit} />
-          <CommentsSection comments={comments} />
-        </div>
-      </section>
+      <main>
+        <ArticleHeader article={article} />
+        <ArticleImage image={article.image} alt={article.title} />
+        <ArticleContent content={article.fullContent} />
+        
+        <section className="bg-gray-50 py-16 mt-16" aria-labelledby="comments-section-heading">
+          <div className="container max-w-4xl mx-auto px-4 lg:px-16">
+            <h2 id="comments-section-heading" className="text-3xl font-bold mb-8 text-gray-900 text-left">Diskusi & Komentar</h2>
+            <CommentForm onSubmit={handleCommentSubmit} />
+            <CommentsSection comments={comments} />
+          </div>
+        </section>
+        
+        {/* Related Articles */}
+        <section className="container max-w-4xl mx-auto px-4 lg:px-16 my-8">
+          <h3 className="text-2xl font-bold mb-4">Related Articles</h3>
+          <ul className="space-y-4">
+            {articlesData.filter(a => a.id !== article.id).slice(0, 2).map(a => (
+              <li key={a.id}><Link to={`/artikel/${a.slug}`} className="text-blue-600 hover:underline">{a.title}</Link></li>
+            ))}
+          </ul>
+        </section>
+      </main>
     </div>
   );
 };
