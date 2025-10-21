@@ -5,7 +5,7 @@ import ProgramCard from '../components/ProgramCard'; // Menggunakan komponen kar
 
 // Placeholder Images
 import bannerImage from '../assets/hero-bg.png';
-import programImage from '../assets/rectangle.png';
+import programImage from '../assets/rectangle.png'; // Gambar untuk program
 import carouselImg1 from '../assets/contoh1.png';
 import carouselImg2 from '../assets/contoh2.png';
 import carouselImg3 from '../assets/contoh3.png';
@@ -20,7 +20,7 @@ const sustainablePrograms = [
 
 const carouselImages = [carouselImg1, carouselImg2, carouselImg3, carouselImg1, carouselImg2, carouselImg3]; // Duplikasi untuk slide loop
 
-// Data Testimoni (Sama seperti di BeritaTJSLPage)
+// Data Testimoni
 const testimonials = [
     { id: 1, name: 'Budi Santoso', text: 'Integer diam nulla, rhoncus sed lorem ac, feugiat laoreet sem. Maecenas sed nisi massa.' },
     { id: 2, name: 'Siti Aminah', text: 'Aliquam vel dolor dictum, tincidunt magna et, porta velit. Integer diam nulla, rhoncus sed lorem ac.' },
@@ -29,7 +29,6 @@ const testimonials = [
 
 
 // --- SUB-KOMPONEN (untuk kerapian) ---
-// Testimonial Card (Bisa juga dipindah ke file komponen terpisah nanti)
 const TestimonialCard = ({ testimonial }) => (
     <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
         <blockquote className="text-gray-600 italic mb-4">"{testimonial.text}"</blockquote>
@@ -124,7 +123,12 @@ const TJSLPage = () => {
         <div className="container mx-auto px-8 lg:px-16">
           <div className="flex justify-between items-center mb-12">
             <h2 className="text-4xl font-bold text-gray-900">Program Berkelanjutan</h2>
-            <Link to="/program-berkelanjutan" className="font-semibold text-blue-600 hover:text-blue-700 transition-colors text-sm">See All</Link>
+            
+            {/* --- INI DIA PERBAIKANNYA --- */}
+            <Link to="/berita-tjsl" className="font-semibold text-blue-600 hover:text-blue-700 transition-colors text-sm">
+              See All
+            </Link>
+            
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {sustainablePrograms.map((prog, index) => (
@@ -134,7 +138,7 @@ const TJSLPage = () => {
         </div>
       </section>
 
-      {/* --- VOICES FROM THE COMMUNITY SECTION --- */}
+      {/* Voices From The Community Section */}
       <section className="bg-white py-20" aria-labelledby="testimonials-heading">
         <div className="container mx-auto px-8 lg:px-16">
           <h2 id="testimonials-heading" className="text-3xl font-bold text-center mb-12 text-gray-900">
@@ -147,7 +151,6 @@ const TJSLPage = () => {
           </div>
         </div>
       </section>
-
     </div>
   );
 };
