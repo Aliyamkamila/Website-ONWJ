@@ -26,6 +26,13 @@ const events = [
     { id: 1, day: '15', month: 'Dec', title: 'Evaluasi Program Tahunan', description: 'December 15, 2025' },
     { id: 2, day: '05', month: 'Jan', title: 'Peluncuran Program Baru', description: 'January 05, 2026' },
 ];
+// Data Testimoni (Sama seperti di BeritaTJSLPage)
+const testimonials = [
+    { id: 1, name: 'Budi Santoso', text: 'Programnya sangat membantu desa kami...' },
+    { id: 2, name: 'Siti Aminah', text: 'Terima kasih atas dukungannya selama ini...' },
+    { id: 3, name: 'Joko Susilo', text: 'Semoga program ini terus berlanjut...' },
+];
+
 
 // --- SUB-KOMPONEN SIDEBAR (Mirip BeritaTJSLPage) ---
 const SidebarCard = ({ title, children, ariaId }) => (
@@ -39,6 +46,7 @@ const RecentProgramItem = ({ program }) => (
   <div className="flex items-start space-x-4">
     <img src={program.image} alt={program.title} className="w-16 h-16 object-cover rounded-md flex-shrink-0" loading="lazy" />
     <div className="flex-1 min-w-0">
+      {/* Jika program punya halaman detail, arahkan ke sana. Jika tidak, hapus Link */}
       <Link to={`/artikel/${program.slug}`} className="font-semibold text-sm leading-tight text-gray-800 hover:text-blue-600 transition-colors block" title={program.title}>
         {program.title}
       </Link>
@@ -76,6 +84,13 @@ const EventItem = ({ event }) => (
     </li>
 );
 
+const SearchInput = () => (
+  <div className="relative">
+    <input type="search" placeholder="Search Programs..." className="w-full pl-4 pr-10 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Search programs" />
+    <svg className="w-5 h-5 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+  </div>
+);
+
 const Pagination = () => ( // Placeholder
   <nav className="flex justify-center items-center space-x-2 pt-12" aria-label="Pagination">
     <span className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md font-bold">1</span>
@@ -84,29 +99,52 @@ const Pagination = () => ( // Placeholder
   </nav>
 );
 
+// Testimonial Card Component (Bisa diambil dari BeritaTJSLPage jika sama persis)
+const TestimonialCard = ({ testimonial }) => (
+    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+        <blockquote className="text-gray-600 italic mb-4">"{testimonial.text}"</blockquote>
+        <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-full bg-gray-200 flex-shrink-0" aria-hidden="true"></div>
+        <cite className="font-bold text-gray-800 not-italic">- {testimonial.name}</cite>
+        </div>
+    </div>
+);
+
+
 // --- MAIN COMPONENT ---
 const AllProgramsPage = () => {
   return (
     <div className="bg-gray-50 min-h-screen">
       {/* Banner */}
-      <section className="relative h-72 md:h-80 w-full">
-        <img src={bannerImage} alt="Banner Program Berkelanjutan" className="w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-black/50" />
-        <div className="container mx-auto px-8 lg:px-16 h-full flex items-center justify-start">
-          <h1 className="text-white text-5xl font-bold relative inline-block pb-4">
-            Program Berkelanjutan
-            <span className="absolute bottom-0 left-0 w-full h-1 bg-blue-500"></span>
-          </h1>
-        </div>
-        <img src={logo} alt="Logo" className="h-10 absolute top-8 right-8 lg:right-16" />
-      </section>
+     <section className="relative h-72 md:h-80 w-full flex items-end">
+  <img
+    src={bannerImage}
+    alt="Banner Program Berkelanjutan"
+    className="absolute inset-0 w-full h-full object-cover"
+  />
+      <div className="absolute inset-0 bg-black/50" />
+
+      <div className="container mx-auto px-8 lg:px-16 pb-10 relative z-10">
+        <h1 className="text-white text-5xl font-bold relative inline-block pb-2">
+          Program Berkelanjutan
+          <span className="absolute bottom-0 left-0 w-full h-1 bg-blue-500"></span>
+        </h1>
+      </div>
+
+      <img
+        src={logo}
+        alt="Logo"
+        className="h-10 absolute top-8 right-8 lg:right-16"
+      />
+    </section>
+
 
       {/* Main Content with Sidebar */}
       <div className="container mx-auto px-8 lg:px-16 py-16">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-          
           {/* Main Program Grid (Kolom Kiri) */}
           <main className="lg:col-span-2 space-y-8">
+            {/* Grid untuk Kartu Program */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {allProgramsData.map((prog) => (
                 <ProgramCard key={prog.id} program={prog} />
@@ -117,6 +155,9 @@ const AllProgramsPage = () => {
 
           {/* Sidebar (Kolom Kanan) */}
           <aside className="space-y-8">
+            <SidebarCard ariaId="search-programs">
+                <SearchInput />
+            </SidebarCard>
             <SidebarCard title="Recently Added" ariaId="recent-programs">
                 <div className="space-y-5">
                     {recentPrograms.map((prog) => <RecentProgramItem key={prog.id} program={prog} />)}
@@ -133,8 +174,20 @@ const AllProgramsPage = () => {
           </aside>
         </div>
       </div>
-       {/* Section Voices From The Community bisa ditambahkan di sini jika perlu */}
-       {/* <section className="bg-white py-20" aria-labelledby="testimonials-heading">...</section> */}
+
+      {/* Voices from the community */}
+      <section className="bg-white py-20" aria-labelledby="testimonials-heading">
+        <div className="container mx-auto px-8 lg:px-16">
+          <h2 id="testimonials-heading" className="text-3xl font-bold text-center mb-12 text-gray-900">
+            Voices From The Community
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {testimonials.map((testimonial) => (
+              <TestimonialCard key={testimonial.id} testimonial={testimonial} />
+            ))}
+          </div>
+        </div>
+      </section>
     </div>
   );
 };
