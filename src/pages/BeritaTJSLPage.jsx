@@ -142,7 +142,6 @@ const BeritaTJSLPage = () => {
         <div className="absolute inset-0 bg-black/50" />
         <div className="container mx-auto px-8 lg:px-16 h-full flex items-center justify-start">
           <h1 className="text-white text-5xl font-bold relative inline-block pb-4">
-            Berita TJSL
             <span className="absolute bottom-0 left-0 w-full h-1 bg-blue-500"></span>
           </h1>
         </div>
