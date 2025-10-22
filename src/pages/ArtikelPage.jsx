@@ -3,20 +3,56 @@ import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 
 // Ikon
-import { FaShareAlt, FaHome } from 'react-icons/fa'; // Pastikan react-icons sudah terinstall
+import { FaShareAlt, FaHome } from 'react-icons/fa'; // Ini sekarang akan work setelah 'npm install react-icons'
 
 // Placeholder Images
-import bannerImage from '../assets/hero-bg.png'; // Mungkin tidak perlu banner besar lagi
 import articleImage from '../assets/rectangle.png';
 import logo from '../assets/logo.webp';
 
-// --- DATA ARTIKEL LENGKAP (Pastikan sinkron) ---
+// --- DATA ARTIKEL LENGKAP (SINKRON DENGAN 12 ARTIKEL DI BERITATJSLPAGE) ---
 const articlesData = [
-  { id: 1, slug: 'social-impact-assessment-and-community-involvement', category: 'Community Development', date: 'January 15, 2025', title: 'Empowering Communities Through Sustainable Energy', fullContent: `<p>Lorem ipsuvvxfbrjhbgfvrjhgfjhbbcdskjbfjksfkjhkjvbjsvbjshbhbsvbsvbdhhhhhhhhhhhhhh dolor sit amet consectetur...</p><p>Volutpate gravida sed consequat augue...</p><p>Non turpis sed turpis eget...</p>`, image: articleImage },
-  { id: 2, slug: 'new-tree-planting-initiative-for-greener-future', category: 'Environment', date: 'December 22, 2024', title: 'New Tree Planting Initiative for a Greener Future', fullContent: `<p>This is the full content for the Tree Planting Initiative...</p><p>Our efforts aim to combat deforestation...</p>`, image: articleImage },
-  { id: 3, slug: 'artikel-ketiga-yang-baru', category: 'Technology', date: 'November 30, 2024', title: 'Innovations in Renewable Energy Technology', fullContent: `<p>Konten lengkap untuk artikel ketiga...</p>`, image: articleImage },
-  { id: 4, slug: 'artikel-keempat-yang-baru', category: 'Corporate', date: 'November 15, 2024', title: 'Our Commitment to Corporate Governance', fullContent: `<p>Konten lengkap untuk artikel keempat...</p>`, image: articleImage },
+    { id: 1, slug: 'social-impact-assessment-and-community-involvement', category: 'Community Development', date: 'January 15, 2025', title: 'Social Impact Assessment and Community Involvement', description: 'We are committed to drive positive impact...', image: articleImage, fullContent: `<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet consectetur adipiscing elit. Quisque faucibus ex sapien vitae pellentesque sem placerat. In id cursus mi pretium tellus duis convallis. Tempus leo eu aenean sed diam urna tempor. Pulvinar vivamus fringilla lacus nec metus bibendum egestas. Iaculis massa nisl malesuada lacinia integer nunc posuere. Ut hendrerit semper vel class aptent taciti sociosqu. Ad litora torquent per conubia nostra inceptos himenaeos.
+
+Lorem ipsum dolor sit amet consectetur adipiscing elit. Quisque faucibus ex sapien vitae pellentesque sem placerat. In id cursus mi pretium tellus duis convallis. Tempus leo eu aenean sed diam urna tempor. Pulvinar vivamus fringilla lacus nec metus bibendum egestas. Iaculis massa nisl malesuada lacinia integer nunc posuere. Ut hendrerit semper vel class aptent taciti sociosqu. Ad litora torquent per conubia nostra inceptos himenaeos.
+
+Lorem ipsum dolor sit amet consectetur adipiscing elit. Quisque faucibus ex sapien vitae pellentesque sem placerat. In id cursus mi pretium tellus duis convallis. Tempus leo eu aenean sed diam urna tempor. Pulvinar vivamus fringilla lacus nec metus bibendum egestas. Iaculis massa nisl malesuada lacinia integer nunc posuere. Ut hendrerit semper vel class aptent taciti sociosqu. Ad litora torquent per conubia nostra inceptos himenaeos.
+
+Lorem ipsum dolor sit amet consectetur adipiscing elit. Quisque faucibus ex sapien vitae pellentesque sem placerat. In id cursus mi pretium tellus duis convallis. Tempus leo eu aenean sed diam urna tempor. Pulvinar vivamus fringilla lacus nec metus bibendum egestas. Iaculis massa nisl malesuada lacinia integer nunc posuere. Ut hendrerit semper vel class aptent taciti sociosqu. Ad litora torquent per conubia nostra inceptos himenaeos.
+
+Lorem ipsum dolor sit amet consectetur adipiscing elit. Quisque faucibus ex sapien vitae pellentesque sem placerat. In id cursus mi pretium tellus duis convallis. Tempus leo eu aenean sed diam urna tempor. Pulvinar vivamus fringilla lacus nec metus bibendum egestas. Iaculis massa nisl malesuada lacinia integer nunc posuere. Ut hendrerit semper vel class aptent taciti sociosqu. Ad litora torquent per conubia nostra inceptos himenaeos.
+
+Lorem ipsum dolor sit amet consectetur adipiscing elit. Quisque faucibus ex sapien vitae pellentesque sem placerat. In id cursus mi pretium tellus duis convallis. Tempus leo eu aenean sed diam urna tempor. Pulvinar vivamus fringilla lacus nec metus bibendum egestas. Iaculis massa nisl malesuada lacinia integer nunc posuere. Ut hendrerit semper vel class aptent taciti sociosqu. Ad litora torquent per conubia nostra inceptos himenaeos.
+
+Lorem ipsum dolor sit amet consectetur adipiscing elit. Quisque faucibus ex sapien vitae pellentesque sem placerat. In id cursus mi pretium tellus duis convallis. Tempus leo eu aenean sed diam urna tempor. Pulvinar vivamus fringilla lacus nec metus bibendum egestas. Iaculis massa nisl malesuada lacinia integer nunc posuere. Ut hendrerit semper vel class aptent taciti sociosqu. Ad litora torquent per conubia nostra inceptos himenaeos.
+
+Lorem ipsum dolor sit amet consectetur adipiscing elit. Quisque faucibus ex sapien vitae pellentesque sem placerat. In id cursus mi pretium tellus duis convallis. Tempus leo eu aenean sed diam urna tempor. Pulvinar vivamus fringilla lacus nec metus bibendum egestas. Iaculis massa nisl malesuada lacinia integer nunc posuere. Ut hendrerit semper vel class aptent taciti sociosqu. Ad litora torquent per conubia nostra inceptos himenaeos.
+
+Lorem ipsum dolor sit amet consectetur adipiscing elit. Quisque faucibus ex sapien vitae pellentesque sem placerat. In id cursus mi pretium tellus duis convallis. Tempus leo eu aenean sed diam urna tempor. Pulvinar vivamus fringilla lacus nec metus bibendum egestas. Iaculis massa nisl malesuada lacinia integer nunc posuere. Ut hendrerit semper vel class aptent taciti sociosqu. Ad litora torquent per conubia nostra inceptos himenaeos.
+
+Lorem ipsum dolor sit amet consectetur adipiscing elit. Quisque faucibus ex sapien vitae pellentesque sem placerat. In id cursus mi pretium tellus duis convallis. Tempus leo eu aenean sed diam urna tempor. Pulvinar vivamus fringilla lacus nec metus bibendum egestas. Iaculis massa nisl malesuada lacinia integer nunc posuere. Ut hendrerit semper vel class aptent taciti sociosqu. Ad litora torquent per conubia nostra inceptos himenaeos.
+
+Lorem ipsum dolor sit amet consectetur adipiscing elit. Quisque faucibus ex sapien vitae pellentesque sem placerat. In id cursus mi pretium tellus duis convallis. Tempus leo eu aenean sed diam urna tempor. Pulvinar vivamus fringilla lacus nec metus bibendum egestas. Iaculis massa nisl malesuada lacinia integer nunc posuere. Ut hendrerit semper vel class aptent taciti sociosqu. Ad litora torquent per conubia nostra inceptos himenaeos.
+
+Lorem ipsum dolor sit amet consectetur adipiscing elit. Quisque faucibus ex sapien vitae pellentesque sem placerat. In id cursus mi pretium tellus duis convallis. Tempus leo eu aenean sed diam urna tempor. Pulvinar vivamus fringilla lacus nec metus bibendum egestas. Iaculis massa nisl malesuada lacinia integer nunc posuere. Ut hendrerit semper vel class aptent taciti sociosqu. Ad litora torquent per conubia nostra inceptos himenaeos.
+
+Lorem ipsum dolor sit amet consectetur adipiscing elit. Quisque faucibus ex sapien vitae pellentesque sem placerat. In id cursus mi pretium tellus duis convallis. Tempus leo eu aenean sed diam urna tempor. Pulvinar vivamus fringilla lacus nec metus bibendum egestas. Iaculis massa nisl malesuada lacinia integer nunc posuere. Ut hendrerit semper vel class aptent taciti sociosqu. Ad litora torquent per conubia nostra inceptos himenaeos.
+
+Lorem ipsum dolor sit amet consectetur adipiscing elit. Quisque faucibus ex sapien vitae pellentesque sem placerat. In id cursus mi pretium tellus duis convallis. Tempus leo eu aenean sed diam urna tempor. Pulvinar vivamus fringilla lacus nec metus bibendum egestas. Iaculis massa nisl malesuada lacinia integer nunc posuere. Ut hendrerit semper vel class aptent taciti sociosqu. Ad litora torquent per conubia nostra inceptos himenaeos.
+
+Lorem ipsum dolor sit amet consectetur adipiscing elit. Quisque faucibus ex sapien vitae pellentesque sem placerat. In id cursus mi pretium tellus duis convallis. Tempus leo eu aenean sed diam urna tempor. Pulvinar vivamus fringilla lacus nec metus bibendum egestas. Iaculis massa nisl malesuada lacinia integer nunc posuere. Ut hendrerit semper vel class aptent taciti sociosqu. Ad litora torquent per conubia nostra inceptos himenaeos.</p>` },
+    { id: 2, slug: 'new-tree-planting-initiative-for-greener-future', category: 'Environment', date: 'December 22, 2024', title: 'New Tree Planting Initiative for a Greener Future', description: 'A new initiative focused on environmental sustainability...', image: articleImage, fullContent: `<p>Konten lengkap untuk artikel 2...</p>` },
+    { id: 3, slug: 'artikel-ketiga-yang-baru', category: 'Environment', date: 'December 22, 2024', title: 'Artikel Ketiga yang Baru', description: 'Deskripsi artikel ketiga...', image: articleImage, fullContent: `<p>Konten lengkap untuk artikel 3...</p>` },
+    { id: 4, slug: 'artikel-keempat-yang-baru', category: 'Community Development', date: 'January 15, 2025', title: 'Artikel Keempat yang Baru', description: 'Deskripsi artikel keempat...', image: articleImage, fullContent: `<p>Konten lengkap untuk artikel 4...</p>` },
+    { id: 5, slug: 'artikel-kelima', category: 'Environment', date: 'November 10, 2024', title: 'Artikel Kelima', description: 'Deskripsi artikel kelima...', image: articleImage, fullContent: `<p>Konten lengkap untuk artikel 5...</p>` },
+    { id: 6, slug: 'artikel-keenam', category: 'Community Development', date: 'October 5, 2024', title: 'Artikel Keenam', description: 'Deskripsi artikel keenam...', image: articleImage, fullContent: `<p>Konten lengkap untuk artikel 6...</p>` },
+    { id: 7, slug: 'artikel-ketujuh', category: 'Environment', date: 'September 20, 2024', title: 'Artikel Ketujuh', description: 'Deskripsi artikel ketujuh...', image: articleImage, fullContent: `<p>Konten lengkap untuk artikel 7...</p>` },
+    { id: 8, slug: 'artikel-kedelapan', category: 'Community Development', date: 'August 15, 2024', title: 'Artikel Kedelapan', description: 'Deskripsi artikel kedelapan...', image: articleImage, fullContent: `<p>Konten lengkap untuk artikel 8...</p>` },
+    { id: 9, slug: 'artikel-kesembilan', category: 'Environment', date: 'July 1, 2024', title: 'Artikel Kesembilan', description: 'Deskripsi artikel kesembilan...', image: articleImage, fullContent: `<p>Konten lengkap untuk artikel 9...</p>` },
+    { id: 10, slug: 'artikel-kesepuluh', category: 'Community Development', date: 'June 10, 2024', title: 'Artikel Kesepuluh', description: 'Deskripsi artikel kesepuluh...', image: articleImage, fullContent: `<p>Konten lengkap untuk artikel 10...</p>` },
+    { id: 11, slug: 'artikel-kesebelas', category: 'Environment', date: 'May 5, 2024', title: 'Artikel Kesebelas', description: 'Deskripsi artikel kesebelas...', image: articleImage, fullContent: `<p>Konten lengkap untuk artikel 11...</p>` },
+    { id: 12, slug: 'artikel-keduabelas', category: 'Community Development', date: 'April 20, 2024', title: 'Artikel Keduabelas', description: 'Deskripsi artikel keduabelas...', image: articleImage, fullContent: `<p>Konten lengkap untuk artikel 12...</p>` },
 ];
+
 
 const initialComments = [
   { id: 1, author: 'Budi Santoso', avatar: 'https://via.placeholder.com/48?text=BS', content: 'Artikel yang sangat informatif!', date: 'Jan 10, 2025' },
@@ -35,7 +71,7 @@ const Breadcrumbs = ({ category, title }) => (
         </Link>
       </li>
       <li><div className="flex items-center"><span className="mx-1">/</span><Link to="/berita-tjsl" className="ms-1 text-blue-600 hover:text-blue-800">Berita TJSL</Link></div></li>
-      <li aria-current="page"><div className="flex items-center"><span className="mx-1">/</span><span className="ms-1 text-gray-400">{title}</span></div></li>
+      <li aria-current="page"><div className="flex items-center"><span className="mx-1">/</span><span className="ms-1 text-gray-400 line-clamp-1">{title}</span></div></li>
     </ol>
   </nav>
 );
@@ -95,7 +131,7 @@ const ArtikelPage = () => {
   return (
     <div className="bg-white min-h-screen">
       {/* Container Utama */}
-      <div className="container max-w-5xl mx-auto px-4 lg:px-8 py-12"> {/* Lebih lebar sedikit */}
+      <div className="container max-w-5xl mx-auto px-4 lg:px-8 py-12">
         <Breadcrumbs category={article.category} title={article.title} />
         <ArticleHeader article={article} />
         <ArticleImage image={article.image} alt={article.title} />
@@ -112,12 +148,12 @@ const ArtikelPage = () => {
                  </div>
             </div>
 
-             {/* Sidebar Sederhana (Opsional) */}
+             {/* Sidebar Artikel Terkait */}
              <aside className="col-span-12 lg:col-span-4 space-y-8 lg:mt-0 mt-12">
                 <section className="bg-gray-50 p-6 rounded-lg border">
                     <h3 className="font-bold text-xl mb-4">Artikel Terkait</h3>
                     <ul className="space-y-3">
-                        {articlesData.filter(a => a.id !== article.id).slice(0, 3).map(a => (
+                        {articlesData.filter(a => a.id !== article.id && a.category === article.category).slice(0, 3).map(a => (
                         <li key={a.id}>
                             <Link to={`/artikel/${a.slug}`} className="text-blue-600 hover:underline hover:text-blue-800 transition-colors">
                             {a.title}

@@ -41,14 +41,20 @@ const newsItems = [
     { id: 3, slug: 'artikel-ketiga-yang-baru', category: 'Pendidikan', date: '10 Nov 2024', title: 'Program Beasiswa Mencapai Target Penerima Baru', description: 'Tahun ini, program beasiswa kami berhasil menjangkau 1.500 siswa berprestasi...', image: programImage },
     { id: 4, slug: 'artikel-keempat-yang-baru', category: 'Kesehatan', date: '05 Okt 2024', title: 'Peresmian Fasilitas Sanitasi Air Bersih di Desa Mitra', description: 'Fasilitas baru ini diharapkan dapat meningkatkan kualitas kesehatan masyarakat sekitar...', image: programImage },
     { id: 5, slug: 'artikel-keempat-yang-baru', category: 'Kesehatan', date: '05 Okt 2024', title: 'Peresmian Fasilitas Sanitasi Air Bersih di Desa Mitra', description: 'Fasilitas baru ini diharapkan dapat meningkatkan kualitas kesehatan masyarakat sekitar...', image: programImage },
-
-];
+  ];
 
 // Data Kalender Kegiatan
 const events = [
     { id: 1, day: '15', month: 'Dec', title: 'Evaluasi Program Tahunan 2025', description: 'December 15, 2025 - Rapat Internal & Mitra' },
     { id: 2, day: '05', month: 'Jan', title: 'Peluncuran Program Energi Terbarukan Desa', description: 'January 05, 2026 - Lokasi: Desa Sukamaju' },
     { id: 3, day: '22', month: 'Mar', title: 'Hari Penanaman Pohon Sedunia', description: 'March 22, 2026 - Kegiatan Bersama Komunitas' },
+];
+
+// --- DATA BARU UNTUK TESTIMONI ---
+const testimonials = [
+    { id: 1, name: 'Budi Santoso', text: 'Program beasiswa ini sangat membantu anak saya untuk terus bersekolah. Terima kasih!', avatar: 'https://via.placeholder.com/48?text=BS' },
+    { id: 2, name: 'Siti Aminah', text: 'Penanaman mangrove membuat pantai kami lebih aman dari abrasi. Luar biasa!', avatar: 'https://via.placeholder.com/48?text=SA' },
+    { id: 3, name: 'Joko Susilo', text: 'Akses air bersih sekarang jauh lebih mudah berkat program sanitasi. Warga sangat bersyukur.', avatar: 'https://via.placeholder.com/48?text=JS' },
 ];
 
 
@@ -147,7 +153,6 @@ const NewsCard = ({ news, delay }) => {
     useEffect(() => {
         const observer = new IntersectionObserver(([entry]) => {
             if (entry.isIntersecting) entry.target.classList.add('opacity-100', 'translate-y-0');
-            // else entry.target.classList.remove('opacity-100', 'translate-y-0'); // Hapus else agar animasi hanya sekali
         }, { threshold: 0.1 });
         if (cardRef.current) observer.observe(cardRef.current);
         return () => { if (cardRef.current) observer.unobserve(cardRef.current) };
@@ -180,25 +185,23 @@ const NewsCard = ({ news, delay }) => {
 const TJSLBeritaSection = ({ featuredNews, latestNews }) => (
     <section className="bg-gray-100 py-24">
         <div className="container mx-auto px-8 lg:px-16">
-          {/* Featured Story */}
           {featuredNews && (
             <div className="mb-20">
                 <div className="flex flex-col lg:flex-row items-center gap-12">
                     <div className="lg:w-1/2"><div className="rounded-3xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow"><Link to={`/artikel/${featuredNews.slug}`}><div className="relative aspect-[4/3]"><img src={featuredNews.image} alt="Featured News" className="w-full h-full object-cover transition-transform duration-700 hover:scale-105" loading="lazy" /><div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"/></div></Link></div></div>
                     <div className="lg:w-1/2 space-y-6 px-4">
-                        <div className="flex items-center gap-4"><div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center"><svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9.5a2 2 0 00-2-2h-2"/></svg></div><div><p className="text-sm text-gray-500">Featured Story</p><p className="text-blue-600 font-medium">{featuredNews.date}</p></div></div>
+                        <div className="flex items-center gap-4"><div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center"><svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9.5a2 2 0 00-2-2h-2"/></svg></div><div><p className="text-sm text-gray-500">Featured Story</p><p className="text-blue-600 font-medium">{featuredNews.date}</p></div></div>
                         <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 leading-tight"><Link to={`/artikel/${featuredNews.slug}`} className="hover:text-blue-700 transition-colors">{featuredNews.title}</Link></h2>
                         <p className="text-base text-gray-600 leading-relaxed">{featuredNews.description}</p>
-                        <Link to={`/artikel/${featuredNews.slug}`} className="group inline-flex items-center gap-3 text-blue-600 font-semibold hover:text-blue-700 transition-colors"><span>Baca Selengkapnya</span><svg className="w-5 h-5 transform transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg></Link>
+                        <Link to={`/artikel/${featuredNews.slug}`} className="group inline-flex items-center gap-3 text-blue-600 font-semibold hover:text-blue-700 transition-colors"><span>Baca Selengkapnya</span><svg className="w-5 h-5 transform transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg></Link>
                     </div>
                 </div>
             </div>
           )}
-          {/* Grid Berita Terbaru */}
           <div className="flex justify-between items-end mb-10">
             <div><h4 className="text-blue-600 font-medium mb-1 text-sm uppercase tracking-wider">Update Terkini</h4><h2 className="text-3xl font-bold text-gray-900">Berita Terbaru</h2></div>
             <Link to="/berita-tjsl" className="group inline-flex items-center gap-2 text-blue-600 font-medium hover:text-blue-700 transition-colors text-sm">
-                <span>Lihat Semua</span><svg className="w-5 h-5 transform transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                <span>Lihat Semua</span><svg className="w-5 h-5 transform transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
             </Link>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -223,6 +226,35 @@ const TJSLCalendarSection = ({ events }) => (
     </section>
 );
 
+// --- KOMPONEN BARU: TESTIMONI ---
+const TestimonialCard = ({ testimonial }) => (
+    <div className="bg-white p-8 rounded-lg shadow-lg border border-gray-100 transform transition-transform hover:scale-105">
+        <blockquote className="text-gray-600 italic text-lg mb-6 relative">
+            <span className="text-blue-500 text-4xl absolute -top-4 -left-4">“</span>
+            "{testimonial.text}"
+        </blockquote>
+        <div className="flex items-center gap-4">
+            <img src={testimonial.avatar} alt={testimonial.name} className="w-12 h-12 rounded-full" />
+            <cite className="font-bold text-gray-800 not-italic">- {testimonial.name}</cite>
+        </div>
+    </div>
+);
+
+const TJSLVoicesSection = ({ testimonials }) => (
+    <section className="bg-blue-50 py-24" aria-labelledby="testimonials-heading">
+        <div className="container mx-auto px-8 lg:px-16">
+            <h2 id="testimonials-heading" className="text-4xl font-bold text-center mb-16 text-gray-900">
+                Voices From The Community
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {testimonials.map((testimonial) => (
+                    <TestimonialCard key={testimonial.id} testimonial={testimonial} />
+                ))}
+            </div>
+        </div>
+    </section>
+);
+
 
 // --- MAIN PAGE COMPONENT ---
 const TJSLPage = () => {
@@ -233,16 +265,14 @@ const TJSLPage = () => {
   return (
     <div className="min-h-screen bg-white">
       <TJSLHero />
-      <TJSLProfile quickFacts={quickFactsData} /> {/* Kirim data via props */}
-      <ProgramUnggulan slides={slideData} /> {/* Kirim data via props */}
-      <TJSLPrinsip pilar={pilarData} /> {/* Kirim data via props */}
+      <TJSLProfile quickFacts={quickFactsData} />
+      <ProgramUnggulan slides={slideData} />
+      <TJSLPrinsip pilar={pilarData} />
+      <TJSLCalendarSection events={events} />
+      <TJSLBeritaSection featuredNews={featuredNews} latestNews={latestNews} />
       
-      {/* --- Panggil Section Baru Di Sini --- */}
-      <TJSLCalendarSection events={events} /> {/* Kirim data via props */}
-      <TJSLBeritaSection featuredNews={featuredNews} latestNews={latestNews} /> {/* Kirim data via props */}
-      
-      {/* Optional: Voices From The Community */}
-      {/* <section className="bg-white py-20">...</section> */}
+      {/* --- MEMANGGIL SECTION VOICES DI SINI --- */}
+      <TJSLVoicesSection testimonials={testimonials} />
     </div>
   );
 };

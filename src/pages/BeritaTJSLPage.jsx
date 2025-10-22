@@ -1,240 +1,237 @@
 // src/pages/BeritaTJSLPage.jsx
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { FaHome } from 'react-icons/fa'; // Pastikan sudah 'npm install react-icons'
 
-// Placeholder Images
-import bannerImage from '../assets/hero-bg.png';
-import articleImage from '../assets/rectangle.png';
+// Import Aset
+import bannerImage from '../assets/hero-bg.png'; // Ganti dengan gambar banner berita
 import logo from '../assets/logo.webp';
+import articleImage from '../assets/rectangle.png'; // Gambar untuk slider/kartu
+import carouselImg1 from '../assets/contoh2.png';
+import carouselImg2 from '../assets/contoh3.png';
+import carouselImg3 from '../assets/contoh4.png';
 
-// --- DATA DUMMY ---
+// --- DATA DUMMY (Sama seperti yang kamu buat) ---
 const articlesData = [
-  {
-    id: 1,
-    slug: 'social-impact-assessment-and-community-involvement',
-    category: 'Community Development',
-    date: 'January 15, 2025',
-    title: 'Social Impact Assessment and Community Involvement',
-    description: 'We are committed to drive positive impact and creating shared value consistently in our operations. Our social impact initiatives ensure that our projects align with community needs and values.',
-    image: articleImage,
-  },
-  {
-    id: 2,
-    slug: 'new-tree-planting-initiative-for-greener-future',
-    category: 'Environment',
-    date: 'December 22, 2024',
-    title: 'New Tree Planting Initiative for a Greener Future',
-    description: 'A new initiative focused on environmental sustainability through large-scale tree planting to combat deforestation and promote biodiversity in the region.',
-    image: articleImage,
-  },
-  {
-    id: 3,
-    slug: 'artikel-ketiga-yang-baru', // Pastikan slug ini ada di ArtikelPage.jsx
-    category: 'Environment',
-    date: 'December 22, 2024',
-    title: 'New Tree Planting Initiative for a Greener Future',
-    description: 'A new initiative focused on environmental sustainability through large-scale tree planting...',
-    image: articleImage,
-  },
-  {
-    id: 4,
-    slug: 'artikel-keempat-yang-baru', // Pastikan slug ini ada di ArtikelPage.jsx
-    category: 'Community Development',
-    date: 'January 15, 2025',
-    title: 'Social Impact Assessment and Community Involvement',
-    description: 'We are committed to drive positive impact and creating shared value consistently in our operations...',
-    image: articleImage,
-  },
+    { id: 1, slug: 'social-impact-assessment-and-community-involvement', category: 'Community Development', date: 'January 15, 2025', title: 'Social Impact Assessment and Community Involvement', description: 'We are committed to drive positive impact...', image: articleImage },
+    { id: 2, slug: 'new-tree-planting-initiative-for-greener-future', category: 'Environment', date: 'December 22, 2024', title: 'New Tree Planting Initiative for a Greener Future', description: 'A new initiative focused on environmental sustainability...', image: articleImage },
+    { id: 3, slug: 'artikel-ketiga-yang-baru', category: 'Environment', date: 'December 22, 2024', title: 'Artikel Ketiga yang Baru', description: 'Deskripsi artikel ketiga...', image: articleImage },
+    { id: 4, slug: 'artikel-keempat-yang-baru', category: 'Community Development', date: 'January 15, 2025', title: 'Artikel Keempat yang Baru', description: 'Deskripsi artikel keempat...', image: articleImage },
+    { id: 5, slug: 'artikel-kelima', category: 'Environment', date: 'November 10, 2024', title: 'Artikel Kelima', description: 'Deskripsi artikel kelima...', image: articleImage },
+    { id: 6, slug: 'artikel-keenam', category: 'Community Development', date: 'October 5, 2024', title: 'Artikel Keenam', description: 'Deskripsi artikel keenam...', image: articleImage },
+    // ... sisa data ...
 ];
 
-const recentPosts = articlesData.slice(0, 4);
+// --- SUB-KOMPONEN HALAMAN (Diadaptasi dari 'Tentang Kami') ---
 
-const testimonials = [
-    { id: 1, name: 'Budi Santoso', text: 'Integer diam nulla, rhoncus sed lorem ac, feugiat laoreet sem. Maecenas sed nisi massa. Praesent eget auctor eros.' },
-    { id: 2, name: 'Siti Aminah', text: 'Aliquam vel dolor dictum, tincidunt magna et, porta velit. Integer diam nulla, rhoncus sed lorem ac, feugiat laoreet sem.' },
-    { id: 3, name: 'Joko Susilo', text: 'Praesent eget auctor eros. Nunc lacinia ex eu feugiat egestas. Maecenas sed nisi massa. Integer diam nulla, rhoncus sed lorem ac.' },
-];
-
-const events = [
-    { id: 1, day: '15', month: 'Dec', title: 'Discovering the new solar panel', description: 'December 15, 2024' },
-    { id: 2, day: '05', month: 'Jan', title: 'TJSL Scholarship Deadline', description: '2024 academic year scholarships' },
-    { id: 3, day: '22', month: 'Mar', title: 'Tree Planting Day', description: 'Join our annual environmental initiative' },
-];
-
-// --- SUB-KOMPONEN ---
-
-// ## KARTU ARTIKEL HORIZONTAL BARU ##
-const ArticleCard = ({ article }) => (
-  <article className="group bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden transition-all duration-300 hover:shadow-lg flex flex-col md:flex-row">
-    {/* Image Container */}
-    <div className="md:w-2/5 h-48 md:h-auto">
-      <Link to={`/artikel/${article.slug}`}>
-        <img 
-          src={article.image} 
-          alt={article.title} 
-          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" 
-          loading="lazy" 
-        />
-      </Link>
-    </div>
-    {/* Text Content Container */}
-    <div className="md:w-3/5 p-6 flex flex-col justify-between">
-      <div>
-        <p className="text-sm mb-2">
-          <span className="font-semibold text-blue-600">{article.category}</span>
-          <time dateTime={article.date} className="text-gray-400 ml-3">{article.date}</time>
-        </p>
-        <h2 className="text-xl font-bold text-gray-800 mb-2 leading-tight">
-          <Link to={`/artikel/${article.slug}`} className="hover:text-blue-600 transition-colors">
-            {article.title}
-          </Link>
-        </h2>
-        <p className="text-gray-600 text-sm mb-4 line-clamp-2">{article.description}</p>
-      </div>
-      <Link 
-        to={`/artikel/${article.slug}`} 
-        className="font-semibold text-blue-600 flex items-center group self-start mt-auto"
-        aria-label={`Read more about ${article.title}`}
-      >
-        Read More <span className="ml-2 transform group-hover:translate-x-1 transition-transform">→</span>
-      </Link>
-    </div>
-  </article>
-);
-
-
-const SidebarCard = ({ title, children, ariaId }) => (
-    <section className="bg-white p-6 rounded-xl shadow-sm border border-gray-100" aria-labelledby={ariaId}>
-        {title && <h3 id={ariaId} className="font-bold text-xl mb-6">{title}</h3>}
-        {children}
-    </section>
-);
-
-const RecentPostItem = ({ post }) => (
-  <div className="flex items-start space-x-4">
-    <img src={post.image} alt={post.title} className="w-16 h-16 object-cover rounded-md flex-shrink-0" loading="lazy" />
-    <div className="flex-1 min-w-0">
-      <Link to={`/artikel/${post.slug}`} className="font-semibold text-sm leading-tight text-gray-800 hover:text-blue-600 transition-colors block" title={post.title}>
-        {post.title}
-      </Link>
-      <p className="text-xs text-gray-400 mt-1"><time dateTime={post.date}>{post.date}</time></p>
-    </div>
-  </div>
-);
-
-const QuickStats = () => (
-    <div className="space-y-4">
-      <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
-        <div className="bg-red-100 p-2 rounded-md"><svg className="w-6 h-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg></div>
-        <div>
-          <p className="text-2xl font-bold text-gray-800">50+</p>
-          <p className="text-sm text-gray-500">Projects Completed</p>
+// 1. Hero Banner (Adaptasi dari phero.jsx)
+const BeritaHero = () => (
+    <div className="relative h-[60vh] overflow-hidden">
+        <div className="absolute inset-0">
+            <img src={bannerImage} alt="Banner Berita" className="w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-black/50" />
         </div>
-      </div>
-      <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
-        <div className="bg-blue-100 p-2 rounded-md"><svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg></div>
-        <div>
-          <p className="text-2xl font-bold text-gray-800">10,000</p>
-          <p className="text-sm text-gray-500">People Benefited</p>
-        </div>
-      </div>
-    </div>
-);
-
-const EventItem = ({ event }) => (
-    <li className="flex items-start space-x-4">
-        <strong className="text-red-600 text-3xl font-black flex-shrink-0 w-12 text-center">{event.day}<span className="block text-sm font-normal text-gray-500">{event.month}</span></strong>
-        <div className="flex-1 min-w-0">
-        <h4 className="font-bold text-gray-800 mb-1">{event.title}</h4>
-        <p className="text-xs text-gray-400">{event.description}</p>
-        </div>
-    </li>
-);
-
-const TestimonialCard = ({ testimonial }) => (
-    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-        <blockquote className="text-gray-600 italic mb-4">"{testimonial.text}"</blockquote>
-        <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full bg-gray-200 flex-shrink-0" aria-hidden="true"></div>
-        <cite className="font-bold text-gray-800 not-italic">- {testimonial.name}</cite>
-        </div>
-    </div>
-);
-
-const Pagination = () => (
-  <nav className="flex justify-center items-center space-x-2 pt-8" aria-label="Pagination">
-    <span className="px-4 py-2 bg-blue-600 text-white rounded-md font-bold">1</span>
-    <Link to="#" className="px-4 py-2 hover:bg-gray-100 text-gray-700 rounded-md transition-colors">2</Link>
-    <Link to="#" className="px-4 py-2 hover:bg-gray-100 text-gray-700 rounded-md transition-colors">3</Link>
-    <span className="px-2 text-gray-400">...</span>
-    <Link to="#" className="px-4 py-2 hover:bg-gray-100 text-gray-700 rounded-md transition-colors">8</Link>
-    <Link to="#" className="px-3 py-2 hover:bg-gray-100 text-gray-700 rounded-md transition-colors" aria-label="Next page">›</Link>
-  </nav>
-);
-
-const SearchInput = () => (
-  <div className="relative">
-    <input type="search" placeholder="Search Articles..." className="w-full pl-4 pr-10 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Search articles" />
-    <svg className="w-5 h-5 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-  </div>
-);
-
-// --- MAIN COMPONENT ---
-const BeritaTJSLPage = () => {
-  return (
-    <div className="bg-gray-50"> {/* Ganti background utama jadi abu-abu muda */}
-      {/* Banner */}
-      <section className="relative h-72 md:h-80 w-full">
-        <img src={bannerImage} alt="Banner TJSL" className="w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-black/50" />
-        <div className="container mx-auto px-8 lg:px-16 h-full flex items-center justify-start">
-          <h1 className="text-white text-5xl font-bold relative inline-block pb-4">
-            Berita TJSL
-            <span className="absolute bottom-0 left-0 w-full h-1 bg-blue-500"></span>
-          </h1>
-        </div>
-        <img src={logo} alt="Logo" className="h-10 absolute top-8 right-8 lg:right-16" />
-      </section>
-
-      <div className="container mx-auto px-8 lg:px-16 py-16">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-          {/* Main Content */}
-          <main className="lg:col-span-2 space-y-8">
-            {articlesData.map((article) => <ArticleCard key={article.id} article={article} />)}
-            <Pagination />
-          </main>
-
-          {/* Sidebar */}
-          <aside className="space-y-8">
-            <SidebarCard ariaId="search-articles">
-                <SearchInput />
-            </SidebarCard>
-            <SidebarCard title="Recent" ariaId="recent-posts">
-                <div className="space-y-5">
-                    {recentPosts.map((post) => <RecentPostItem key={post.id} post={post} />)}
+        <div className="relative container mx-auto px-8 lg:px-16 h-full flex items-center">
+            <div className="max-w-3xl text-white">
+                <div className="flex items-center gap-2 mb-4 text-sm">
+                    <Link to="/" className="text-gray-300 hover:text-white flex items-center gap-1">
+                        <FaHome /> Home
+                    </Link>
+                    <span>/</span>
+                    <span className="font-semibold text-white">Berita TJSL</span>
                 </div>
-            </SidebarCard>
-            <SidebarCard ariaId="quick-stats">
-                <QuickStats />
-            </SidebarCard>
-            <SidebarCard title="Event Calendar / TJSL Activities" ariaId="event-calendar">
-                <ul className="space-y-6" role="list">
-                    {events.map((event) => <EventItem key={event.id} event={event} />)}
-                </ul>
-            </SidebarCard>
-          </aside>
+                <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">Berita TJSL</h1>
+                <p className="text-lg text-gray-200 leading-relaxed">
+                    Ikuti perkembangan terbaru mengenai program Tanggung Jawab Sosial dan Lingkungan kami.
+                </p>
+            </div>
         </div>
-      </div>
+    </div>
+);
 
-      {/* Voices from the community */}
-      <section className="bg-white py-20" aria-labelledby="testimonials-heading">
-        <div className="container mx-auto px-8 lg:px-16">
-          <h2 id="testimonials-heading" className="text-3xl font-bold text-center mb-12 text-gray-900">Voices From The Community</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {testimonials.map((testimonial) => <TestimonialCard key={testimonial.id} testimonial={testimonial} />)}
-          </div>
+// 2. Filter & Kategori (Adaptasi dari pprofile.jsx, tapi diganti)
+const BeritaFilter = ({ categories, selected, onSelect, onSearch, searchTerm }) => (
+    <div className="container mx-auto px-8 lg:px-16 py-16">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+            {/* Kategori */}
+            <div className="flex flex-wrap gap-2">
+                {categories.map(cat => (
+                    <button
+                        key={cat}
+                        onClick={() => onSelect(cat)}
+                        className={`px-4 py-2 rounded-full font-medium transition-colors ${selected === cat ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                    >
+                        {cat}
+                    </button>
+                ))}
+            </div>
+            {/* Search Bar */}
+            <div className="relative w-full md:w-72">
+                <input
+                    type="text"
+                    placeholder="Cari berita..."
+                    value={searchTerm}
+                    onChange={onSearch}
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <svg className="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+            </div>
         </div>
-      </section>
+    </div>
+);
+
+// 3. Daftar Artikel (Adaptasi dari psejarah.jsx / pvisimisi.jsx - kita ganti jadi grid kartu)
+const ArticleGrid = ({ articles }) => (
+    <div className="container mx-auto px-8 lg:px-16 pb-20">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {articles.map(article => (
+                <ArticleCard key={article.id} article={article} />
+            ))}
+        </div>
+        {articles.length === 0 && (
+            <p className="text-center text-gray-500 text-lg">Tidak ada berita yang ditemukan.</p>
+        )}
+    </div>
+);
+
+// Komponen Kartu Artikel (bisa dipisah ke file sendiri jika mau)
+const ArticleCard = ({ article }) => (
+    <div className="group bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden transition-all duration-300 hover:shadow-lg flex flex-col">
+        <div className="h-48 overflow-hidden">
+            <Link to={`/artikel/${article.slug}`}>
+                <img src={article.image} alt={article.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" loading="lazy" />
+            </Link>
+        </div>
+        <div className="p-6 flex flex-col flex-grow">
+            <p className="text-sm mb-2">
+                <span className="font-semibold text-blue-600">{article.category}</span>
+                <time dateTime={article.date} className="text-gray-400 ml-3">{article.date}</time>
+            </p>
+            <h2 className="text-xl font-bold text-gray-800 mb-2 leading-tight flex-grow">
+                <Link to={`/artikel/${article.slug}`} className="hover:text-blue-600 transition-colors">
+                    {article.title}
+                </Link>
+            </h2>
+            <p className="text-gray-600 text-sm mb-4 line-clamp-2 flex-grow">{article.description}</p>
+            <Link to={`/artikel/${article.slug}`} className="font-semibold text-blue-600 flex items-center group self-start mt-auto" aria-label={`Read more about ${article.title}`}>
+                Read More <span className="ml-2 transform group-hover:translate-x-1 transition-transform">→</span>
+            </Link>
+        </div>
+    </div>
+);
+
+// 4. Pagination (Opsional tapi penting)
+const Pagination = ({ currentPage, totalPages, onPageChange }) => {
+    if (totalPages <= 1) return null;
+    const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
+    return (
+        <nav className="flex justify-center items-center space-x-2 pb-20" aria-label="Pagination">
+             <button
+                onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-2 hover:bg-gray-100 text-gray-700 rounded-md transition-colors disabled:opacity-50"
+             >‹</button>
+            {pages.map(page => (
+                <button
+                    key={page}
+                    onClick={() => onPageChange(page)}
+                    className={`w-10 h-10 rounded-md font-bold transition-colors ${page === currentPage ? 'bg-blue-600 text-white' : 'hover:bg-gray-100 text-gray-700'}`}
+                >
+                    {page}
+                </button>
+            ))}
+             <button
+                onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
+                disabled={currentPage === totalPages}
+                className="px-3 py-2 hover:bg-gray-100 text-gray-700 rounded-md transition-colors disabled:opacity-50"
+             >›</button>
+        </nav>
+    );
+};
+
+
+// --- CUSTOM HOOK UNTUK LOGIKA ---
+const useBeritaFilter = (articles) => {
+    const [currentPage, setCurrentPage] = useState(1);
+    const [selectedCategory, setSelectedCategory] = useState('All');
+    const [searchTerm, setSearchTerm] = useState('');
+    const itemsPerPage = 9; // 9 kartu per halaman (3x3 grid)
+
+    const categories = ['All', ...new Set(articles.map(a => a.category))];
+
+    const filteredArticles = React.useMemo(() => {
+        return articles
+            .filter(article => 
+                selectedCategory === 'All' || article.category === selectedCategory
+            )
+            .filter(article => 
+                article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                article.description.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+    }, [articles, selectedCategory, searchTerm]);
+
+    const totalPages = Math.ceil(filteredArticles.length / itemsPerPage);
+    
+    const paginatedArticles = React.useMemo(() => {
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        return filteredArticles.slice(startIndex, startIndex + itemsPerPage);
+    }, [filteredArticles, currentPage, itemsPerPage]);
+
+    const handleSearch = (e) => {
+        setSearchTerm(e.target.value);
+        setCurrentPage(1); // Reset ke halaman 1 saat search
+    };
+
+    const handleSelectCategory = (category) => {
+        setSelectedCategory(category);
+        setCurrentPage(1); // Reset ke halaman 1 saat filter
+    };
+
+    return {
+        paginatedArticles,
+        currentPage,
+        totalPages,
+        setCurrentPage,
+        categories,
+        selectedCategory,
+        handleSelectCategory,
+        searchTerm,
+        handleSearch
+    };
+};
+
+
+// --- MAIN PAGE COMPONENT ---
+const BeritaTJSLPage = () => {
+  const {
+      paginatedArticles,
+      currentPage,
+      totalPages,
+      setCurrentPage,
+      categories,
+      selectedCategory,
+      handleSelectCategory,
+      searchTerm,
+      handleSearch
+  } = useBeritaFilter(articlesData);
+
+  return (
+    <div className="bg-gray-50 min-h-screen">
+      <BeritaHero />
+      <BeritaFilter 
+          categories={categories}
+          selected={selectedCategory}
+          onSelect={handleSelectCategory}
+          searchTerm={searchTerm}
+          onSearch={handleSearch}
+      />
+      <ArticleGrid articles={paginatedArticles} />
+      <Pagination 
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+      />
+      {/* Kita hilangkan "Voices from the Community" di sini agar tidak duplikat dengan halaman TJSL */}
     </div>
   );
 };
