@@ -1,3 +1,4 @@
+// src/main.jsx
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, RouterProvider, ScrollRestoration } from 'react-router-dom';
@@ -13,15 +14,13 @@ import ArtikelPage from './pages/ArtikelPage';
 import Manajemen from './pages/manajemen/mmanajemen';
 import Mainbisnis from './pages/bisnis/mainbisnis';
 import Mainwk from './pages/wk/mainwk';
-
-// --- 1. Import halaman media & penghargaan ---
 import MediaInformasiPage from './pages/media/MediaInformasiPage';
 import PenghargaanPage from './pages/media/PenghargaanPage';
+import AllProgramsPage from './pages/AllProgramsPage';
+import LaporanTahunanPage from './pages/media/LaporanTahunanPage';
+import KontakPage from './pages/KontakPage';
 
-// --- 2. Import halaman Semua Program (AllProgramsPage) ---
-import AllProgramsPage from './pages/AllProgramsPage'; // Pastikan file ini ada
-
-const router = createBrowserRouter([
+const router = createBrowserRouter([ // <-- Buka createBrowserRouter
   {
     path: '/',
     element: (
@@ -30,16 +29,10 @@ const router = createBrowserRouter([
         <Layout />
       </>
     ),
-    children: [
+    children: [ // <-- Buka children array
       { index: true, element: <HomePage /> },
       { path: 'tjsl', element: <TJSLPage /> },
-
-      // ---> PASTIKAN RUTE INI ADA DAN BENAR <---
-      {
-        path: 'program-berkelanjutan', // Alamat URL-nya
-        element: <AllProgramsPage />,  // Komponen yang ditampilkan
-      },
-
+      { path: 'program-berkelanjutan', element: <AllProgramsPage /> },
       { path: 'tentang', element: <Tentang /> },
       { path: 'kelola', element: <TataKelola /> },
       { path: 'manajemen', element: <Manajemen /> },
@@ -47,14 +40,15 @@ const router = createBrowserRouter([
       { path: 'wilayahkerja', element: <Mainwk /> },
       { path: 'berita-tjsl', element: <BeritaTJSLPage /> },
       { path: 'artikel/:slug', element: <ArtikelPage /> },
-
-      // --- 2. Tambahkan rute baru di sini ---
       { path: 'media-informasi', element: <MediaInformasiPage /> },
       { path: 'penghargaan', element: <PenghargaanPage /> },
-    ],
-  },
-]);
+      { path: 'laporan-tahunan', element: <LaporanTahunanPage /> },
+      { path: 'kontak', element: <KontakPage /> },
+    ], // <-- TUTUP children array
+  }, // <-- TUTUP root route object
+]); // <-- TUTUP createBrowserRouter (setelah array)
 
+// --- createRoot dipindah ke sini, SETELAH router didefinisikan ---
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <RouterProvider router={router} />

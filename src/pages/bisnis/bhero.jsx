@@ -28,5 +28,5 @@ const BHero = () => {
     </div>
   );
 };
-
+  
 export default BHero;
