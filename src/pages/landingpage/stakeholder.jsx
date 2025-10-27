@@ -12,25 +12,29 @@ const Stakeholder = () => {
   ];
 
   return (
-    <section className="bg-gray-50 py-12">
-      <div className="container mx-auto px-8 lg:px-16">
+    <section className="bg-white py-12 md:py-16"> {/* Adjusted padding */}
+      <div className="section-container">
         <div className="text-center mb-12">
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-900">
-            Our Stakeholders
+          <p className="text-primary-600 font-semibold text-sm uppercase tracking-wider mb-3">Mitra Kami</p>
+          <h2 className="text-display-sm text-gray-900 mb-4">
+            Stakeholder & Partner
           </h2>
+          <p className="text-gray-600 max-w-2xl mx-auto">
+            Kami bekerja sama dengan berbagai institusi terkemuka untuk menciptakan nilai tambah bagi semua pihak.
+          </p>
         </div>
 
-        <div className="h-[120px] w-full overflow-hidden">
+        <div className="h-[100px] w-full overflow-hidden">
           <LogoLoop
             logos={stakeholderLogos}
-            speed={15} // Sesuaikan kecepatan
+            speed={25}
             direction="left"
-            logoHeight={80}
-            gap={32} // Kurangi gap untuk spacing yang lebih rapat
+            logoHeight={70}
+            gap={40}
             pauseOnHover
             scaleOnHover
             fadeOut
-            fadeOutColor="#f9fafb"
+            fadeOutColor="#ffffff"
             ariaLabel="Our stakeholders"
           />
         </div>

@@ -1,68 +1,117 @@
-import React, { useState } from 'react';
-import CircularGallery from './circulargallery';
-import penghargaan1 from '../../../assets/contoh1.png';
-import penghargaan2 from '../../../assets/contoh2.png';
-import penghargaan3 from '../../../assets/contoh3.png';
-import penghargaan4 from '../../../assets/contoh4.png';
-import penghargaan5 from '../../../assets/contoh4.png';
+import React, { useState, useEffect } from 'react';
+import CountUp from './CountUp'; 
+import './penghargaan.css';
 
-const Penghargaan = () => {
-  const [isLoading, setIsLoading] = useState(true);
+export default function Penghargaan() {
+  const awards = [
+    {
+      id: 1,
+      title: 'Best Innovation Award',
+      icon: '🏆',
+      description: 'Lorem ipsum has been the industry\'s standard dummy text ever since the 1500s, when an unknown printer',
+    },
+    {
+      id: 2,
+      title: 'Customer Excellence Award',
+      icon: '⭐',
+      description: 'Lorem ipsum has been the industry\'s standard dummy text ever since the 1500s, when an unknown printer',
+    },
+    {
+      id: 3,
+      title: 'Industry Leader Award',
+      icon: '👑',
+      description: 'Lorem ipsum has been the industry\'s standard dummy text ever since the 1500s, when an unknown printer',
+    },
+  ];
 
-  const penghargaanItems = [
+  const statistics = [
     {
-      src: penghargaan1,
-      title: 'Penghargaan Keselamatan'
+      id: 1,
+      value: 20,
+      suffix: '+',
+      label: 'Years Experience',
     },
     {
-      src: penghargaan2,
-      title: 'Environmental Award'
+      id: 2,
+      value: 35,
+      suffix: '+',
+      label: 'Award Win',
     },
     {
-      src: penghargaan3,
-      title: 'Best Performance'
+      id: 3,
+      value: 1750,
+      suffix: '+',
+      label: 'Happy Customers',
+      separator: ',',
     },
     {
-      src: penghargaan4,
-      title: 'Innovation Award'
+      id: 4,
+      value: 120,
+      suffix: '+',
+      label: 'Expert Staffs',
     },
-    {
-      src: penghargaan5,
-      title: 'Safety Achievement'
-    }
   ];
 
   return (
-    <section className="bg-gray-900 py-16">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-            Penghargaan Kami
-          </h2>
-          <p className="text-gray-300 max-w-2xl mx-auto">
-            Berbagai penghargaan yang telah kami raih sebagai bukti komitmen kami.
-          </p>
-        </div>
-
-        <div className="min-h-[500px] w-full relative">
-          {isLoading && (
-            <div className="absolute inset-0 flex items-center justify-center z-10">
-              <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-white"></div>
+    <section className="penghargaan-section" id="awards">
+      <div className="penghargaan-wrapper">
+        {/* Integrated Header and Cards Layout */}
+        <div className="penghargaan-main">
+          {/* Left Side - Header with Blue Background */}
+          <div className="penghargaan-header">
+            <div className="penghargaan-content">
+              <h2 className="penghargaan-title">Our Award</h2>
+              <p className="penghargaan-description">
+                Lorem ipsum has been the industry's standard dummy text ever since the 1500s, 
+                when an unknown printer took a gallery of type and scrambled it to make a type specimen book.
+              </p>
+              <button className="penghargaan-button" aria-label="View more awards">
+                View More
+              </button>
             </div>
-          )}
-          <CircularGallery
-            items={penghargaanItems}
-            bend={0}
-            textColor="#ffffff"
-            borderRadius={0.00}
-            font="bold 24px system-ui"
-            scrollSpeed={0.8}
-            scrollEase={0.02}
-          />
+          </div>
+
+          {/* Right Side - Award Cards */}
+          <div className="penghargaan-grid">
+            {awards.map((award, index) => (
+              <div 
+                key={award.id} 
+                className="penghargaan-card"
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
+                <div className="penghargaan-icon" role="img" aria-label={award.title}>
+                  {award.icon}
+                </div>
+                <h3 className="penghargaan-card-title">{award.title}</h3>
+                <p className="penghargaan-card-description">{award.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Statistics Section with CountUp Animation */}
+      <div className="statistik-section">
+        <div className="statistik-container">
+          {statistics.map((stat, index) => (
+            <div key={stat.id} className="statistik-card">
+              <div className="statistik-number">
+                <CountUp
+                  to={stat.value}
+                  from={0}
+                  direction="up"
+                  delay={index * 0.2}
+                  duration={2}
+                  separator={stat.separator || ''}
+                  className="statistik-number-value"
+                />
+                {stat.suffix}
+              </div>
+              <div className="statistik-label">{stat.label}</div>
+            </div>
+          ))}
         </div>
       </div>
     </section>
   );
-};
-
-export default Penghargaan;
+}

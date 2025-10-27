@@ -1,20 +1,17 @@
 import React, { useEffect, useRef } from 'react';
 import beritaImage from '../../assets/rectangle.png';
 
-// Component Card Berita
-const NewsCard = ({ title, image, date, category, instagramLink, delay }) => {
+const NewsCard = ({ title, image, date, category, delay }) => {
   const cardRef = useRef(null);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          entry.target.classList.add('opacity-100', 'translate-y-0');
-          entry.target.classList.remove('opacity-0', 'translate-y-10');
-        } else {
-          // Reset animation when out of view
-          entry.target.classList.remove('opacity-100', 'translate-y-0');
-          entry.target.classList.add('opacity-0', 'translate-y-10');
+          setTimeout(() => {
+            entry.target.classList.add('opacity-100', 'translate-y-0');
+            entry.target.classList.remove('opacity-0', 'translate-y-10');
+          }, delay);
         }
       },
       { threshold: 0.1 }
@@ -29,30 +26,32 @@ const NewsCard = ({ title, image, date, category, instagramLink, delay }) => {
         observer.unobserve(cardRef.current);
       }
     };
-  }, []);
+  }, [delay]);
 
   return (
     <div 
       ref={cardRef}
-      className="group cursor-pointer opacity-0 translate-y-10 transition-all duration-500 ease-out"
+      className="group cursor-pointer opacity-0 translate-y-10 transition-smooth-slow"
       style={{ transitionDelay: `${delay}ms` }}
     >
-      <div className="rounded-2xl overflow-hidden mb-4 transform transition-all duration-500 ease-out group-hover:shadow-xl">
-        <div className="relative aspect-[5/3]">
+      <div className="rounded-xl overflow-hidden mb-4 shadow-md group-hover:shadow-lg transition-smooth-slow">
+        <div className="relative aspect-[16/10]">
           <img 
             src={image} 
             alt={title}
-            className="w-full h-full object-cover transform transition-transform duration-500 group-hover:scale-105"
+            className="w-full h-full object-cover transform transition-smooth-slow group-hover:scale-110"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"/>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"/>
         </div>
       </div>
       <div className="space-y-2 px-1">
         <div className="flex items-center gap-3">
-          <span className="text-sm text-blue-600 font-medium">{category}</span>
+          <span className="inline-block px-3 py-1 bg-primary-100 text-primary-600 text-xs font-semibold rounded-full">
+            {category}
+          </span>
           <span className="text-sm text-gray-400">{date}</span>
         </div>
-        <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2">
+        <h3 className="text-base font-semibold text-gray-900 group-hover:text-primary-600 transition-colors line-clamp-2 leading-snug">
           {title}
         </h3>
       </div>
@@ -64,7 +63,6 @@ const Berita = () => {
   const featuredRef = useRef(null);
   const newsGridRef = useRef(null);
 
-  // Data berita
   const newsItems = [
     {
       id: 1,
@@ -72,7 +70,6 @@ const Berita = () => {
       image: beritaImage,
       date: "10 Oct 2025",
       category: "Energi",
-      instagramLink: "#"
     },
     {
       id: 2,
@@ -80,7 +77,6 @@ const Berita = () => {
       image: beritaImage,
       date: "10 Oct 2025",
       category: "Teknologi",
-      instagramLink: "#"
     },
     {
       id: 3,
@@ -88,7 +84,6 @@ const Berita = () => {
       image: beritaImage,
       date: "10 Oct 2025",
       category: "Kerjasama",
-      instagramLink: "#"
     },
     {
       id: 4,
@@ -96,7 +91,6 @@ const Berita = () => {
       image: beritaImage,
       date: "10 Oct 2025",
       category: "Inovasi",
-      instagramLink: "#"
     }
   ];
 
@@ -110,9 +104,6 @@ const Berita = () => {
       if (entry.isIntersecting) {
         entry.target.classList.add('opacity-100', 'translate-y-0');
         entry.target.classList.remove('opacity-0', 'translate-y-10');
-      } else {
-        entry.target.classList.remove('opacity-100', 'translate-y-0');
-        entry.target.classList.add('opacity-0', 'translate-y-10');
       }
     };
 
@@ -136,55 +127,55 @@ const Berita = () => {
   }, []);
 
   return (
-    <section className="py-16 bg-gray-50">
+    <section className="py-16 md:py-20 bg-gray-50"> {/* Adjusted padding for better proportion */}
       {/* Featured News */}
       <div 
         ref={featuredRef}
-        className="container mx-auto px-8 lg:px-16 mb-20 opacity-0 translate-y-10 transition-all duration-500 ease-out"
+        className="section-container mb-16 md:mb-20 opacity-0 translate-y-10 transition-smooth-slow"
       >
-        <div className="flex flex-col lg:flex-row items-center gap-12">
+        <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
           {/* Left Side - Image */}
-          <div className="lg:w-1/2">
-            <div className="rounded-3xl overflow-hidden transform transition-all duration-500 hover:shadow-xl">
+          <div className="lg:w-[50%]">
+            <div className="rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-smooth-slow">
               <div className="relative aspect-[4/3]">
                 <img
                   src={beritaImage}
                   alt="Featured News"
-                  className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
+                  className="w-full h-full object-cover transition-smooth-slow hover:scale-105"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"/>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent"/>
               </div>
             </div>
           </div>
 
           {/* Right Side - Content */}
-          <div className="lg:w-1/2 space-y-6 px-4">
+          <div className="lg:w-[50%] space-y-6">
             <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary-600 to-primary-700 flex items-center justify-center shadow-lg">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9.5a2 2 0 00-2-2h-2"/>
                 </svg>
               </div>
               <div>
-                <p className="text-sm text-gray-500">Featured Story</p>
-                <p className="text-blue-600 font-medium">10 October 2025</p>
+                <p className="text-sm text-gray-500 font-medium">Berita Utama</p>
+                <p className="text-primary-600 font-semibold">10 Oktober 2025</p>
               </div>
             </div>
 
-            <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 leading-tight">
+            <h2 className="text-display-sm text-gray-900 leading-tight">
               Terobosan Teknologi Migas untuk Masa Depan Berkelanjutan
-            </h1>
+            </h2>
 
-            <p className="text-base text-gray-600 leading-relaxed">
+            <p className="text-gray-600 text-lg leading-relaxed">
               Inovasi terbaru dalam industri migas menunjukkan perkembangan signifikan 
               dalam upaya mencapai keseimbangan antara produktivitas dan kelestarian 
               lingkungan.
             </p>
 
-            <button className="group inline-flex items-center gap-3 text-blue-600 font-semibold hover:text-blue-700 transition-colors">
+            <button className="group inline-flex items-center gap-3 text-primary-600 font-semibold hover:text-primary-700 transition-smooth">
               <span>Baca Selengkapnya</span>
               <svg 
-                className="w-5 h-5 transform transition-transform group-hover:translate-x-1" 
+                className="w-5 h-5 transform transition-transform group-hover:translate-x-2" 
                 fill="none" 
                 stroke="currentColor" 
                 viewBox="0 0 24 24"
@@ -199,14 +190,14 @@ const Berita = () => {
       {/* Latest News Section */}
       <div 
         ref={newsGridRef}
-        className="container mx-auto px-8 lg:px-16 opacity-0 translate-y-10 transition-all duration-500 ease-out"
+        className="section-container opacity-0 translate-y-10 transition-smooth-slow"
       >
-        <div className="flex justify-between items-end mb-10">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-4">
           <div>
-            <h4 className="text-blue-600 font-medium mb-2">Update Terkini</h4>
-            <h2 className="text-2xl font-bold text-gray-900">Berita Terbaru</h2>
+            <p className="text-primary-600 font-semibold text-sm uppercase tracking-wider mb-2">Update Terkini</p>
+            <h3 className="text-display-md text-gray-900">Berita Terbaru</h3>
           </div>
-          <button className="group inline-flex items-center gap-2 text-blue-600 font-medium hover:text-blue-700 transition-colors">
+          <button className="group inline-flex items-center gap-2 text-primary-600 font-semibold hover:text-primary-700 transition-smooth whitespace-nowrap">
             <span>Lihat Semua</span>
             <svg 
               className="w-5 h-5 transform transition-transform group-hover:translate-x-1" 
@@ -225,7 +216,7 @@ const Berita = () => {
             <NewsCard
               key={item.id}
               {...item}
-              delay={index * 100}
+              delay={index * 150} // Increased delay for smoother stagger
             />
           ))}
         </div>

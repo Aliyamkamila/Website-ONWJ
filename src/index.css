@@ -11,27 +11,92 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Hapus atau modifikasi style body yang mempengaruhi layout */
 body {
   margin: 0;
   padding: 0;
   min-height: 100vh;
   width: 100%;
-  overflow-x: hidden; /* Mencegah horizontal scroll */
+  overflow-x: hidden;
+  background-color: #ffffff; /* Base primary background */
+  color: #0f172a; /* Dark text for readability */
 }
 
-/* Hapus style button default karena kita menggunakan Tailwind */
 button {
   all: unset;
   cursor: pointer;
 }
 
-/* Tambahkan di bagian akhir file */
-@layer utilities {
-  .animate-slide {
-    animation: slide 30s linear infinite;
+.section-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+@media (min-width: 768px) {
+  .section-container {
+    padding: 0 2rem;
   }
-  .animate-slide:hover {
-    animation-play-state: paused;
+}
+
+.animate-slide {
+  animation: slide 30s linear infinite;
+}
+
+.animate-slide:hover {
+  animation-play-state: paused;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.6s ease-in-out;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.8s ease-out;
+}
+
+.transition-smooth {
+  transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.transition-smooth-slow {
+  transition: all 600ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.text-display-sm {
+  font-size: 1.875rem;
+  line-height: 2.25rem;
+  font-weight: 600;
+}
+
+.text-display-md {
+  font-size: 2.25rem;
+  line-height: 2.5rem;
+  font-weight: 700;
+}
+
+@media (min-width: 768px) {
+  .text-display-sm {
+    font-size: 2.25rem;
+    line-height: 2.5rem;
+  }
+
+  .text-display-md {
+    font-size: 3rem;
+    line-height: 1;
+  }
+}
+
+.animate-slide-down {
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  0% {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
   }
 }
