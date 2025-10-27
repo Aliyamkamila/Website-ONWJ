@@ -48,7 +48,7 @@ const router = createBrowserRouter([ // <-- Buka createBrowserRouter
   }, // <-- TUTUP root route object
 ]); // <-- TUTUP createBrowserRouter (setelah array)
 
-// --- createRoot dipindah ke sini, SETELAH router didefinisikan ---
+  // --- createRoot dipindah ke sini, SETELAH router didefinisikan ---
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <RouterProvider router={router} />

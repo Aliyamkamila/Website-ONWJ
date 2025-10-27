@@ -27,13 +27,6 @@ const slideData = [
     { title: 'Program Kesehatan', content: 'Menyediakan layanan kesehatan gratis dan perbaikan fasilitas sanitasi untuk masyarakat sekitar.', image: carouselImg3, link: '#' },
 ];
 
-// Data untuk Pilar TJSL
-const pilarData = [
-    { title: "Pendidikan", content: "Mencerdaskan kehidupan bangsa melalui program beasiswa dan infrastruktur.", color: "bg-blue-50" },
-    { title: "Kesehatan", content: "Meningkatkan kualitas hidup masyarakat melalui layanan kesehatan.", color: "bg-green-50" },
-    { title: "Lingkungan", content: "Menjaga kelestarian alam melalui program konservasi.", color: "bg-purple-50" },
-];
-
 // Data untuk Berita Terkait TJSL
 const newsItems = [
     { id: 1, slug: 'social-impact-assessment-and-community-involvement', category: 'TJSL Update', date: '15 Jan 2025', title: 'Hasil Penilaian Dampak Sosial Terbaru Dirilis', description: 'Laporan komprehensif mengenai dampak operasi kami terhadap komunitas lokal kini tersedia...', image: programImage },
@@ -42,13 +35,6 @@ const newsItems = [
     { id: 4, slug: 'artikel-keempat-yang-baru', category: 'Kesehatan', date: '05 Okt 2024', title: 'Peresmian Fasilitas Sanitasi Air Bersih di Desa Mitra', description: 'Fasilitas baru ini diharapkan dapat meningkatkan kualitas kesehatan masyarakat sekitar...', image: programImage },
     { id: 5, slug: 'artikel-keempat-yang-baru', category: 'Kesehatan', date: '05 Okt 2024', title: 'Peresmian Fasilitas Sanitasi Air Bersih di Desa Mitra', description: 'Fasilitas baru ini diharapkan dapat meningkatkan kualitas kesehatan masyarakat sekitar...', image: programImage },
   ];
-
-// Data Kalender Kegiatan
-const events = [
-    { id: 1, day: '15', month: 'Dec', title: 'Evaluasi Program Tahunan 2025', description: 'December 15, 2025 - Rapat Internal & Mitra' },
-    { id: 2, day: '05', month: 'Jan', title: 'Peluncuran Program Energi Terbarukan Desa', description: 'January 05, 2026 - Lokasi: Desa Sukamaju' },
-    { id: 3, day: '22', month: 'Mar', title: 'Hari Penanaman Pohon Sedunia', description: 'March 22, 2026 - Kegiatan Bersama Komunitas' },
-];
 
 // --- DATA BARU UNTUK TESTIMONI ---
 const testimonials = [
@@ -119,7 +105,7 @@ const ProgramUnggulan = ({ slides }) => {
                 <div className="space-y-6">
                   <h3 className="text-3xl font-bold text-gray-900">{item.title}</h3>
                   <p className="text-gray-600 leading-relaxed">{item.content}</p>
-                   <Link to={item.link} className="inline-block bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-blue-700 transition">Pelajari Lebih Lanjut</Link>
+                  <Link to={item.link} className="inline-block bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-blue-700 transition">Pelajari Lebih Lanjut</Link>
                 </div>
                 <div className="relative h-full hidden lg:block"><div className="absolute inset-0 rounded-3xl overflow-hidden shadow-xl"><img src={item.image} alt={item.title} className="w-full h-full object-cover"/></div></div>
               </div>
@@ -131,21 +117,6 @@ const ProgramUnggulan = ({ slides }) => {
     </section>
   );
 };
-
-// Komponen Pilar TJSL
-const TJSLPrinsip = ({ pilar }) => (
-  <div className="container mx-auto px-8 lg:px-16 py-20 bg-white">
-    <h2 className="text-3xl font-bold text-gray-900 mb-12 text-center">Pilar Utama TJSL</h2>
-    <div className="grid md:grid-cols-3 gap-8">
-      {pilar.map((item, index) => (
-        <div key={index} className={`${item.color} p-8 rounded-2xl transition-all duration-300 hover:shadow-lg transform hover:-translate-y-2`}>
-          <h3 className="text-xl font-bold text-gray-900 mb-4">{item.title}</h3>
-          <p className="text-gray-600 leading-relaxed">{item.content}</p>
-        </div>
-      ))}
-    </div>
-  </div>
-);
 
 // Komponen Kartu Berita (Mirip landing page)
 const NewsCard = ({ news, delay }) => {
@@ -164,7 +135,7 @@ const NewsCard = ({ news, delay }) => {
           <Link to={`/artikel/${news.slug}`}>
             <div className="relative aspect-[5/3] overflow-hidden">
                 <img src={news.image} alt={news.title} className="w-full h-full object-cover transform transition-transform duration-500 group-hover:scale-105" loading="lazy" />
-                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"/>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"/>
             </div>
           </Link>
         </div>
@@ -174,7 +145,7 @@ const NewsCard = ({ news, delay }) => {
             <span className="text-sm text-gray-400">{news.date}</span>
           </div>
           <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2">
-             <Link to={`/artikel/${news.slug}`}>{news.title}</Link>
+            <Link to={`/artikel/${news.slug}`}>{news.title}</Link>
           </h3>
         </div>
       </div>
@@ -207,21 +178,6 @@ const TJSLBeritaSection = ({ featuredNews, latestNews }) => (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {latestNews.map((item, index) => (<NewsCard key={item.id} news={item} delay={index * 100} />))}
           </div>
-        </div>
-    </section>
-);
-
-// Komponen Kalender Kegiatan Item
-const CalendarEventItem = ({ event }) => ( <div className="flex items-start space-x-6 p-4 bg-white rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow"> <strong className="text-blue-600 text-4xl font-black flex-shrink-0 w-16 text-center leading-none">{event.day}<span className="block text-sm font-medium text-gray-500">{event.month.toUpperCase()}</span></strong> <div className="flex-1 min-w-0"><h4 className="font-bold text-gray-800 mb-1">{event.title}</h4><p className="text-sm text-gray-500">{event.description}</p></div> </div> );
-
-// Komponen Section Kalender Kegiatan
-const TJSLCalendarSection = ({ events }) => (
-    <section className="bg-white py-24">
-        <div className="container mx-auto px-8 lg:px-16">
-            <h2 className="text-4xl font-bold text-gray-900 text-center mb-16">Kalender Kegiatan</h2>
-            <div className="max-w-3xl mx-auto space-y-6">
-                 {events.map((event) => (<CalendarEventItem key={event.id} event={event} />))}
-            </div>
         </div>
     </section>
 );
@@ -267,8 +223,8 @@ const TJSLPage = () => {
       <TJSLHero />
       <TJSLProfile quickFacts={quickFactsData} />
       <ProgramUnggulan slides={slideData} />
-      <TJSLPrinsip pilar={pilarData} />
-      <TJSLCalendarSection events={events} />
+      {/* <TJSLPrinsip pilar={pilarData} /> */} {/* DIHAPUS */}
+      {/* <TJSLCalendarSection events={events} /> */} {/* DIHAPUS */}
       <TJSLBeritaSection featuredNews={featuredNews} latestNews={latestNews} />
       
       {/* --- MEMANGGIL SECTION VOICES DI SINI --- */}
