@@ -1,0 +1,59 @@
+.logo-loop-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+}
+
+.logo-track {
+  display: inline-flex;
+  position: relative;
+  white-space: nowrap;
+  will-change: transform;
+}
+
+.logo-content {
+  display: inline-flex;
+  align-items: center;
+  animation: scroll var(--speed) linear infinite;
+  padding-right: var(--gap); /* Tambahkan padding untuk jarak antar set logo */
+}
+
+.logo-item {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--logo-height);
+  height: var(--logo-height);
+  transition: transform 0.3s ease;
+  margin-right: var(--gap);
+}
+
+.logo-item:last-child {
+  margin-right: 0; /* Hapus margin di item terakhir */
+}
+
+@keyframes scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(calc(-50%)); /* Sesuaikan dengan lebar exact dari satu set logo */
+  }
+}
+
+/* Pause animation on hover if enabled */
+.logo-track:hover .logo-content {
+  animation-play-state: paused;
+}
+
+/* Pastikan gambar logo sesuai dengan container */
+.logo-item img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  vertical-align: middle;
+}
