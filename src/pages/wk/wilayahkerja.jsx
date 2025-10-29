@@ -11,7 +11,7 @@ import {
 } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import MarkerClusterGroup from 'react-leaflet-markercluster';
+import "@changey/react-leaflet-markercluster/dist/styles.min.css";
 import 'react-leaflet-markercluster/dist/styles.min.css';
 import icon from 'leaflet/dist/images/marker-icon.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
