@@ -1,24 +1,41 @@
-import React, { useState } from 'react';
-import { MapContainer, TileLayer, Polygon, Popup, Marker } from 'react-leaflet';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
+import {
+  MapContainer,
+  TileLayer,
+  Polygon,
+  Marker,
+  Tooltip,
+  LayersControl,
+  LayerGroup,
+  ScaleControl
+} from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import L from 'leaflet'; // Import L
+import L from 'leaflet';
+import MarkerClusterGroup from 'react-leaflet-markercluster';
+import 'react-leaflet-markercluster/dist/styles.min.css';
 import icon from 'leaflet/dist/images/marker-icon.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
-import './wilayahkerja.css'; // <-- PASTIKAN FILE CSS INI ADA
+import './wilayahkerja.css';
 
-// Fix icon Leaflet
-let DefaultIcon = L.icon({
-    iconUrl: icon,
-    shadowUrl: iconShadow,
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34]
+// Fix icon Leaflet (single instance)
+const DefaultIcon = L.icon({
+  iconUrl: icon,
+  shadowUrl: iconShadow,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34]
 });
 L.Marker.prototype.options.icon = DefaultIcon;
 
+const WilayahKerja = () => {
+  const [activeItem, setActiveItem] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [filter, setFilter] = useState('semua');
+  const [zoomLevel, setZoomLevel] = useState(8);
+  const mapRef = useRef(null);
 
-// --- DATA WILAYAH PENGEBORAN (AREA A, B, dan Jawa Barat) ---
-const areaACoordinates = [
+  // useMemo untuk data (hindari recreation setiap render)
+  const areaACoordinates = useMemo(() => ([
     [-6.105650, 106.784844], [-6.065867, 106.784847], [-6.065925, 106.798917],
     [-5.966986, 106.799314], [-5.966942, 106.787517], [-5.930794, 106.788217],
     [-5.930828, 106.797092], [-5.913056, 106.797161], [-5.913156, 106.815433],
@@ -81,8 +98,9 @@ const areaACoordinates = [
     [-5.966494, 106.834512], [-6.033156, 106.834512], [-6.033153, 106.818173],
     [-6.066483, 106.818172], [-6.066489, 106.851503], [-6.083150, 106.851503],
     [-6.083153, 106.868169], [-6.108147, 106.868169], [-6.105650, 106.784844],
-];
-const areaBCoordinates = [
+  ]), []);
+
+  const areaBCoordinates = useMemo(() => ([
     [-4.999928, 106.501544], [-5.012225, 106.557475], [-5.062450, 106.557194],
     [-5.062783, 106.593089], [-5.171453, 106.592719], [-5.171589, 106.628578],
     [-5.198333, 106.628475], [-5.198447, 106.655925], [-5.207650, 106.655964],
@@ -90,220 +108,223 @@ const areaBCoordinates = [
     [-5.288850, 106.688183], [-5.288519, 106.601450], [-5.361253, 106.600611],
     [-5.361319, 106.618350], [-5.449878, 106.618197], [-5.449878, 106.501544],
     [-4.999928, 106.501544],
-];
-const jawaBaratCoordinates = [ // <-- KOORDINAT JAWA BARAT DITAMBAHKAN
-    [-5.8333, 104.8000],
-    [-5.8333, 108.8000],
-    [-7.8333, 108.8000],
-    [-7.8333, 104.8000],
-    [-5.8333, 104.8000]
-];
+  ]), []);
 
-const pengeboranData = [
-    { 
-      name: 'AREA A (Pengeboran)', 
-      coordinates: areaACoordinates, 
+  const pengeboranData = useMemo(() => ([
+    {
+      name: 'AREA A (Pengeboran)',
+      coordinates: areaACoordinates,
       description: 'Wilayah Kerja Area A berdasarkan shapefile resmi BATAS_AREA_KERJA dengan proyeksi WGS 1984. Area ini mencakup wilayah operasi lepas pantai yang sangat luas dari Jakarta hingga Cirebon.',
       facilities: ['Multiple Offshore Platforms', 'FSO (Floating Storage Offloading)', 'Production & Processing Facilities'],
-      production: 'Area produksi utama dengan kapasitas tinggi: Minyak: 5000 BOPD, Gas: 50 MMSCFD',
+      production: 'Minyak: 5000 BOPD, Gas: 50 MMSCFD',
       color: '#EF4444',
-      region: 'Laut Jawa - Pesisir Jawa Barat (Jakarta - Bekasi - Karawang - Subang - Indramayu - Cirebon)',
+      region: 'Laut Jawa - Pesisir Jawa Barat',
       entity: 'LWPolyline',
       layer: '_BATAS',
       linetype: 'DASHED2',
       totalPoints: areaACoordinates.length
-    }, // Merah
-    { 
-      name: 'AREA B (Pengeboran)', 
-      coordinates: areaBCoordinates, 
-      description: 'Wilayah Kerja Area B berdasarkan shapefile resmi dengan koordinat presisi tinggi. Berlokasi di sebelah barat laut Area A dengan potensi pengembangan yang menjanjikan.',
-      facilities: ['Offshore Production Platforms', 'Support Vessels & Equipment', 'Pipeline Networks'],
-      production: 'Area pengembangan dengan fokus eksplorasi: Minyak: 7000 BOPD, Gas: 70 MMSCFD',
+    },
+    {
+      name: 'AREA B (Pengeboran)',
+      coordinates: areaBCoordinates,
+      description: 'Wilayah Kerja Area B ...',
+      facilities: ['Offshore Production Platforms', 'Support Vessels', 'Pipeline Networks'],
+      production: 'Minyak: 7000 BOPD, Gas: 70 MMSCFD',
       color: '#F59E0B',
       region: 'Laut Jawa - Area Barat Laut',
       entity: 'LWPolyline',
       layer: '_BATAS',
       linetype: 'DASHED2',
       totalPoints: areaBCoordinates.length
-    }, // Orany
-];
+    }
+  ]), [areaACoordinates, areaBCoordinates]);
 
-// --- DATA LOKASI TJSL (TITIK MARKER) ---
-// Tambahkan fields teknis & fasilitas agar modal TJSL tampil mirip dengan modal AREA lama
-const tjslData = [
+  const tjslData = useMemo(() => ([
     { name: 'Program Pendidikan (Kalibaru)', position: [-6.1026, 106.9192], description: 'Bantuan renovasi sekolah dan beasiswa.', facilities: ['Renovasi ruang kelas','Beasiswa siswa berprestasi'], region: 'Kalibaru - Bekasi', production: 'N/A', entity: 'Point', layer: '_TJSL', linetype: 'POINT', totalPoints: 1, color: '#3B82F6' },
     { name: 'Program Mangrove (Muara Gembong)', position: [-5.9972, 107.0394], description: 'Penanaman 5.000 bibit mangrove.', facilities: ['Penanaman bibit','Edukasi lingkungan'], region: 'Muara Gembong - Bekasi', production: 'N/A', entity: 'Point', layer: '_TJSL', linetype: 'POINT', totalPoints: 1, color: '#059669' },
     { name: 'Program Kesehatan (Sungai Buntu)', position: [-6.0563, 107.4026], description: 'Pusat layanan kesehatan air bersih.', facilities: ['Klinik lapangan','Penyuluhan kesehatan'], region: 'Sungai Buntu - Indramayu', production: 'N/A', entity: 'Point', layer: '_TJSL', linetype: 'POINT', totalPoints: 1, color: '#8B5CF6' },
     { name: 'Program UKM (Mayangan)', position: [-6.2177, 107.7800], description: 'Pelatihan dan modal usaha untuk UKM lokal.', facilities: ['Pelatihan bisnis','Modal usaha mikro'], region: 'Mayangan - Cirebon', production: 'N/A', entity: 'Point', layer: '_TJSL', linetype: 'POINT', totalPoints: 1, color: '#F97316' },
     { name: 'Program Lingkungan (Balongan)', position: [-6.3971, 108.3682], description: 'Konservasi terumbu karang.', facilities: ['Restorasi terumbu','Monitoring biodiversitas'], region: 'Balongan - Indramayu', production: 'N/A', entity: 'Point', layer: '_TJSL', linetype: 'POINT', totalPoints: 1, color: '#06B6D4' },
     { name: 'Program Sosial (Jawa Barat)', position: [-6.9147, 107.6098], description: 'Program pemberdayaan masyarakat dan pelatihan keterampilan di wilayah Jawa Barat.', facilities: ['Pelatihan keterampilan','Pemberdayaan masyarakat'], region: 'Jawa Barat (provinsi)', production: 'N/A', entity: 'Point', layer: '_TJSL', linetype: 'POINT', totalPoints: 1, color: '#EF4444' },
-];
-// -----------------------
+  ]), []);
 
-const WilayahKerja = () => {
-  const [activeItem, setActiveItem] = useState(null); // Ganti nama state
-  const [showModal, setShowModal] = useState(false);
-  const [filter, setFilter] = useState('semua');
+  // center default
+  const center = [-6.2, 107.5];
 
+  // open modal helper
   const openModal = (itemData) => {
     setActiveItem(itemData);
     setShowModal(true);
   };
-
   const closeModal = () => {
     setShowModal(false);
     setActiveItem(null);
   };
-  
-  // Close modal when clicking outside
-  const handleModalBackdropClick = (e) => {
-    if (e.target.classList.contains('modal-backdrop')) {
-      closeModal();
-    }
+
+  // When map is created, save ref and listen zoom changes
+  const handleMapCreated = (mapInstance) => {
+    mapRef.current = mapInstance;
+    setZoomLevel(mapInstance.getZoom());
+    mapInstance.on('zoomend', () => setZoomLevel(mapInstance.getZoom()));
   };
 
+  // optional: when user toggles filter, you may want to fit bounds to visible layers
+  useEffect(() => {
+    if (!mapRef.current) return;
+    if (filter === 'pengeboran') {
+      // fit bounds of polygons (AREA A + B)
+      const allCoords = [...pengeboranData.flatMap(a => a.coordinates)];
+      if (allCoords.length) {
+        mapRef.current.fitBounds(allCoords, { padding: [40, 40] });
+      }
+    } else if (filter === 'tjsl') {
+      const allPoints = tjslData.map(p => p.position);
+      if (allPoints.length) {
+        mapRef.current.fitBounds(allPoints, { padding: [40, 40] });
+      }
+    } else {
+      mapRef.current.setView(center, 8);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filter]);
 
   return (
-    <div className="bg-gray-50 py-20">
-      <div className="container mx-auto px-8 lg:px-16">
-        
-        {/* Tombol Filter */}
-        <div className="flex flex-wrap justify-center gap-4 mb-8">
-            <button
-                onClick={() => setFilter('semua')}
-                className={`px-6 py-2 rounded-full font-semibold transition-colors ${filter === 'semua' ? 'bg-blue-600 text-white shadow-lg' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
-            >
-                Tampilkan Semua
-            </button>
-            <button
-                onClick={() => setFilter('pengeboran')}
-                className={`px-6 py-2 rounded-full font-semibold transition-colors ${filter === 'pengeboran' ? 'bg-blue-600 text-white shadow-lg' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
-            >
-                Peta Pengeboran
-            </button>
-            <button
-                onClick={() => setFilter('tjsl')}
-                className={`px-6 py-2 rounded-full font-semibold transition-colors ${filter === 'tjsl' ? 'bg-blue-600 text-white shadow-lg' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
-            >
-                Peta TJSL
-            </button>
+    <div className="bg-gray-50 py-8">
+      <div className="container mx-auto px-4 lg:px-16">
+        {/* Buttons */}
+        <div className="flex flex-wrap justify-center gap-4 mb-4">
+          <button onClick={() => setFilter('semua')} className={`px-4 py-2 rounded-full ${filter === 'semua' ? 'bg-blue-600 text-white' : 'bg-white'}`}>Tampilkan Semua</button>
+          <button onClick={() => setFilter('pengeboran')} className={`px-4 py-2 rounded-full ${filter === 'pengeboran' ? 'bg-blue-600 text-white' : 'bg-white'}`}>Peta Pengeboran</button>
+          <button onClick={() => setFilter('tjsl')} className={`px-4 py-2 rounded-full ${filter === 'tjsl' ? 'bg-blue-600 text-white' : 'bg-white'}`}>Peta TJSL</button>
         </div>
 
-        {/* Map Container */}
-        <div className="max-w-6xl mx-auto bg-white rounded-xl shadow-lg p-4 border border-gray-200">
+        <div className="max-w-6xl mx-auto bg-white rounded-xl shadow-lg p-2 border border-gray-200">
           <MapContainer
-            center={[-6.2, 107.5]}
-            zoom={8} // Zoom out sedikit
-            style={{ height: '600px', width: '100%' }}
-            className="rounded-lg z-0"
+            center={center}
+            zoom={8}
+            style={{ height: '620px', width: '100%' }}
+            whenCreated={handleMapCreated}
+            minZoom={6}
+            maxZoom={16}
+            maxBounds={[[-12, 95], [6, 141]]} // contoh batas Indonesia luas
+            className="rounded-lg"
           >
             <TileLayer
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              attribution='&copy; OpenStreetMap contributors'
             />
-            
-            {/* Tampilkan Pengeboran (Polygon) */}
-            {(filter === 'semua' || filter === 'pengeboran') && pengeboranData.map((area) => (
-              <Polygon
-                key={area.name}
-                positions={area.coordinates}
-                pathOptions={{
-                  fillColor: area.color || '#EF4444',
-                  fillOpacity: 0.6,
-                  weight: 2,
-                  color: 'white',
-                }}
-                eventHandlers={{
-                  click: () => openModal({ ...area, type: 'pengeboran' }),
-                  mouseover: (e) => e.target.setStyle({ fillOpacity: 0.8 }),
-                  mouseout: (e) => e.target.setStyle({ fillOpacity: 0.6 }),
-                }}
-              />
-            ))}
 
-            {/* Tampilkan Program TJSL (Marker) */}
-            {(filter === 'semua' || filter === 'tjsl') && tjslData.map((item) => (
-                <Marker 
-                  key={item.name} 
-                  position={item.position}
-                  eventHandlers={{
-                    click: () => openModal({ ...item, type: 'tjsl' }),
-                  }}
-                />
-            ))}
+            <ScaleControl position="bottomleft" />
+
+            <LayersControl position="topright">
+              {/* Pengeboran polygons */}
+              <LayersControl.Overlay name="Pengeboran" checked={filter !== 'tjsl'}>
+                <LayerGroup>
+                  {(filter === 'semua' || filter === 'pengeboran') && pengeboranData.map(area => (
+                    <Polygon
+                      key={area.name}
+                      positions={area.coordinates}
+                      pathOptions={{
+                        fillColor: area.color || '#EF4444',
+                        fillOpacity: 0.45,
+                        weight: 2,
+                        color: area.color || '#ffffff',
+                      }}
+                      eventHandlers={{
+                        click: () => openModal({ ...area, type: 'pengeboran' })
+                      }}
+                    />
+                  ))}
+                </LayerGroup>
+              </LayersControl.Overlay>
+
+              {/* TJSL markers (dimasukkan ke cluster group) */}
+              <LayersControl.Overlay name="TJSL" checked={filter !== 'pengeboran'}>
+                <LayerGroup>
+                  {(filter === 'semua' || filter === 'tjsl') && (
+                    <MarkerClusterGroup chunkedLoading>
+                      {tjslData.map((item, idx) => (
+                        <Marker
+                          key={item.name}
+                          position={item.position}
+                          eventHandlers={{
+                            click: () => openModal({ ...item, type: 'tjsl' })
+                          }}
+                        >
+                          {/* Tooltip angka: tampil permanen hanya ketika zoom cukup besar */}
+                          <Tooltip
+                            direction="top"
+                            offset={[0, -10]}
+                            opacity={1}
+                            permanent={zoomLevel >= 10}
+                          >
+                            {idx + 1}
+                          </Tooltip>
+                        </Marker>
+                      ))}
+                    </MarkerClusterGroup>
+                  )}
+                </LayerGroup>
+              </LayersControl.Overlay>
+            </LayersControl>
           </MapContainer>
         </div>
       </div>
 
-      {/* Modal Pop-up (mirip tampilan modal lama untuk AREA, sekarang juga dipakai untuk TJSL) */}
+      {/* Modal (sama pola seperti sebelumnya) */}
       {showModal && activeItem && (
-        <div className="modal-backdrop" onClick={handleModalBackdropClick}>
+        <div className="modal-backdrop" onClick={(e) => { if (e.target.classList.contains('modal-backdrop')) closeModal(); }}>
           <div className="modal-content">
-            {/* Modal Header */}
             <div className="modal-header">
-              <div className="modal-header-left" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div 
-                  className="modal-color-indicator"
-                  style={{ 
-                    width: 14, 
-                    height: 14, 
-                    borderRadius: 4, 
-                    backgroundColor: activeItem.color || '#FFEB3B', 
-                    border: `2px solid ${activeItem.color ? '#ffffff33' : '#00000022'}` 
-                  }}
-                />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ width: 14, height: 14, borderRadius: 4, backgroundColor: activeItem.color || '#FFEB3B' }} />
                 <h3 className="modal-title">📍 Detail: {activeItem.name}</h3>
               </div>
-              <button className="modal-close-btn" onClick={closeModal} aria-label="Close modal">✕</button>
+              <button className="modal-close-btn" onClick={closeModal}>✕</button>
             </div>
 
-            {/* Modal Body - gunakan layout mirip modal lama (kiri: deskripsi + data teknis, kanan: fasilitas + produksi) */}
             <div className="modal-body">
               <div className="modal-grid">
-                {/* Left Column */}
                 <div className="modal-column">
                   <div className="modal-section">
-                    <h4 className="modal-section-title">📋 Deskripsi Lengkap</h4>
+                    <h4 className="modal-section-title">📋 Deskripsi</h4>
                     <p className="modal-text">{activeItem.description}</p>
                   </div>
 
                   <div className="modal-section">
-                    <h4 className="modal-section-title">🧾 Data Teknis</h4>
+                    <h4 className="modal-section-title">📐 Data Teknis</h4>
                     <div className="modal-data-grid">
                       <div className="modal-data-item">
-                        <span className="modal-data-label">Entity Type:</span>
-                        <span className="modal-data-value">{activeItem.entity || (activeItem.type === 'tjsl' ? 'Point' : 'Polygon')}</span>
+                        <div className="modal-data-label">Entity Type:</div>
+                        <div className="modal-data-value">{activeItem.entity || (activeItem.type === 'tjsl' ? 'Point' : 'Polygon')}</div>
                       </div>
                       <div className="modal-data-item">
-                        <span className="modal-data-label">Layer:</span>
-                        <span className="modal-data-value">{activeItem.layer || (activeItem.type === 'tjsl' ? '_TJSL' : '_BATAS')}</span>
+                        <div className="modal-data-label">Layer:</div>
+                        <div className="modal-data-value">{activeItem.layer || (activeItem.type === 'tjsl' ? '_TJSL' : '_BATAS')}</div>
                       </div>
                       <div className="modal-data-item">
-                        <span className="modal-data-label">Line Type:</span>
-                        <span className="modal-data-value">{activeItem.linetype || (activeItem.type === 'tjsl' ? 'POINT' : 'DASHED2')}</span>
+                        <div className="modal-data-label">Line Type:</div>
+                        <div className="modal-data-value">{activeItem.linetype || (activeItem.type === 'tjsl' ? 'POINT' : 'DASHED2')}</div>
                       </div>
                       <div className="modal-data-item">
-                        <span className="modal-data-label">Total Koordinat:</span>
-                        <span className="modal-data-value">{activeItem.totalPoints ?? (activeItem.coordinates ? activeItem.coordinates.length : 1)} titik</span>
+                        <div className="modal-data-label">Total Koordinat:</div>
+                        <div className="modal-data-value">{activeItem.totalPoints ?? (activeItem.coordinates ? activeItem.coordinates.length : 1)} titik</div>
                       </div>
                     </div>
                   </div>
 
                   <div className="modal-section">
                     <h4 className="modal-section-title">📍 Wilayah Geografis</h4>
-                    <p className="modal-text">{activeItem.region || activeItem.position?.join(', ') || '—'}</p>
+                    <p className="modal-text">{activeItem.region || (activeItem.position ? activeItem.position.join(', ') : '—')}</p>
                   </div>
                 </div>
 
-                {/* Right Column */}
                 <div className="modal-column">
                   <div className="modal-section">
-                    <h4 className="modal-section-title">🏭 Fasilitas & Infrastruktur</h4>
-                    {activeItem.facilities && activeItem.facilities.length > 0 ? (
+                    <h4 className="modal-section-title">{activeItem.type === 'pengeboran' ? '🏭 Fasilitas & Infrastruktur' : '💙 Program & Fasilitas'}</h4>
+                    {activeItem.facilities && activeItem.facilities.length ? (
                       <ul className="modal-list">
-                        {activeItem.facilities.map((facility, idx) => (
-                          <li key={idx} className="modal-list-item">→ {facility}</li>
-                        ))}
+                        {activeItem.facilities.map((f, i) => <li key={i} className="modal-list-item">→ {f}</li>)}
                       </ul>
                     ) : (
                       <p className="modal-text">Informasi fasilitas tidak tersedia.</p>
@@ -311,7 +332,7 @@ const WilayahKerja = () => {
                   </div>
 
                   <div className="modal-section">
-                    <h4 className="modal-section-title">📊 Informasi Produksi / Catatan</h4>
+                    <h4 className="modal-section-title">📊 Produksi / Target</h4>
                     <p className="modal-text">{activeItem.production || 'Tidak tersedia'}</p>
                   </div>
                 </div>
@@ -324,4 +345,4 @@ const WilayahKerja = () => {
   );
 };
 
-export default WilayahKerja;
+export default WilayahKerja;  

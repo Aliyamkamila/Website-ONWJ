@@ -70,6 +70,7 @@
 }
 
 /* Map Container */
+/* NOTE: ubah overflow agar tooltip/popup tidak terpotong oleh border-radius */
 .map-wrapper {
   background-color: #FFFFFF;
   border-radius: 1rem;
@@ -85,13 +86,22 @@
   }
 }
 
+/* ubah overflow: visible agar tooltip/popup tidak ter-clipped */
 .map-container {
   height: 500px;
   width: 100%;
   border-radius: 0.75rem;
-  overflow: hidden;
+  /* sebelumnya overflow: hidden; -> ubah menjadi visible */
+  overflow: visible;
   border: 2px solid #e5e7eb;
-  cursor: pointer;
+  /* lebih baik beri cursor grab sehingga terlihat draggable */
+  cursor: grab;
+  position: relative; /* pastikan positioning konteks */
+}
+
+/* ketika user drag, ubah cursor agar lebih natural (JS handling recommended) */
+.map-container:active {
+  cursor: grabbing;
 }
 
 @media (min-width: 768px) {
@@ -99,6 +109,51 @@
     height: 600px;
   }
 }
+
+/* --- Leaflet z-index & tooltip tweaks --- */
+/* Pastikan marker dan tooltip selalu di atas polygon/vector */
+.leaflet-pane .leaflet-tile-pane { z-index: 200; }
+.leaflet-pane .leaflet-shadow-pane { z-index: 300; }
+.leaflet-pane .leaflet-overlay-pane { z-index: 400; } /* polygons, polylines */
+.leaflet-pane .leaflet-marker-pane { z-index: 600 !important; } /* markers */
+.leaflet-pane .leaflet-tooltip-pane { z-index: 650 !important; }  /* tooltips */
+.leaflet-pane .leaflet-popup-pane { z-index: 700 !important; }    /* popups */
+
+/* Tooltip (angka) style supaya jelas dan tidak terpotong */
+.leaflet-tooltip {
+  background: rgba(255, 255, 255, 0.95);
+  color: #0f172a;
+  border: 1px solid #e5e7eb;
+  padding: 4px 8px;
+  border-radius: 6px;
+  box-shadow: 0 4px 10px rgba(2, 6, 23, 0.08);
+  font-weight: 700;
+  white-space: nowrap; /* jangan wrap angka */
+  pointer-events: none; /* biarkan klik ke map di bawah tooltip */
+  transform-origin: center bottom;
+  font-size: 0.9rem;
+}
+
+/* Tooltip permanent bisa sedikit lebih compact */
+.leaflet-tooltip.leaflet-tooltip-bottom.leaflet-tooltip-permanent {
+  margin-top: 2px;
+  padding: 2px 6px;
+  font-size: 0.85rem;
+}
+
+/* Marker icon z-index safety */
+.leaflet-marker-icon {
+  z-index: 610 !important;
+  will-change: transform;
+}
+
+/* Popup improvements */
+.leaflet-popup {
+  z-index: 720 !important;
+}
+
+/* Jika kamu menggunakan MarkerCluster, override cluster z-index */
+.leaflet-markercluster-pane { z-index: 605 !important; }
 
 /* Legend Section */
 .legend-wrapper {
@@ -163,8 +218,9 @@
   left: 0;
   right: 0;
   bottom: 0;
+  /* kurangi blur untuk performa mobile */
   background-color: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(4px);
+  backdrop-filter: none; /* disabled by default for better perf; bisa gunakan blur ringan jika perlu */
   z-index: 9999;
   display: flex;
   align-items: center;
@@ -174,12 +230,7 @@
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; } to { opacity: 1; }
 }
 
 .modal-content {
@@ -196,14 +247,8 @@
 }
 
 @keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px) scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+  from { opacity: 0; transform: translateY(30px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 /* Modal Header */
@@ -238,9 +283,7 @@
 }
 
 @media (max-width: 640px) {
-  .modal-title {
-    font-size: 1.25rem;
-  }
+  .modal-title { font-size: 1.25rem; }
 }
 
 .modal-close-btn {
@@ -272,158 +315,35 @@
   flex: 1;
 }
 
-@media (max-width: 768px) {
-  .modal-body {
-    padding: 1.5rem;
-  }
-}
+/* rest of modal styles unchanged (keperluan estetika) */
+.modal-grid { display: grid; grid-template-columns: 1fr; gap: 2rem; }
+@media (min-width: 768px) { .modal-grid { grid-template-columns: repeat(2, 1fr); } }
 
-.modal-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 2rem;
-}
-
-@media (min-width: 768px) {
-  .modal-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-.modal-column {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.modal-section {
-  background-color: #f8fafc;
-  border-radius: 0.75rem;
-  padding: 1.5rem;
-  border: 1px solid #e5e7eb;
-}
-
-.modal-section-title {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #0f172a;
-  margin: 0 0 1rem 0;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.modal-text {
-  font-size: 0.9rem;
-  line-height: 1.7;
-  color: #64748b;
-  margin: 0;
-}
-
-.modal-data-grid {
-  display: grid;
-  gap: 0.75rem;
-}
-
-.modal-data-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.625rem;
-  background-color: #FFFFFF;
-  border-radius: 0.5rem;
-  border: 1px solid #e5e7eb;
-}
-
-.modal-data-label {
-  font-size: 0.85rem;
-  color: #64748b;
-  font-weight: 500;
-}
-
-.modal-data-value {
-  font-size: 0.85rem;
-  color: #0f172a;
-  font-weight: 600;
-  font-family: monospace;
-}
-
-.modal-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.625rem;
-}
-
-.modal-list-item {
-  font-size: 0.875rem;
-  line-height: 1.6;
-  color: #64748b;
-  padding: 0.625rem 0.75rem;
-  padding-left: 2rem;
-  position: relative;
-  background-color: #FFFFFF;
-  border-radius: 0.5rem;
-  border: 1px solid #e5e7eb;
-}
-
-.modal-list-item::before {
-  content: '→';
-  position: absolute;
-  left: 0.75rem;
-  color: #2973B4;
-  font-weight: 700;
-}
+.modal-column { display:flex; flex-direction:column; gap:1.5rem; }
+.modal-section { background-color:#f8fafc; border-radius:0.75rem; padding:1.5rem; border:1px solid #e5e7eb; }
+.modal-section-title { font-size:1rem; font-weight:600; color:#0f172a; margin:0 0 1rem 0; display:flex; align-items:center; gap:0.5rem;}
+.modal-text { font-size:0.9rem; line-height:1.7; color:#64748b; margin:0; }
+.modal-data-grid { display:grid; gap:0.75rem; }
+.modal-data-item { display:flex; justify-content:space-between; align-items:center; padding:0.625rem; background-color:#FFFFFF; border-radius:0.5rem; border:1px solid #e5e7eb; }
+.modal-data-label { font-size:0.85rem; color:#64748b; font-weight:500; }
+.modal-data-value { font-size:0.85rem; color:#0f172a; font-weight:600; font-family:monospace; }
+.modal-list { list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:0.625rem; }
+.modal-list-item { font-size:0.875rem; line-height:1.6; color:#64748b; padding:0.625rem 0.75rem; padding-left:2rem; position:relative; background-color:#FFFFFF; border-radius:0.5rem; border:1px solid #e5e7eb; }
+.modal-list-item::before { content:'→'; position:absolute; left:0.75rem; color:#2973B4; font-weight:700; }
 
 /* Responsive */
 @media (max-width: 640px) {
-  .wilayahkerja-section {
-    padding: 3rem 0;
-  }
-
-  .wilayahkerja-title {
-    font-size: 1.75rem;
-  }
-
-  .map-container {
-    height: 400px;
-  }
-
-  .modal-content {
-    max-height: 95vh;
-    border-radius: 0.75rem;
-  }
-
-  .modal-header {
-    padding: 1.25rem 1.5rem;
-  }
-
-  .modal-body {
-    padding: 1.25rem;
-  }
-
-  .modal-section {
-    padding: 1.25rem;
-  }
+  .wilayahkerja-section { padding: 3rem 0; }
+  .wilayahkerja-title { font-size: 1.75rem; }
+  .map-container { height: 400px; }
+  .modal-content { max-height: 95vh; border-radius: 0.75rem; }
+  .modal-header { padding: 1.25rem 1.5rem; }
+  .modal-body { padding: 1.25rem; }
+  .modal-section { padding: 1.25rem; }
 }
 
 /* Custom Scrollbar for Modal */
-.modal-body::-webkit-scrollbar {
-  width: 8px;
-}
-
-.modal-body::-webkit-scrollbar-track {
-  background: #f1f5f9;
-  border-radius: 4px;
-}
-
-.modal-body::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 4px;
-}
-
-.modal-body::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
-}
+.modal-body::-webkit-scrollbar { width: 8px; }
+.modal-body::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+.modal-body::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+.modal-body::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
