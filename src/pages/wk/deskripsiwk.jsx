@@ -1,5 +1,8 @@
+// src/pages/wk/deskripsiwk.jsx
 import React from 'react';
 import WorkAreaImage from '../../assets/wilayah/area-map.webp';
+// Ganti ikon emoji dengan react-icons agar profesional
+import { FaIndustry, FaBolt, FaWater } from 'react-icons/fa'; 
 
 const DeskripsiWK = () => {
   const workAreas = [
@@ -16,41 +19,21 @@ const DeskripsiWK = () => {
   ];
 
   const keyFeatures = [
-    {
-      icon: '🏢',
-      title: 'Fasilitas Produksi',
-      description: 'Memiliki berbagai fasilitas produksi strategis di sepanjang wilayah operasi'
-    },
-    {
-      icon: '⚡',
-      title: 'Kapasitas Produksi',
-      description: 'Mampu memproduksi minyak dan gas dengan kapasitas yang signifikan'
-    },
-    {
-      icon: '🌊',
-      title: 'Offshore Operations',
-      description: 'Operasi lepas pantai dengan teknologi modern dan standar keamanan tinggi'
-    }
+    { icon: <FaIndustry className="w-8 h-8 text-blue-600" />, title: 'Fasilitas Produksi', description: 'Memiliki berbagai fasilitas produksi strategis di sepanjang wilayah operasi' },
+    { icon: <FaBolt className="w-8 h-8 text-orange-500" />, title: 'Kapasitas Produksi', description: 'Mampu memproduksi minyak dan gas dengan kapasitas yang signifikan' },
+    { icon: <FaWater className="w-8 h-8 text-teal-500" />, title: 'Offshore Operations', description: 'Operasi lepas pantai dengan teknologi modern dan standar keamanan tinggi' }
   ];
 
   return (
-    <div className="bg-white py-16">
-      <div className="container mx-auto px-4">
-        {/* Header Section */}
-        <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-gray-800 mb-4">
-            Wilayah Kerja
-          </h2>
-          <div className="w-32 h-2 bg-gradient-to-r from-blue-500 to-blue-600 mx-auto rounded-full"></div>
-        </div>
-
+    <div className="bg-white py-20">
+      <div className="container mx-auto px-8 lg:px-16">
         {/* Main Content */}
         <div className="max-w-6xl mx-auto">
           <div className="grid md:grid-cols-2 gap-12 items-center mb-16">
             <div className="space-y-6">
               {workAreas.map((area, index) => (
                 <div key={index}>
-                  <h3 className="text-2xl font-semibold text-gray-800 mb-4">
+                  <h3 className="text-3xl font-semibold text-gray-800 mb-4">
                     {area.title}
                   </h3>
                   <p className="text-gray-600 mb-6 leading-relaxed">
@@ -59,7 +42,7 @@ const DeskripsiWK = () => {
                   <ul className="space-y-3">
                     {area.points.map((point, idx) => (
                       <li key={idx} className="flex items-center text-gray-700">
-                        <span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>
+                        <span className="w-2 h-2 bg-blue-500 rounded-full mr-3 flex-shrink-0"></span>
                         {point}
                       </li>
                     ))}
@@ -73,7 +56,6 @@ const DeskripsiWK = () => {
                 alt="Wilayah Kerja Overview"
                 className="rounded-lg shadow-lg w-full"
               />
-              <div className="absolute inset-0 bg-blue-500 opacity-10 rounded-lg"></div>
             </div>
           </div>
 
@@ -82,7 +64,7 @@ const DeskripsiWK = () => {
             {keyFeatures.map((feature, index) => (
               <div 
                 key={index}
-                className="bg-gray-50 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300"
+                className="bg-gray-50 rounded-xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
               >
                 <div className="text-4xl mb-4">{feature.icon}</div>
                 <h4 className="text-xl font-semibold text-gray-800 mb-2">

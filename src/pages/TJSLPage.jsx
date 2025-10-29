@@ -223,14 +223,10 @@ const TJSLPage = () => {
       <TJSLHero />
       <TJSLProfile quickFacts={quickFactsData} />
       <ProgramUnggulan slides={slideData} />
-      {/* <TJSLPrinsip pilar={pilarData} /> */} {/* DIHAPUS */}
-      {/* <TJSLCalendarSection events={events} /> */} {/* DIHAPUS */}
       <TJSLBeritaSection featuredNews={featuredNews} latestNews={latestNews} />
-      
-      {/* --- MEMANGGIL SECTION VOICES DI SINI --- */}
       <TJSLVoicesSection testimonials={testimonials} />
     </div>
   );
 };
-
+  
 export default TJSLPage;
