@@ -15,37 +15,40 @@ const slidesData = [
   {
     backgroundImage: bisnisBackground,
     cardImage: bisnisCard,
-    title: "Bisnis",
-    description: "Kami mengembangkan solusi bisnis energi yang berkelanjutan dan menguntungkan dengan fokus pada inovasi teknologi.",
-    link: "/bisnis",
+    title: "Eksplorasi & Produksi",
+    description:
+      "Dari hulu ke hilir — menggali potensi energi dan menghadirkan nilai berkelanjutan untuk daerah.",
+    link: "/eksplorasi-produksi",
     themeColor: "from-primary-600/80 to-primary-700/90",
   },
   {
     backgroundImage: monitoringBackground,
     cardImage: monitoringCard,
-    title: "Monitoring",
-    description: "Sistem monitoring canggih untuk mengoptimalkan operasional dan memastikan keselamatan kerja.",
-    link: "/bisnis",
+    title: "Program TJSL",
+    description:
+      "Komitmen kami terhadap tanggung jawab sosial dan lingkungan demi masyarakat yang lebih mandiri.",
+    link: "/tjsl",
     themeColor: "from-secondary-500/80 to-secondary-600/90",
   },
   {
     backgroundImage: lokasiBackground,
     cardImage: lokasiCard,
-    title: "Lokasi",
-    description: "Eksplorasi dan pengembangan lokasi strategis untuk memaksimalkan potensi energi.",
-    link: "/bisnis",
+    title: "Wilayah Kerja",
+    description:
+      "Area operasi kami di berbagai titik strategis yang mendukung ketahanan energi nasional.",
+    link: "/wilayah-kerja",
     themeColor: "from-primary-500/80 to-primary-600/90",
   },
   {
     backgroundImage: tjslBackground,
     cardImage: tjslCard,
-    title: "TJSL",
-    description: "Program Tanggung Jawab Sosial dan Lingkungan untuk pemberdayaan masyarakat.",
-    link: "/tjsl",
+    title: "UMKM Binaan",
+    description:
+      "Profil dan perjalanan para pelaku usaha yang tumbuh bersama program pemberdayaan kami.",
+    link: "/umkm-binaan",
     themeColor: "from-secondary-400/80 to-secondary-500/90",
   },
 ];
-
 const Bisnis = () => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [direction, setDirection] = useState('next');
