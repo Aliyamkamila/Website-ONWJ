@@ -7,12 +7,17 @@ import {
   Tooltip,
   LayersControl,
   LayerGroup,
-  ScaleControl
+  ScaleControl,
+  useMap
 } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import "@changey/react-leaflet-markercluster/dist/styles.min.css";
-import 'react-leaflet-markercluster/dist/styles.min.css';
+
+// Import leaflet.markercluster plugin and styles (install leaflet.markercluster)
+import 'leaflet.markercluster/dist/MarkerCluster.css';
+import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
+import 'leaflet.markercluster';
+
 import icon from 'leaflet/dist/images/marker-icon.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 import './wilayahkerja.css';
@@ -26,6 +31,54 @@ const DefaultIcon = L.icon({
   popupAnchor: [1, -34]
 });
 L.Marker.prototype.options.icon = DefaultIcon;
+
+/*
+  MarkerCluster wrapper that uses leaflet.markercluster directly.
+  Props:
+    - markers: array of { name, position, ... }
+    - onMarkerClick: function called with item when marker clicked
+    - zoomLevel: current map zoom (used to decide permanent tooltip)
+*/
+function MarkerCluster({ markers = [], onMarkerClick = () => {}, zoomLevel = 8 }) {
+  const map = useMap();
+  const clusterRef = useRef(null);
+
+  useEffect(() => {
+    if (!map) return;
+    // create cluster group
+    const mcg = L.markerClusterGroup({ chunkedLoading: true });
+    clusterRef.current = mcg;
+
+    // add markers
+    markers.forEach((item, idx) => {
+      const m = L.marker(item.position, { title: item.name, riseOnHover: true });
+      m.on('click', () => onMarkerClick({ ...item, type: 'tjsl' }));
+
+      // bind tooltip (permanent when zoom >= 10)
+      m.bindTooltip(String(idx + 1), {
+        direction: 'top',
+        offset: [0, -10],
+        permanent: zoomLevel >= 10,
+        opacity: 1
+      });
+
+      mcg.addLayer(m);
+    });
+
+    map.addLayer(mcg);
+
+    return () => {
+      // cleanup
+      if (map && mcg) {
+        map.removeLayer(mcg);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [map, /* re-create cluster when markers array changes */ JSON.stringify(markers), zoomLevel]);
+
+  // When markers or zoom change we recreate cluster (above). Nothing to render.
+  return null;
+}
 
 const WilayahKerja = () => {
   const [activeItem, setActiveItem] = useState(null);
@@ -114,7 +167,7 @@ const WilayahKerja = () => {
     {
       name: 'AREA A (Pengeboran)',
       coordinates: areaACoordinates,
-      description: 'Wilayah Kerja Area A berdasarkan shapefile resmi BATAS_AREA_KERJA dengan proyeksi WGS 1984. Area ini mencakup wilayah operasi lepas pantai yang sangat luas dari Jakarta hingga Cirebon.',
+      description: 'Wilayah Kerja Area A berdasarkan shapefile resmi BATAS_AREA_KERJA dengan proyeksi WGS 1984. Area ini mencakup wilayah operasi lepas pantai yang sangat luas dari Jakarta hingga[...]',
       facilities: ['Multiple Offshore Platforms', 'FSO (Floating Storage Offloading)', 'Production & Processing Facilities'],
       production: 'Minyak: 5000 BOPD, Gas: 50 MMSCFD',
       color: '#EF4444',
@@ -140,12 +193,12 @@ const WilayahKerja = () => {
   ]), [areaACoordinates, areaBCoordinates]);
 
   const tjslData = useMemo(() => ([
-    { name: 'Program Pendidikan (Kalibaru)', position: [-6.1026, 106.9192], description: 'Bantuan renovasi sekolah dan beasiswa.', facilities: ['Renovasi ruang kelas','Beasiswa siswa berprestasi'], region: 'Kalibaru - Bekasi', production: 'N/A', entity: 'Point', layer: '_TJSL', linetype: 'POINT', totalPoints: 1, color: '#3B82F6' },
-    { name: 'Program Mangrove (Muara Gembong)', position: [-5.9972, 107.0394], description: 'Penanaman 5.000 bibit mangrove.', facilities: ['Penanaman bibit','Edukasi lingkungan'], region: 'Muara Gembong - Bekasi', production: 'N/A', entity: 'Point', layer: '_TJSL', linetype: 'POINT', totalPoints: 1, color: '#059669' },
-    { name: 'Program Kesehatan (Sungai Buntu)', position: [-6.0563, 107.4026], description: 'Pusat layanan kesehatan air bersih.', facilities: ['Klinik lapangan','Penyuluhan kesehatan'], region: 'Sungai Buntu - Indramayu', production: 'N/A', entity: 'Point', layer: '_TJSL', linetype: 'POINT', totalPoints: 1, color: '#8B5CF6' },
-    { name: 'Program UKM (Mayangan)', position: [-6.2177, 107.7800], description: 'Pelatihan dan modal usaha untuk UKM lokal.', facilities: ['Pelatihan bisnis','Modal usaha mikro'], region: 'Mayangan - Cirebon', production: 'N/A', entity: 'Point', layer: '_TJSL', linetype: 'POINT', totalPoints: 1, color: '#F97316' },
-    { name: 'Program Lingkungan (Balongan)', position: [-6.3971, 108.3682], description: 'Konservasi terumbu karang.', facilities: ['Restorasi terumbu','Monitoring biodiversitas'], region: 'Balongan - Indramayu', production: 'N/A', entity: 'Point', layer: '_TJSL', linetype: 'POINT', totalPoints: 1, color: '#06B6D4' },
-    { name: 'Program Sosial (Jawa Barat)', position: [-6.9147, 107.6098], description: 'Program pemberdayaan masyarakat dan pelatihan keterampilan di wilayah Jawa Barat.', facilities: ['Pelatihan keterampilan','Pemberdayaan masyarakat'], region: 'Jawa Barat (provinsi)', production: 'N/A', entity: 'Point', layer: '_TJSL', linetype: 'POINT', totalPoints: 1, color: '#EF4444' },
+    { name: 'Program Pendidikan (Kalibaru)', position: [-6.1026, 106.9192], description: 'Bantuan renovasi sekolah dan beasiswa.', facilities: ['Renovasi ruang kelas','Beasiswa siswa berprestasi']},
+    { name: 'Program Mangrove (Muara Gembong)', position: [-5.9972, 107.0394], description: 'Penanaman 5.000 bibit mangrove.', facilities: ['Penanaman bibit','Edukasi lingkungan'], region: 'Muara Gembong'},
+    { name: 'Program Kesehatan (Sungai Buntu)', position: [-6.0563, 107.4026], description: 'Pusat layanan kesehatan air bersih.', facilities: ['Klinik lapangan','Penyuluhan kesehatan'], region: 'Sungai Buntu'},
+    { name: 'Program UKM (Mayangan)', position: [-6.2177, 107.7800], description: 'Pelatihan dan modal usaha untuk UKM lokal.', facilities: ['Pelatihan bisnis','Modal usaha mikro'], region: 'Mayangan'},
+    { name: 'Program Lingkungan (Balongan)', position: [-6.3971, 108.3682], description: 'Konservasi terumbu karang.', facilities: ['Restorasi terumbu','Monitoring biodiversitas'], region: 'Balongan'},
+    { name: 'Program Sosial (Jawa Barat)', position: [-6.9147, 107.6098], description: 'Program pemberdayaan masyarakat dan pelatihan keterampilan di wilayah Jawa Barat.', facilities: ['Pelatihan']},
   ]), []);
 
   // center default
@@ -172,7 +225,6 @@ const WilayahKerja = () => {
   useEffect(() => {
     if (!mapRef.current) return;
     if (filter === 'pengeboran') {
-      // fit bounds of polygons (AREA A + B)
       const allCoords = [...pengeboranData.flatMap(a => a.coordinates)];
       if (allCoords.length) {
         mapRef.current.fitBounds(allCoords, { padding: [40, 40] });
@@ -238,31 +290,12 @@ const WilayahKerja = () => {
                 </LayerGroup>
               </LayersControl.Overlay>
 
-              {/* TJSL markers (dimasukkan ke cluster group) */}
+              {/* TJSL markers (dimasukkan ke cluster group using leaflet.markercluster) */}
               <LayersControl.Overlay name="TJSL" checked={filter !== 'pengeboran'}>
                 <LayerGroup>
                   {(filter === 'semua' || filter === 'tjsl') && (
-                    <MarkerClusterGroup chunkedLoading>
-                      {tjslData.map((item, idx) => (
-                        <Marker
-                          key={item.name}
-                          position={item.position}
-                          eventHandlers={{
-                            click: () => openModal({ ...item, type: 'tjsl' })
-                          }}
-                        >
-                          {/* Tooltip angka: tampil permanen hanya ketika zoom cukup besar */}
-                          <Tooltip
-                            direction="top"
-                            offset={[0, -10]}
-                            opacity={1}
-                            permanent={zoomLevel >= 10}
-                          >
-                            {idx + 1}
-                          </Tooltip>
-                        </Marker>
-                      ))}
-                    </MarkerClusterGroup>
+                    // our MarkerCluster creates native Leaflet markers and clusters them
+                    <MarkerCluster markers={tjslData} onMarkerClick={openModal} zoomLevel={zoomLevel} />
                   )}
                 </LayerGroup>
               </LayersControl.Overlay>
@@ -345,4 +378,4 @@ const WilayahKerja = () => {
   );
 };
 
-export default WilayahKerja;  
+export default WilayahKerja;
