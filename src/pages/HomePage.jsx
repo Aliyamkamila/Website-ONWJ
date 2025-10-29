@@ -1,4 +1,3 @@
-// src/pages/HomePage.jsx
 import React from 'react';
 import Hero from './landingpage/hero';
 import Profile from './landingpage/profile';

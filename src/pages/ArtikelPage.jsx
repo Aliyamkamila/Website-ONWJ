@@ -1,15 +1,9 @@
-// src/pages/ArtikelPage.jsx
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-
-// Ikon
-import { FaShareAlt, FaHome, FaTwitter, FaLinkedin, FaWhatsapp } from 'react-icons/fa'; // Pastikan react-icons sudah terinstall
-
-// Placeholder Images
+import { FaShareAlt, FaHome, FaTwitter, FaLinkedin, FaWhatsapp } from 'react-icons/fa'; 
 import articleImage from '../assets/rectangle.png';
-import authorAvatar from '../assets/logo.webp'; // Kita pakai logo sebagai placeholder avatar penulis
+import authorAvatar from '../assets/logo.webp'; 
 
-// --- DATA ARTIKEL LENGKAP (SINKRON DENGAN 12 ARTIKEL DI BERITATJSLPAGE) ---
 const articlesData = [
     { id: 1, slug: 'social-impact-assessment-and-community-involvement', category: 'Community Development', date: 'January 15, 2025', title: 'Social Impact Assessment and Community Involvement', description: 'We are committed to drive positive impact...', image: articleImage, fullContent: `<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p><p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>`, tags: ['Komunitas', 'Penilaian Dampak', 'TJSL'] },
     { id: 2, slug: 'new-tree-planting-initiative-for-greener-future', category: 'Environment', date: 'December 22, 2024', title: 'New Tree Planting Initiative for a Greener Future', description: 'A new initiative focused on environmental sustainability...', image: articleImage, fullContent: `<p>Konten lengkap untuk artikel 2. Lorem ipsum dolor sit amet, consectetur adipiscing elit...</p>`, tags: ['Lingkungan', 'Penanaman Pohon', 'Konservasi'] },
@@ -30,9 +24,6 @@ const initialComments = [
   { id: 1, author: 'Budi Santoso', avatar: 'https://via.placeholder.com/48?text=BS', content: 'Artikel yang sangat informatif!', date: 'Jan 10, 2025' },
   { id: 2, author: 'Siti Aminah', avatar: 'https://via.placeholder.com/48?text=SA', content: 'Terima kasih atas wawasannya.', date: 'Jan 12, 2025' },
 ];
-
-// --- SUB-KOMPONEN ---
-
 const Breadcrumbs = ({ category, title }) => (
   <nav aria-label="breadcrumb" className="mb-8 text-sm text-gray-500">
     <ol className="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">

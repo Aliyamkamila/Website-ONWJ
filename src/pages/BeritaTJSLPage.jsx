@@ -1,17 +1,13 @@
-// src/pages/BeritaTJSLPage.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { FaHome } from 'react-icons/fa'; // Pastikan sudah 'npm install react-icons'
-
-// Import Aset
-import bannerImage from '../assets/hero-bg.png'; // Ganti dengan gambar banner berita
+import { FaHome } from 'react-icons/fa'; 
+import bannerImage from '../assets/hero-bg.png';
 import logo from '../assets/logo.webp';
-import articleImage from '../assets/rectangle.png'; // Gambar untuk slider/kartu
+import articleImage from '../assets/rectangle.png'; 
 import carouselImg1 from '../assets/contoh2.png';
 import carouselImg2 from '../assets/contoh3.png';
 import carouselImg3 from '../assets/contoh4.png';
 
-// --- DATA DUMMY (Sama seperti yang kamu buat) ---
 const articlesData = [
     { id: 1, slug: 'social-impact-assessment-and-community-involvement', category: 'Community Development', date: 'January 15, 2025', title: 'Social Impact Assessment and Community Involvement', description: 'We are committed to drive positive impact...', image: articleImage },
     { id: 2, slug: 'new-tree-planting-initiative-for-greener-future', category: 'Environment', date: 'December 22, 2024', title: 'New Tree Planting Initiative for a Greener Future', description: 'A new initiative focused on environmental sustainability...', image: articleImage },
@@ -21,10 +17,6 @@ const articlesData = [
     { id: 6, slug: 'artikel-keenam', category: 'Community Development', date: 'October 5, 2024', title: 'Artikel Keenam', description: 'Deskripsi artikel keenam...', image: articleImage },
     // ... sisa data ...
 ];
-
-// --- SUB-KOMPONEN HALAMAN (Diadaptasi dari 'Tentang Kami') ---
-
-// 1. Hero Banner (Adaptasi dari phero.jsx)
 const BeritaHero = () => (
     <div className="relative h-[60vh] overflow-hidden">
         <div className="absolute inset-0">
@@ -48,12 +40,9 @@ const BeritaHero = () => (
         </div>
     </div>
 );
-
-// 2. Filter & Kategori (Adaptasi dari pprofile.jsx, tapi diganti)
 const BeritaFilter = ({ categories, selected, onSelect, onSearch, searchTerm }) => (
     <div className="container mx-auto px-8 lg:px-16 py-16">
         <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-            {/* Kategori */}
             <div className="flex flex-wrap gap-2">
                 {categories.map(cat => (
                     <button
@@ -65,7 +54,6 @@ const BeritaFilter = ({ categories, selected, onSelect, onSearch, searchTerm }) 
                     </button>
                 ))}
             </div>
-            {/* Search Bar */}
             <div className="relative w-full md:w-72">
                 <input
                     type="text"
@@ -80,7 +68,6 @@ const BeritaFilter = ({ categories, selected, onSelect, onSearch, searchTerm }) 
     </div>
 );
 
-// 3. Daftar Artikel (Adaptasi dari psejarah.jsx / pvisimisi.jsx - kita ganti jadi grid kartu)
 const ArticleGrid = ({ articles }) => (
     <div className="container mx-auto px-8 lg:px-16 pb-20">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -94,7 +81,6 @@ const ArticleGrid = ({ articles }) => (
     </div>
 );
 
-// Komponen Kartu Artikel (bisa dipisah ke file sendiri jika mau)
 const ArticleCard = ({ article }) => (
     <div className="group bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden transition-all duration-300 hover:shadow-lg flex flex-col">
         <div className="h-48 overflow-hidden">
@@ -120,7 +106,6 @@ const ArticleCard = ({ article }) => (
     </div>
 );
 
-// 4. Pagination (Opsional tapi penting)
 const Pagination = ({ currentPage, totalPages, onPageChange }) => {
     if (totalPages <= 1) return null;
     const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
@@ -149,13 +134,11 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
     );
 };
 
-
-// --- CUSTOM HOOK UNTUK LOGIKA ---
 const useBeritaFilter = (articles) => {
     const [currentPage, setCurrentPage] = useState(1);
     const [selectedCategory, setSelectedCategory] = useState('All');
     const [searchTerm, setSearchTerm] = useState('');
-    const itemsPerPage = 9; // 9 kartu per halaman (3x3 grid)
+    const itemsPerPage = 9;
 
     const categories = ['All', ...new Set(articles.map(a => a.category))];
 
@@ -179,12 +162,12 @@ const useBeritaFilter = (articles) => {
 
     const handleSearch = (e) => {
         setSearchTerm(e.target.value);
-        setCurrentPage(1); // Reset ke halaman 1 saat search
+        setCurrentPage(1); 
     };
 
     const handleSelectCategory = (category) => {
         setSelectedCategory(category);
-        setCurrentPage(1); // Reset ke halaman 1 saat filter
+        setCurrentPage(1); 
     };
 
     return {
@@ -200,8 +183,6 @@ const useBeritaFilter = (articles) => {
     };
 };
 
-
-// --- MAIN PAGE COMPONENT ---
 const BeritaTJSLPage = () => {
   const {
       paginatedArticles,
@@ -231,7 +212,6 @@ const BeritaTJSLPage = () => {
           totalPages={totalPages}
           onPageChange={setCurrentPage}
       />
-      {/* Kita hilangkan "Voices from the Community" di sini agar tidak duplikat dengan halaman TJSL */}
     </div>
   );
 };

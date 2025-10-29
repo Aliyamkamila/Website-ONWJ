@@ -12,17 +12,13 @@ import {
 } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-
-// Import leaflet.markercluster plugin and styles (install leaflet.markercluster)
 import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import 'leaflet.markercluster';
-
 import icon from 'leaflet/dist/images/marker-icon.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 import './wilayahkerja.css';
 
-// Fix icon Leaflet (single instance)
 const DefaultIcon = L.icon({
   iconUrl: icon,
   shadowUrl: iconShadow,
@@ -32,29 +28,17 @@ const DefaultIcon = L.icon({
 });
 L.Marker.prototype.options.icon = DefaultIcon;
 
-/*
-  MarkerCluster wrapper that uses leaflet.markercluster directly.
-  Props:
-    - markers: array of { name, position, ... }
-    - onMarkerClick: function called with item when marker clicked
-    - zoomLevel: current map zoom (used to decide permanent tooltip)
-*/
 function MarkerCluster({ markers = [], onMarkerClick = () => {}, zoomLevel = 8 }) {
   const map = useMap();
   const clusterRef = useRef(null);
 
   useEffect(() => {
     if (!map) return;
-    // create cluster group
     const mcg = L.markerClusterGroup({ chunkedLoading: true });
     clusterRef.current = mcg;
-
-    // add markers
     markers.forEach((item, idx) => {
       const m = L.marker(item.position, { title: item.name, riseOnHover: true });
       m.on('click', () => onMarkerClick({ ...item, type: 'tjsl' }));
-
-      // bind tooltip (permanent when zoom >= 10)
       m.bindTooltip(String(idx + 1), {
         direction: 'top',
         offset: [0, -10],
@@ -68,15 +52,11 @@ function MarkerCluster({ markers = [], onMarkerClick = () => {}, zoomLevel = 8 }
     map.addLayer(mcg);
 
     return () => {
-      // cleanup
       if (map && mcg) {
         map.removeLayer(mcg);
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [map, /* re-create cluster when markers array changes */ JSON.stringify(markers), zoomLevel]);
-
-  // When markers or zoom change we recreate cluster (above). Nothing to render.
+  }, [map, JSON.stringify(markers), zoomLevel]);
   return null;
 }
 
@@ -86,8 +66,6 @@ const WilayahKerja = () => {
   const [filter, setFilter] = useState('semua');
   const [zoomLevel, setZoomLevel] = useState(8);
   const mapRef = useRef(null);
-
-  // useMemo untuk data (hindari recreation setiap render)
   const areaACoordinates = useMemo(() => ([
     [-6.105650, 106.784844], [-6.065867, 106.784847], [-6.065925, 106.798917],
     [-5.966986, 106.799314], [-5.966942, 106.787517], [-5.930794, 106.788217],
@@ -202,10 +180,8 @@ const WilayahKerja = () => {
     { name: 'Program Sosial (Jawa Barat)', position: [-6.9147, 107.6098], description: 'Program pemberdayaan masyarakat dan pelatihan keterampilan di wilayah Jawa Barat.', facilities: ['Pelatihan']},
   ]), []);
 
-  // center default
   const center = [-6.2, 107.5];
 
-  // open modal helper
   const openModal = (itemData) => {
     setActiveItem(itemData);
     setShowModal(true);
@@ -221,7 +197,6 @@ const WilayahKerja = () => {
     mapInstance.on('zoomend', () => setZoomLevel(mapInstance.getZoom()));
   };
 
-  // optional: when user toggles filter, you may want to fit bounds to visible layers
   useEffect(() => {
     if (!mapRef.current) return;
     if (filter === 'pengeboran') {

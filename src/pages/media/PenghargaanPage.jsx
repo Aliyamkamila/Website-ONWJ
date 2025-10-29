@@ -1,12 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-
-// Placeholder Images
 import bannerImage from '../../assets/hero-bg.png';
 import awardImage from '../../assets/rectangle.png';
 import logo from '../../assets/logo.webp';
 
-// --- DATA DUMMY PENGHARGAAN ---
 const awardsData = [
   { year: 2024, title: 'Best HSE Performance Award', givenBy: 'Kementerian ESDM' },
   { year: 2024, title: 'Community Empowerment Excellence', givenBy: 'CSR Outlook Awards' },
@@ -16,7 +13,6 @@ const awardsData = [
   { year: 2022, title: 'Environmental Stewardship Award', givenBy: 'Green Earth Foundation' },
 ];
 
-// --- SUB-KOMPONEN CARD ---
 const AwardCard = ({ award, index, visible }) => (
   <div
     className={`bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden group transition-all duration-700 hover:shadow-2xl hover:-translate-y-2`}
@@ -45,19 +41,16 @@ const AwardCard = ({ award, index, visible }) => (
   </div>
 );
 
-// --- HALAMAN UTAMA ---
 const PenghargaanPage = () => {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    // Biar animasi muncul setelah mount
     const timeout = setTimeout(() => setVisible(true), 100);
     return () => clearTimeout(timeout);
   }, []);
 
   return (
     <div className="bg-gray-50">
-      {/* Banner */}
       <section className="relative h-72 md:h-80 w-full">
         <img
           src={bannerImage}
@@ -65,8 +58,6 @@ const PenghargaanPage = () => {
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/70" />
-
-        {/* Teks di tengah */}
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6">
           <h1 className="text-white text-4xl md:text-5xl font-extrabold relative pb-4">
             Penghargaan
@@ -76,24 +67,17 @@ const PenghargaanPage = () => {
             Bukti komitmen kami terhadap inovasi, keberlanjutan, dan keselamatan.
           </p>
         </div>
-
-        {/* Logo pojok kanan atas */}
         <img
           src={logo}
           alt="Logo"
           className="h-10 absolute top-8 right-8 lg:right-16"
         />
       </section>
-
-      {/* Konten Utama */}
       <div className="max-w-screen-xl mx-auto px-6 md:px-10 lg:px-16 py-16">
-        {/* Breadcrumb */}
         <nav className="text-sm text-gray-500 mb-10">
           <Link to="/" className="hover:text-blue-600">Beranda</Link> <span>/</span>{' '}
           <span className="text-gray-700 font-semibold">Penghargaan</span>
         </nav>
-
-        {/* Grid Award */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {awardsData.map((award, index) => (
             <AwardCard key={index} award={award} index={index} visible={visible} />

@@ -17,8 +17,8 @@ body {
   min-height: 100vh;
   width: 100%;
   overflow-x: hidden;
-  background-color: #ffffff; /* Base primary background */
-  color: #0f172a; /* Dark text for readability */
+  background-color: #ffffff;
+  color: #0f172a;
 }
 
 button {

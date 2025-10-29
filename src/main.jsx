@@ -1,9 +1,7 @@
-// src/main.jsx
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, RouterProvider, ScrollRestoration } from 'react-router-dom';
 import './index.css';
-
 import Layout from './Layout';
 import HomePage from './pages/HomePage';
 import TJSLPage from './pages/TJSLPage';
@@ -20,7 +18,7 @@ import AllProgramsPage from './pages/AllProgramsPage';
 import LaporanTahunanPage from './pages/media/LaporanTahunanPage';
 import KontakPage from './pages/KontakPage';
 
-const router = createBrowserRouter([ // <-- Buka createBrowserRouter
+const router = createBrowserRouter([ 
   {
     path: '/',
     element: (
@@ -29,7 +27,7 @@ const router = createBrowserRouter([ // <-- Buka createBrowserRouter
         <Layout />
       </>
     ),
-    children: [ // <-- Buka children array
+    children: [ 
       { index: true, element: <HomePage /> },
       { path: 'tjsl', element: <TJSLPage /> },
       { path: 'program-berkelanjutan', element: <AllProgramsPage /> },
@@ -44,11 +42,10 @@ const router = createBrowserRouter([ // <-- Buka createBrowserRouter
       { path: 'penghargaan', element: <PenghargaanPage /> },
       { path: 'laporan-tahunan', element: <LaporanTahunanPage /> },
       { path: 'kontak', element: <KontakPage /> },
-    ], // <-- TUTUP children array
-  }, // <-- TUTUP root route object
-]); // <-- TUTUP createBrowserRouter (setelah array)
+      { path: 'wilayah-kerja', element: <Mainwk /> },    ],
+  },
+]);
 
-  // --- createRoot dipindah ke sini, SETELAH router didefinisikan ---
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <RouterProvider router={router} />

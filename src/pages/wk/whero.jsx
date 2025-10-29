@@ -1,7 +1,6 @@
-// src/pages/wk/whero.jsx
 import React from 'react';
 import { Link } from 'react-router-dom';
-import platformImage from '../../assets/hero-bg.png'; // Ganti dengan gambar yg lebih relevan
+import platformImage from '../../assets/hero-bg.png';
 import { FaHome } from 'react-icons/fa';
 
 const WHero = () => {

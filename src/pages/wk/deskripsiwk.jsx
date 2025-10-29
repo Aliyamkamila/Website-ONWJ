@@ -1,7 +1,5 @@
-// src/pages/wk/deskripsiwk.jsx
 import React from 'react';
 import WorkAreaImage from '../../assets/wilayah/area-map.webp';
-// Ganti ikon emoji dengan react-icons agar profesional
 import { FaIndustry, FaBolt, FaWater } from 'react-icons/fa'; 
 
 const DeskripsiWK = () => {
@@ -27,7 +25,6 @@ const DeskripsiWK = () => {
   return (
     <div className="bg-white py-20">
       <div className="container mx-auto px-8 lg:px-16">
-        {/* Main Content */}
         <div className="max-w-6xl mx-auto">
           <div className="grid md:grid-cols-2 gap-12 items-center mb-16">
             <div className="space-y-6">
@@ -58,8 +55,6 @@ const DeskripsiWK = () => {
               />
             </div>
           </div>
-
-          {/* Key Features */}
           <div className="grid md:grid-cols-3 gap-8 mt-16">
             {keyFeatures.map((feature, index) => (
               <div 

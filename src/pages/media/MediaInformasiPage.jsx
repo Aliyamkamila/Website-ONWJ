@@ -1,14 +1,10 @@
-// src/pages/media/MediaInformasiPage.jsx
 import React from 'react';
-import { Link, NavLink } from 'react-router-dom'; // Gunakan NavLink untuk active style
-
-// Import Aset
-import bannerImage from '../../assets/hero-bg.png'; // Banner
-import articleImage from '../../assets/rectangle.png'; // Gambar berita
+import { Link, NavLink } from 'react-router-dom'; 
+import bannerImage from '../../assets/hero-bg.png'; 
+import articleImage from '../../assets/rectangle.png'; 
 import logo from '../../assets/logo.webp';
-import { FaHome, FaYoutube, FaInstagram } from 'react-icons/fa'; // Ikon
+import { FaHome, FaYoutube, FaInstagram } from 'react-icons/fa'; 
 
-// --- DATA DUMMY ---
 const mediaBerita = [
     { id: 1, slug: 'social-impact-assessment-and-community-involvement', source: 'Instagram', date: 'October 14, 2025', title: 'Komitmen Kami dalam Penilaian Dampak Sosial', image: articleImage },
     { id: 2, slug: 'new-tree-planting-initiative-for-greener-future', source: 'Instagram', date: 'October 12, 2025', title: 'Inisiatif Penanaman Pohon untuk Masa Depan', image: articleImage },
@@ -21,12 +17,9 @@ const videoData = [
     { id: 3, title: "Program TJSL: Pemberdayaan Masyarakat Pesisir", embedUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ", description: "Kisah sukses program TJSL kami bersama para nelayan dan masyarakat pesisir." },
 ];
 
-const featuredVideo = videoData[0]; // Ambil video pertama sebagai featured
-const galleryVideos = videoData.slice(1); // Sisanya untuk galeri
+const featuredVideo = videoData[0]; 
+const galleryVideos = videoData.slice(1); 
 
-// --- SUB-KOMPONEN ---
-
-// 1. Hero Banner (diadaptasi dari phero.jsx)
 const MediaHero = () => (
     <div className="relative h-[60vh] overflow-hidden">
         <div className="absolute inset-0">
@@ -51,9 +44,7 @@ const MediaHero = () => (
     </div>
 );
 
-// 2. Sub-Navigasi (Dibuat STICKY)
 const SubNav = () => {
-    // Style untuk link yang aktif dan tidak aktif
     const activeStyle = "font-semibold text-blue-600 border-b-2 border-blue-600 py-4";
     const inactiveStyle = "font-medium text-gray-500 hover:text-blue-600 border-b-2 border-transparent py-4 transition-colors";
 
@@ -62,7 +53,7 @@ const SubNav = () => {
             <nav className="container mx-auto px-8 lg:px-16 flex space-x-8">
                 <NavLink 
                     to="/media-informasi" 
-                    end // 'end' prop penting agar tidak match dengan /penghargaan
+                    end
                     className={({ isActive }) => isActive ? activeStyle : inactiveStyle}
                 >
                     Media & Berita
@@ -73,13 +64,11 @@ const SubNav = () => {
                 >
                     Penghargaan
                 </NavLink>
-                {/* Tambahkan link sub-menu lain di sini jika perlu */}
             </nav>
         </div>
     );
 };
 
-// 3. Featured Video Section (BARU)
 const FeaturedVideo = ({ item }) => (
     <section className="bg-white p-8 rounded-xl shadow-lg border border-gray-100">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
@@ -102,8 +91,6 @@ const FeaturedVideo = ({ item }) => (
     </section>
 );
 
-
-// 4. Kartu Berita (Vertikal)
 const BeritaCard = ({ item }) => (
     <article className="group bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1 flex flex-col">
         <div className="h-48 overflow-hidden relative">
@@ -126,7 +113,6 @@ const BeritaCard = ({ item }) => (
     </article>
 );
 
-// 5. Kartu Video Galeri
 const VideoCard = ({ item }) => (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden transition-all duration-300 hover:shadow-lg flex flex-col">
         <div className="aspect-video">
@@ -145,28 +131,19 @@ const VideoCard = ({ item }) => (
     </div>
 );
 
-// --- MAIN PAGE COMPONENT ---
 const MediaInformasiPage = () => {
     return (
         <div className="bg-gray-50 min-h-screen">
             <MediaHero />
             <SubNav />
-
-            {/* Konten Utama */}
             <div className="container mx-auto px-8 lg:px-16 py-16 space-y-16">
-                
-                {/* Featured Video Section */}
                 <FeaturedVideo item={featuredVideo} />
-
-                {/* Section Berita Terkini */}
                 <section>
                     <h2 className="text-3xl font-bold text-gray-900 mb-8">Berita Terkini</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                         {mediaBerita.map((item) => <BeritaCard key={item.id} item={item} />)}
                     </div>
                 </section>
-
-                {/* Section Galeri Video */}
                 <section>
                     <h2 className="text-3xl font-bold text-gray-900 mb-8">Galeri Video</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

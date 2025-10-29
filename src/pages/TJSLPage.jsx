@@ -1,18 +1,13 @@
-// src/pages/TJSLPage.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-
-// Import aset yang kita butuhkan
 import platformImage from '../assets/contoh1.png';
-import programImage from '../assets/rectangle.png'; // Gambar untuk program & berita
+import programImage from '../assets/rectangle.png'; 
 import carouselImg1 from '../assets/contoh2.png';
 import carouselImg2 from '../assets/contoh3.png';
 import carouselImg3 from '../assets/contoh4.png';
 import logo from '../assets/logo.webp';
 import { FaHome } from 'react-icons/fa';
 
-// --- DATA DUMMY ---
-// Data untuk Quick Facts
 const quickFactsData = [
   { title: "Program Pemberdayaan", value: "50+", bgColor: "bg-blue-50", icon: <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg> },
   { title: "Penerima Manfaat", value: "10,000+", bgColor: "bg-green-50", icon: <svg className="w-6 h-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg> },
@@ -20,14 +15,12 @@ const quickFactsData = [
   { title: "Beasiswa Pendidikan", value: "1,500+", bgColor: "bg-orange-50", icon: <svg className="w-6 h-6 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.747 0-3.332.477-4.5 1.253" /></svg> },
 ];
 
-// Data untuk Slider Program Unggulan
 const slideData = [
     { title: 'Program Pendidikan', content: 'Memberikan beasiswa dan merenovasi sekolah untuk masa depan generasi penerus yang lebih cerah.', image: carouselImg1, link: '#' },
     { title: 'Program Lingkungan', content: 'Melakukan penanaman mangrove dan konservasi terumbu karang di wilayah pesisir.', image: carouselImg2, link: '#' },
     { title: 'Program Kesehatan', content: 'Menyediakan layanan kesehatan gratis dan perbaikan fasilitas sanitasi untuk masyarakat sekitar.', image: carouselImg3, link: '#' },
 ];
 
-// Data untuk Berita Terkait TJSL
 const newsItems = [
     { id: 1, slug: 'social-impact-assessment-and-community-involvement', category: 'TJSL Update', date: '15 Jan 2025', title: 'Hasil Penilaian Dampak Sosial Terbaru Dirilis', description: 'Laporan komprehensif mengenai dampak operasi kami terhadap komunitas lokal kini tersedia...', image: programImage },
     { id: 2, slug: 'new-tree-planting-initiative-for-greener-future', category: 'Lingkungan', date: '22 Des 2024', title: 'Penanaman Ribuan Pohon di Area Pesisir Utara', description: 'Sebagai bagian dari komitmen lingkungan, kami menanam lebih dari 5.000 bibit mangrove...', image: programImage },
@@ -36,17 +29,12 @@ const newsItems = [
     { id: 5, slug: 'artikel-keempat-yang-baru', category: 'Kesehatan', date: '05 Okt 2024', title: 'Peresmian Fasilitas Sanitasi Air Bersih di Desa Mitra', description: 'Fasilitas baru ini diharapkan dapat meningkatkan kualitas kesehatan masyarakat sekitar...', image: programImage },
   ];
 
-// --- DATA BARU UNTUK TESTIMONI ---
 const testimonials = [
     { id: 1, name: 'Budi Santoso', text: 'Program beasiswa ini sangat membantu anak saya untuk terus bersekolah. Terima kasih!', avatar: 'https://via.placeholder.com/48?text=BS' },
     { id: 2, name: 'Siti Aminah', text: 'Penanaman mangrove membuat pantai kami lebih aman dari abrasi. Luar biasa!', avatar: 'https://via.placeholder.com/48?text=SA' },
     { id: 3, name: 'Joko Susilo', text: 'Akses air bersih sekarang jauh lebih mudah berkat program sanitasi. Warga sangat bersyukur.', avatar: 'https://via.placeholder.com/48?text=JS' },
 ];
 
-
-// --- SUB-KOMPONEN ---
-
-// Komponen Hero Banner
 const TJSLHero = () => (
   <div className="relative h-[60vh] overflow-hidden">
     <div className="absolute inset-0">
@@ -66,7 +54,6 @@ const TJSLHero = () => (
   </div>
 );
 
-// Komponen Profil & Quick Facts
 const TJSLProfile = ({ quickFacts }) => (
   <div className="container mx-auto px-8 lg:px-16 py-20 bg-white">
     <div className="max-w-4xl mx-auto text-center mb-16">
@@ -89,7 +76,6 @@ const TJSLProfile = ({ quickFacts }) => (
   </div>
 );
 
-// Komponen Slider Program Unggulan
 const ProgramUnggulan = ({ slides }) => {
   const [activeSlide, setActiveSlide] = useState(0);
   useEffect(() => { const timer = setTimeout(() => {setActiveSlide((prev) => (prev + 1) % slides.length)}, 7000); return () => clearTimeout(timer); }, [activeSlide, slides.length]);
@@ -118,7 +104,6 @@ const ProgramUnggulan = ({ slides }) => {
   );
 };
 
-// Komponen Kartu Berita (Mirip landing page)
 const NewsCard = ({ news, delay }) => {
     const cardRef = useRef(null);
     useEffect(() => {
@@ -152,7 +137,6 @@ const NewsCard = ({ news, delay }) => {
     );
 };
 
-// Komponen Section Berita (Termasuk Featured Story)
 const TJSLBeritaSection = ({ featuredNews, latestNews }) => (
     <section className="bg-gray-100 py-24">
         <div className="container mx-auto px-8 lg:px-16">
@@ -182,7 +166,6 @@ const TJSLBeritaSection = ({ featuredNews, latestNews }) => (
     </section>
 );
 
-// --- KOMPONEN BARU: TESTIMONI ---
 const TestimonialCard = ({ testimonial }) => (
     <div className="bg-white p-8 rounded-lg shadow-lg border border-gray-100 transform transition-transform hover:scale-105">
         <blockquote className="text-gray-600 italic text-lg mb-6 relative">
@@ -213,9 +196,8 @@ const TJSLVoicesSection = ({ testimonials }) => (
 
 
 const TJSLPage = () => {
-  // Ambil berita pertama sebagai featured, sisanya sebagai latest
   const featuredNews = newsItems.length > 0 ? newsItems[0] : null;
-  const latestNews = newsItems.slice(1); // Ambil semua kecuali yang pertama
+  const latestNews = newsItems.slice(1);
 
   return (
     <div className="min-h-screen bg-white">
