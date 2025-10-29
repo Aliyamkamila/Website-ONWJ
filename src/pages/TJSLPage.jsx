@@ -212,7 +212,6 @@ const TJSLVoicesSection = ({ testimonials }) => (
 );
 
 
-// --- MAIN PAGE COMPONENT ---
 const TJSLPage = () => {
   // Ambil berita pertama sebagai featured, sisanya sebagai latest
   const featuredNews = newsItems.length > 0 ? newsItems[0] : null;

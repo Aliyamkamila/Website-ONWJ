@@ -193,6 +193,7 @@ const WilayahKerja = () => {
   ]), [areaACoordinates, areaBCoordinates]);
 
   const tjslData = useMemo(() => ([
+    { name: 'Program Ekowisata (Kepulauan Seribu)', position: [-5.55, 106.55], description: 'Pengembangan wisata ramah lingkungan dan edukasi laut.' },
     { name: 'Program Pendidikan (Kalibaru)', position: [-6.1026, 106.9192], description: 'Bantuan renovasi sekolah dan beasiswa.', facilities: ['Renovasi ruang kelas','Beasiswa siswa berprestasi']},
     { name: 'Program Mangrove (Muara Gembong)', position: [-5.9972, 107.0394], description: 'Penanaman 5.000 bibit mangrove.', facilities: ['Penanaman bibit','Edukasi lingkungan'], region: 'Muara Gembong'},
     { name: 'Program Kesehatan (Sungai Buntu)', position: [-6.0563, 107.4026], description: 'Pusat layanan kesehatan air bersih.', facilities: ['Klinik lapangan','Penyuluhan kesehatan'], region: 'Sungai Buntu'},
@@ -214,7 +215,6 @@ const WilayahKerja = () => {
     setActiveItem(null);
   };
 
-  // When map is created, save ref and listen zoom changes
   const handleMapCreated = (mapInstance) => {
     mapRef.current = mapInstance;
     setZoomLevel(mapInstance.getZoom());
