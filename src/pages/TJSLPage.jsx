@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import platformImage from '../assets/contoh1.png';
-import programImage from '../assets/rectangle.png'; 
+import programImage from '../assets/rectangle.png';
 import carouselImg1 from '../assets/contoh2.png';
 import carouselImg2 from '../assets/contoh3.png';
 import carouselImg3 from '../assets/contoh4.png';
@@ -9,17 +9,19 @@ import logo from '../assets/logo.webp';
 import { FaHome } from 'react-icons/fa';
 
 const quickFactsData = [
-  { title: "Program Pemberdayaan", value: "50+", bgColor: "bg-blue-50", icon: <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg> },
-  { title: "Penerima Manfaat", value: "10,000+", bgColor: "bg-green-50", icon: <svg className="w-6 h-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg> },
-  { title: "Pohon Ditanam", value: "25,000+", bgColor: "bg-purple-50", icon: <svg className="w-6 h-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6H8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" /></svg> },
-  { title: "Beasiswa Pendidikan", value: "1,500+", bgColor: "bg-orange-50", icon: <svg className="w-6 h-6 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.747 0-3.332.477-4.5 1.253" /></svg> },
+  { title: "Infrastruktur terbangun", value: "4+", bgColor: "bg-blue-50", icon: <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg> },
+  { title: "Unit EBTKE", value: "8+", bgColor: "bg-green-50", icon: <svg className="w-6 h-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg> },
+  { title: "Paket Pendidikan", value: "800+", bgColor: "bg-purple-50", icon: <svg className="w-6 h-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6H8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" /></svg> },
+  { title: "Kelompok Binaan", value: "3+", bgColor: "bg-orange-50", icon: <svg className="w-6 h-6 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.747 0-3.332.477-4.5 1.253" /></svg> },
+  { title: "Penerimaan Manfaat (Jiwa)", value: "99,500+", bgColor: "bg-orange-50", icon: <svg className="w-6 h-6 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.747 0-3.332.477-4.5 1.253" /></svg> },  
 ];
 
 const slideData = [
-    { title: 'Program Pendidikan', content: 'Memberikan beasiswa dan merenovasi sekolah untuk masa depan generasi penerus yang lebih cerah.', image: carouselImg1, link: '#' },
-    { title: 'Program Lingkungan', content: 'Melakukan penanaman mangrove dan konservasi terumbu karang di wilayah pesisir.', image: carouselImg2, link: '#' },
-    { title: 'Program Kesehatan', content: 'Menyediakan layanan kesehatan gratis dan perbaikan fasilitas sanitasi untuk masyarakat sekitar.', image: carouselImg3, link: '#' },
-];
+    { title: 'Program  Kesehatan', content: 'Memberikan beasiswa dan merenovasi sekolah untuk masa depan generasi penerus yang lebih cerah.', image: carouselImg1, link: '#' },
+    { title: 'Program Lingkungan & energi', content: 'Melakukan penanaman mangrove dan konservasi terumbu karang di wilayah pesisir.', image: carouselImg2, link: '#' },
+    { title: 'Program Ekonomi & Pembangunan Daerah', content: 'Menyediakan layanan kesehatan gratis dan perbaikan fasilitas sanitasi untuk masyarakat sekitar.', image: carouselImg3, link: '#' },
+    { title: 'Program Pendidikan', content: 'Menyediakan layanan kesehatan gratis dan perbaikan fasilitas sanitasi untuk masyarakat sekitar.', image: carouselImg3, link: '#' },
+  ];
 
 const newsItems = [
     { id: 1, slug: 'social-impact-assessment-and-community-involvement', category: 'TJSL Update', date: '15 Jan 2025', title: 'Hasil Penilaian Dampak Sosial Terbaru Dirilis', description: 'Laporan komprehensif mengenai dampak operasi kami terhadap komunitas lokal kini tersedia...', image: programImage },
