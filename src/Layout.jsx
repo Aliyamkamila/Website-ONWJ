@@ -9,11 +9,9 @@ const Layout = () => {
 
   return (
     <div className="relative w-screen min-h-screen overflow-x-hidden">
-      {showHeader && <Header />}
       <main>
         <Outlet />
       </main>
-      <Footer />
     </div>
   );
 };

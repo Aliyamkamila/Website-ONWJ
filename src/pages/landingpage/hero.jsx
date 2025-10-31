@@ -3,7 +3,7 @@ import heroBg from '../../assets/hero-bg.png';
 
 const Hero = () => {
   return (
-    <section className="relative min-h-screen w-full"> {/* Ubah ke min-h-screen */}
+    <section id="hero-section" className="relative min-h-screen bg-gradient-to-r from-primary-600 to-primary-800">
       {/* Background Image yang diperluas ke header */}
       <div 
         className="fixed top-0 left-0 right-0 w-full h-screen z-0" // Menggunakan fixed positioning

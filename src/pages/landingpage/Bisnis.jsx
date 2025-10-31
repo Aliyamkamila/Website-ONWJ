@@ -49,10 +49,12 @@ const slidesData = [
     themeColor: "from-secondary-400/80 to-secondary-500/90",
   },
 ];
+
 const Bisnis = () => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [direction, setDirection] = useState('next');
   const [isAutoPlay, setIsAutoPlay] = useState(true);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const timeoutRef = useRef(null);
 
   const resetTimeout = () => {
@@ -60,23 +62,38 @@ const Bisnis = () => {
   };
 
   const goToSlide = (index) => {
+    if (isTransitioning || index === activeIndex) return;
+    
+    setIsTransitioning(true);
     setDirection(index > activeIndex ? 'next' : 'prev');
     setActiveIndex(index);
     setIsAutoPlay(false);
+    
+    setTimeout(() => setIsTransitioning(false), 800);
   };
 
   const nextSlide = () => {
+    if (isTransitioning) return;
+    
+    setIsTransitioning(true);
     setDirection('next');
     setActiveIndex((prevIndex) =>
       prevIndex === slidesData.length - 1 ? 0 : prevIndex + 1
     );
+    
+    setTimeout(() => setIsTransitioning(false), 800);
   };
 
   const prevSlide = () => {
+    if (isTransitioning) return;
+    
+    setIsTransitioning(true);
     setDirection('prev');
     setActiveIndex((prevIndex) =>
       prevIndex === 0 ? slidesData.length - 1 : prevIndex - 1
     );
+    
+    setTimeout(() => setIsTransitioning(false), 800);
   };
 
   useEffect(() => {
@@ -94,14 +111,14 @@ const Bisnis = () => {
   const nextIndex = (activeIndex + 1) % slidesData.length;
 
   return (
-    <section className="relative min-h-[70vh] w-full flex items-center justify-center overflow-hidden bg-gray-50"> {/* Adjusted height */}
+    <section className="relative min-h-[70vh] w-full flex items-center justify-center overflow-hidden bg-gray-50">
       {/* Background dengan transisi smooth */}
       <div className="absolute inset-0 w-full h-full">
         {slidesData.map((slide, index) => (
           <div
             key={index}
-            className={`absolute inset-0 transition-opacity duration-1000 ease-smooth ${
-              index === activeIndex ? 'opacity-100' : 'opacity-0'
+            className={`absolute inset-0 transition-all duration-[1200ms] ease-out ${
+              index === activeIndex ? 'opacity-100 scale-100' : 'opacity-0 scale-105'
             }`}
             style={{
               backgroundImage: `url(${slide.backgroundImage})`,
@@ -109,20 +126,22 @@ const Bisnis = () => {
               backgroundPosition: 'center',
             }}
           >
-            <div className={`absolute inset-0 bg-gradient-to-b ${slide.themeColor}`} />
+            <div className={`absolute inset-0 bg-gradient-to-b ${slide.themeColor} transition-opacity duration-[800ms] ease-out`} />
           </div>
         ))}
       </div>
 
       {/* Content */}
-      <div className="relative z-10 section-container w-full">
+      <div className="relative z-10 section-container w-full px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
           {/* Kiri: Teks */}
           <div className="text-white space-y-6">
             <div 
-              className={`transition-all duration-700 ${
-                activeIndex !== undefined ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-              }`}
+              key={`title-${activeIndex}`}
+              className="animate-slide-in-content"
+              style={{
+                animation: 'slideInContent 800ms cubic-bezier(0.16, 1, 0.3, 1) forwards',
+              }}
             >
               <h1 
                 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight"
@@ -132,73 +151,107 @@ const Bisnis = () => {
               </h1>
             </div>
 
-            <p className={`text-lg text-white/90 max-w-lg transition-all duration-700 delay-100 ${
-                activeIndex !== undefined ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-              }`}
+            <p 
+              key={`desc-${activeIndex}`}
+              className="text-lg text-white/90 max-w-lg"
+              style={{
+                animation: 'slideInContent 800ms cubic-bezier(0.16, 1, 0.3, 1) forwards 100ms',
+              }}
             >
               {slidesData[activeIndex].description}
             </p>
 
-            <Link
-              to={slidesData[activeIndex].link}
-              className={`group inline-flex items-center gap-3 px-8 py-3 bg-white text-primary-600 font-semibold rounded-lg transition-smooth hover:bg-primary-50 hover:shadow-lg transition-all duration-700 delay-200 ${
-                activeIndex !== undefined ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-              }`}
+            <div
+              key={`button-${activeIndex}`}
+              style={{
+                animation: 'slideInContent 800ms cubic-bezier(0.16, 1, 0.3, 1) forwards 200ms',
+              }}
             >
-              <span>Explore Now</span>
-              <svg 
-                className="w-5 h-5 transform group-hover:translate-x-1 transition-transform" 
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24"
+              <Link
+                to={slidesData[activeIndex].link}
+                className="group inline-flex items-center gap-3 px-8 py-3 bg-white text-primary-600 font-semibold rounded-lg hover:bg-primary-50 hover:shadow-xl transition-all duration-300 ease-out"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </Link>
+                <span>Explore Now</span>
+                <svg 
+                  className="w-5 h-5 transform group-hover:translate-x-1 transition-transform duration-300 ease-out" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </Link>
+            </div>
           </div>
 
-          {/* Kanan: Card Carousel */}
-          <div className="relative h-[50vh] md:h-[60vh] flex items-center justify-center perspective">
+          {/* Kanan: Card Carousel dengan Smart Animate */}
+          <div className="relative h-[50vh] md:h-[60vh] flex items-center justify-center" style={{ perspective: '1500px' }}>
             {/* Previous Card */}
             <div
-              className={`absolute w-3/4 max-w-xs h-full transform transition-all duration-800 ease-smooth opacity-30 scale-75 z-0 shadow-2xl`}
+              key={`prev-${prevIndex}`}
+              className="absolute w-3/4 max-w-xs h-full rounded-2xl overflow-hidden shadow-2xl"
               style={{
-                transform: `${direction === 'next' ? 'translateX(-120%)' : 'translateX(120%)'} scale(0.75)`,
+                transform: direction === 'next' 
+                  ? 'translateX(-120%) translateZ(-200px) scale(0.75) rotateY(15deg)' 
+                  : 'translateX(120%) translateZ(-200px) scale(0.75) rotateY(-15deg)',
+                opacity: 0.3,
+                transition: 'all 800ms cubic-bezier(0.16, 1, 0.3, 1)',
+                transformStyle: 'preserve-3d',
               }}
             >
               <img
                 src={slidesData[prevIndex].cardImage}
                 alt={slidesData[prevIndex].title}
-                className="w-full h-full object-cover rounded-2xl"
+                className="w-full h-full object-cover"
               />
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-transparent to-black/40" />
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/50 transition-opacity duration-800 ease-out" />
             </div>
 
             {/* Active Card */}
             <div
-              className="absolute w-3/4 max-w-xs h-full transform scale-100 z-10 transition-all duration-800 ease-smooth shadow-2xl hover:shadow-3xl hover:scale-105"
+              key={`active-${activeIndex}`}
+              className="absolute w-3/4 max-w-xs h-full rounded-2xl overflow-hidden shadow-2xl group cursor-pointer"
+              style={{
+                transform: 'translateX(0) translateZ(0) scale(1) rotateY(0deg)',
+                opacity: 1,
+                zIndex: 10,
+                transition: 'all 800ms cubic-bezier(0.16, 1, 0.3, 1)',
+                transformStyle: 'preserve-3d',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateX(0) translateZ(20px) scale(1.05) rotateY(0deg)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateX(0) translateZ(0) scale(1) rotateY(0deg)';
+              }}
             >
               <img
                 src={slidesData[activeIndex].cardImage}
                 alt={slidesData[activeIndex].title}
-                className="w-full h-full object-cover rounded-2xl"
+                className="w-full h-full object-cover transition-transform duration-800 ease-out"
               />
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-transparent to-black/30" />
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/40 group-hover:to-black/30 transition-all duration-800 ease-out" />
             </div>
 
             {/* Next Card */}
             <div
-              className={`absolute w-3/4 max-w-xs h-full transform transition-all duration-800 ease-smooth opacity-30 scale-75 z-0 shadow-2xl`}
+              key={`next-${nextIndex}`}
+              className="absolute w-3/4 max-w-xs h-full rounded-2xl overflow-hidden shadow-2xl"
               style={{
-                transform: `${direction === 'next' ? 'translateX(120%)' : 'translateX(-120%)'} scale(0.75)`,
+                transform: direction === 'next' 
+                  ? 'translateX(120%) translateZ(-200px) scale(0.75) rotateY(-15deg)' 
+                  : 'translateX(-120%) translateZ(-200px) scale(0.75) rotateY(15deg)',
+                opacity: 0.3,
+                transition: 'all 800ms cubic-bezier(0.16, 1, 0.3, 1)',
+                transformStyle: 'preserve-3d',
               }}
             >
               <img
                 src={slidesData[nextIndex].cardImage}
                 alt={slidesData[nextIndex].title}
-                className="w-full h-full object-cover rounded-2xl"
+                className="w-full h-full object-cover"
               />
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-transparent to-black/40" />
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/50 transition-opacity duration-800 ease-out" />
             </div>
           </div>
         </div>
@@ -210,7 +263,8 @@ const Bisnis = () => {
               prevSlide();
               setIsAutoPlay(false);
             }}
-            className="text-white/75 hover:text-white transition-smooth p-2 hover:scale-110 transform duration-200"
+            disabled={isTransitioning}
+            className="text-white/75 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed p-2 hover:scale-110 transform transition-all duration-300 ease-out hover:bg-white/10 rounded-full"
             aria-label="Previous slide"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -224,10 +278,11 @@ const Bisnis = () => {
               <button
                 key={index}
                 onClick={() => goToSlide(index)}
-                className={`h-3 rounded-full transition-all duration-300 ${
+                disabled={isTransitioning}
+                className={`h-3 rounded-full transition-all duration-800 ease-out disabled:cursor-not-allowed ${
                   activeIndex === index 
-                    ? 'bg-white w-8' 
-                    : 'bg-white/50 w-3 hover:bg-white/75'
+                    ? 'bg-white w-8 shadow-lg' 
+                    : 'bg-white/50 w-3 hover:bg-white/75 hover:w-4'
                 }`}
                 aria-label={`Go to slide ${index + 1}`}
               />
@@ -239,7 +294,8 @@ const Bisnis = () => {
               nextSlide();
               setIsAutoPlay(false);
             }}
-            className="text-white/75 hover:text-white transition-smooth p-2 hover:scale-110 transform duration-200"
+            disabled={isTransitioning}
+            className="text-white/75 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed p-2 hover:scale-110 transform transition-all duration-300 ease-out hover:bg-white/10 rounded-full"
             aria-label="Next slide"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

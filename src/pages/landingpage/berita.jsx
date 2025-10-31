@@ -1,5 +1,7 @@
 import React, { useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import beritaImage from '../../assets/rectangle.png';
+import { link } from 'framer-motion/client';
 
 const NewsCard = ({ title, image, date, category, delay }) => {
   const cardRef = useRef(null);
@@ -70,6 +72,7 @@ const Berita = () => {
       image: beritaImage,
       date: "10 Oct 2025",
       category: "Energi",
+      link: "/media-informasi",
     },
     {
       id: 2,
@@ -77,6 +80,7 @@ const Berita = () => {
       image: beritaImage,
       date: "10 Oct 2025",
       category: "Teknologi",
+      link: "/media-informasi",
     },
     {
       id: 3,
@@ -84,6 +88,7 @@ const Berita = () => {
       image: beritaImage,
       date: "10 Oct 2025",
       category: "Kerjasama",
+      link: "/media-informasi",
     },
     {
       id: 4,
@@ -91,6 +96,7 @@ const Berita = () => {
       image: beritaImage,
       date: "10 Oct 2025",
       category: "Inovasi",
+      link: "/media-informasi",
     }
   ];
 
@@ -172,7 +178,7 @@ const Berita = () => {
               lingkungan.
             </p>
 
-            <button className="group inline-flex items-center gap-3 text-primary-600 font-semibold hover:text-primary-700 transition-smooth">
+            <Link to="/media-informasi" className="group inline-flex items-center gap-3 text-primary-600 font-semibold hover:text-primary-700 transition-smooth">
               <span>Baca Selengkapnya</span>
               <svg 
                 className="w-5 h-5 transform transition-transform group-hover:translate-x-2" 
@@ -182,7 +188,7 @@ const Berita = () => {
               >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
               </svg>
-            </button>
+            </Link>
           </div>
         </div>
       </div>
@@ -197,7 +203,7 @@ const Berita = () => {
             <p className="text-primary-600 font-semibold text-sm uppercase tracking-wider mb-2">Update Terkini</p>
             <h3 className="text-display-md text-gray-900">Berita Terbaru</h3>
           </div>
-          <button className="group inline-flex items-center gap-2 text-primary-600 font-semibold hover:text-primary-700 transition-smooth whitespace-nowrap">
+          <Link to="/media-informasi" className="group inline-flex items-center gap-2 text-primary-600 font-semibold hover:text-primary-700 transition-smooth whitespace-nowrap">
             <span>Lihat Semua</span>
             <svg 
               className="w-5 h-5 transform transition-transform group-hover:translate-x-1" 
@@ -207,7 +213,7 @@ const Berita = () => {
             >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
             </svg>
-          </button>
+          </Link>
         </div>
 
         {/* News Grid */}

@@ -19,6 +19,7 @@ import Mmanajemen from './pages/manajemen/mmanajemen';
 import Mainwk from "./pages/wk/mainwk";
 import KontakPage from "./pages/KontakPage";
 import UmkmPage from "./pages/UmkmPage";
+import Header from './pages/landingpage/header';
 
 
 const router = createBrowserRouter([
@@ -26,6 +27,7 @@ const router = createBrowserRouter([
     path: '/',
     element: (
       <>
+        <Header />
         <ScrollRestoration />
         <Layout />
       </>

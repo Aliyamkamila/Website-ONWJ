@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, } from 'react';
+import { Link } from 'react-router-dom';
 import CountUp from './CountUp'; 
 import './penghargaan.css';
 
@@ -65,9 +66,9 @@ export default function Penghargaan() {
                 Lorem ipsum has been the industry's standard dummy text ever since the 1500s, 
                 when an unknown printer took a gallery of type and scrambled it to make a type specimen book.
               </p>
-              <button className="penghargaan-button" aria-label="View more awards">
+              <Link to="/penghargaan" className="penghargaan-button" aria-label="View more awards">
                 View More
-              </button>
+              </Link>
             </div>
           </div>
 
