@@ -34,7 +34,7 @@ const router = createBrowserRouter([
       { path: 'tentang', element: <Tentang /> },
       { path: 'kelola', element: <TataKelola /> },
       { path: 'manajemen', element: <Manajemen /> },
-      { path: 'bisnis', element: <Mainbisnis /> },
+      { path: 'Eksplorasi-Produksi', element: <Mainbisnis /> },
       { path: 'wilayahkerja', element: <Mainwk /> },
       { path: 'berita-tjsl', element: <BeritaTJSLPage /> },
       { path: 'artikel/:slug', element: <ArtikelPage /> },
