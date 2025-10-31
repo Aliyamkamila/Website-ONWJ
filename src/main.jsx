@@ -3,7 +3,6 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, RouterProvider, ScrollRestoration } from 'react-router-dom';
 import './index.css';
-
 import Layout from './Layout';
 import HomePage from './pages/HomePage';
 import TJSLPage from './pages/TJSLPage'; 
@@ -17,10 +16,10 @@ import PenghargaanPage from './pages/media/PenghargaanPage';
 import LaporanTahunanPage from './pages/media/LaporanTahunanPage';
 import Mainbisnis from './pages/bisnis/mainbisnis';
 import Mmanajemen from './pages/manajemen/mmanajemen';
-import Mainwk from './pages/wk/mainwk';
+import Mainwk from "./pages/wk/mainwk";
+import KontakPage from "./pages/KontakPage";
+import UmkmPage from "./pages/UmkmPage";
 
-// --- 1. TAMBAHKAN IMPORT INI ---
-import KontakPage from './pages/KontakPage';
 
 const router = createBrowserRouter([
   {
@@ -46,6 +45,7 @@ const router = createBrowserRouter([
       { path: 'manajemen', element: <Mmanajemen /> },
       { path: 'wilayah-kerja', element: <Mainwk /> },
       {path: 'kontak', element: <KontakPage />,},
+      {path: 'umkm-binaan', element: <UmkmPage />,},
     ],
   },
 ]);
