@@ -1,24 +1,28 @@
+// src/main.jsx
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, RouterProvider, ScrollRestoration } from 'react-router-dom';
 import './index.css';
+
 import Layout from './Layout';
 import HomePage from './pages/HomePage';
-import TJSLPage from './pages/TJSLPage';
-import Tentang from './pages/company/tentang';
-import TataKelola from './pages/kelola/tatakelola';
+import TJSLPage from './pages/TJSLPage'; 
 import BeritaTJSLPage from './pages/BeritaTJSLPage';
 import ArtikelPage from './pages/ArtikelPage';
-import Manajemen from './pages/manajemen/mmanajemen';
-import Mainbisnis from './pages/bisnis/mainbisnis';
-import Mainwk from './pages/wk/mainwk';
+import AllProgramsPage from './pages/AllProgramsPage';
+import Tentang from './pages/company/tentang';
+import TataKelola from './pages/kelola/tatakelola';
 import MediaInformasiPage from './pages/media/MediaInformasiPage';
 import PenghargaanPage from './pages/media/PenghargaanPage';
-import AllProgramsPage from './pages/AllProgramsPage';
 import LaporanTahunanPage from './pages/media/LaporanTahunanPage';
+import Mainbisnis from './pages/bisnis/mainbisnis';
+import Mmanajemen from './pages/manajemen/mmanajemen';
+import Mainwk from './pages/wk/mainwk';
+
+// --- 1. TAMBAHKAN IMPORT INI ---
 import KontakPage from './pages/KontakPage';
 
-const router = createBrowserRouter([ 
+const router = createBrowserRouter([
   {
     path: '/',
     element: (
@@ -27,22 +31,22 @@ const router = createBrowserRouter([
         <Layout />
       </>
     ),
-    children: [ 
+    children: [
       { index: true, element: <HomePage /> },
       { path: 'tjsl', element: <TJSLPage /> },
+      { path: 'berita-tjsl', element: <BeritaTJSLPage /> },
+      { path: 'artikel/:slug', element: <ArtikelPage /> },
       { path: 'program-berkelanjutan', element: <AllProgramsPage /> },
       { path: 'tentang', element: <Tentang /> },
       { path: 'kelola', element: <TataKelola /> },
-      { path: 'manajemen', element: <Manajemen /> },
-      { path: 'Eksplorasi-Produksi', element: <Mainbisnis /> },
-      { path: 'wilayahkerja', element: <Mainwk /> },
-      { path: 'berita-tjsl', element: <BeritaTJSLPage /> },
-      { path: 'artikel/:slug', element: <ArtikelPage /> },
       { path: 'media-informasi', element: <MediaInformasiPage /> },
       { path: 'penghargaan', element: <PenghargaanPage /> },
       { path: 'laporan-tahunan', element: <LaporanTahunanPage /> },
-      { path: 'kontak', element: <KontakPage /> },
-      { path: 'wilayah-kerja', element: <Mainwk /> },    ],
+      { path: 'bisnis', element: <Mainbisnis /> },
+      { path: 'manajemen', element: <Mmanajemen /> },
+      { path: 'wilayah-kerja', element: <Mainwk /> },
+      {path: 'kontak', element: <KontakPage />,},
+    ],
   },
 ]);
 
