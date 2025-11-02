@@ -294,6 +294,44 @@
   flex: 1;
 }
 
+/* Tambahkan CSS untuk tabel produksi */
+.production-table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.875rem;
+  margin-top: 1rem;
+}
+
+.production-table th {
+  background-color: #eff6ff;
+  font-weight: 600;
+  color: #1e40af;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border: 1px solid #e5e7eb;
+}
+
+.production-table td {
+  padding: 0.625rem 1rem;
+  border: 1px solid #e5e7eb;
+  color: #334155;
+}
+
+.production-table tbody tr:hover {
+  background-color: #f9fafb;
+}
+
+.production-table tfoot tr {
+  background-color: #dbeafe;
+  font-weight: 700;
+  color: #1e40af;
+}
+
+.overflow-x-auto {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 .modal-grid { display: grid; grid-template-columns: 1fr; gap: 2rem; }
 @media (min-width: 768px) { .modal-grid { grid-template-columns: repeat(2, 1fr); } }
 

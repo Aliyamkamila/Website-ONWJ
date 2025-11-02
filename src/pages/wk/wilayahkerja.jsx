@@ -8,7 +8,9 @@ import {
   LayersControl,
   LayerGroup,
   ScaleControl,
-  useMap
+  useMap,
+  CircleMarker,
+  Polyline
 } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -66,6 +68,7 @@ const WilayahKerja = () => {
   const [filter, setFilter] = useState('semua');
   const [zoomLevel, setZoomLevel] = useState(8);
   const mapRef = useRef(null);
+
   const areaACoordinates = useMemo(() => ([
     [-6.105650, 106.784844], [-6.065867, 106.784847], [-6.065925, 106.798917],
     [-5.966986, 106.799314], [-5.966942, 106.787517], [-5.930794, 106.788217],
@@ -115,7 +118,7 @@ const WilayahKerja = () => {
     [-6.459878, 108.784361], [-6.459819, 108.693764], [-6.505039, 108.693736],
     [-6.505017, 108.657558], [-6.541200, 108.657533], [-6.541111, 108.546606],
     [-6.483981, 108.540703], [-6.423592, 108.539858], [-6.423608, 108.558131],
-    [-6.369467, 108.558175], [-6.369444, 108.531500], [-6.333236, 108.531533],
+    [-6.369467, 108.558175], [-6.369444, 108.531500], [-6.333236, 106.531533],
     [-6.333192, 108.485478], [-6.369400, 108.485444], [-6.369372, 108.458556],
     [-6.396275, 108.458525], [-6.396231, 108.417839], [-5.937467, 108.081978],
     [-5.896706, 107.149486], [-5.850561, 107.149367], [-5.850503, 107.131542],
@@ -140,6 +143,62 @@ const WilayahKerja = () => {
     [-5.361319, 106.618350], [-5.449878, 106.618197], [-5.449878, 106.501544],
     [-4.999928, 106.501544],
   ]), []);
+
+  const flowLineCoordinates = useMemo(() => ([
+    [-5.355123, 106.600162],
+    [-5.361711, 106.591125],
+    [-5.821120, 107.032625],
+    [-5.827708, 107.023589],
+    [-5.823055, 106.991481],
+    [-5.842273, 107.177863],
+    [-5.910981, 107.301039],
+    [-5.917569, 107.292003],
+    [-5.908607, 107.052618],
+    [-5.915194, 107.517144],
+    [-6.032211, 107.526713],
+    [-6.121081, 107.857525],
+    [-6.079227, 107.716877],
+    [-5.975795, 107.759091],
+    [-5.948672, 107.919132],
+    [-5.954138, 107.909904],
+    [-6.004002, 108.116644],
+    [-6.110974, 108.126987],
+  ]), []);
+
+  // Generate data produksi dummy untuk setiap titik flow
+  const generateProductionData = (pointIndex) => {
+    const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+    return months.map((month, idx) => ({
+      month,
+      oil: Math.floor(Math.random() * 3000) + 1500 + (pointIndex * 100), // BOPD
+      gas: Math.floor(Math.random() * 8000) + 3000 + (pointIndex * 200), // MMSCFD
+      water: Math.floor(Math.random() * 1000) + 200, // BWPD
+    }));
+  };
+
+  // Data untuk setiap titik flow
+  const flowPointsData = useMemo(() => 
+    flowLineCoordinates.map((coord, index) => ({
+      id: `FLOW-${index + 1}`,
+      name: `Flow Point ${index + 1}`,
+      position: coord,
+      type: 'flow',
+      description: `Titik flow ${index + 1} pada jalur pipeline utama. Merupakan bagian dari sistem distribusi minyak dan gas dari platform produksi ke fasilitas pemrosesan.`,
+      facilities: [
+        'Pipeline Connection',
+        'Flow Meter',
+        'Pressure Monitoring',
+        'Safety Valve System',
+        'Control Station'
+      ],
+      production: generateProductionData(index),
+      coordinates: `${coord[0].toFixed(6)}°, ${coord[1].toFixed(6)}°`,
+      status: 'Operational',
+      pressure: `${(Math.random() * 500 + 1000).toFixed(2)} PSI`,
+      temperature: `${(Math.random() * 30 + 50).toFixed(1)}°C`,
+      flowRate: `${(Math.random() * 5000 + 3000).toFixed(0)} BBL/Day`
+    }))
+  , [flowLineCoordinates]);
 
   const pengeboranData = useMemo(() => ([
     {
@@ -186,6 +245,7 @@ const WilayahKerja = () => {
     setActiveItem(itemData);
     setShowModal(true);
   };
+  
   const closeModal = () => {
     setShowModal(false);
     setActiveItem(null);
@@ -200,7 +260,7 @@ const WilayahKerja = () => {
   useEffect(() => {
     if (!mapRef.current) return;
     if (filter === 'pengeboran') {
-      const allCoords = [...pengeboranData.flatMap(a => a.coordinates)];
+      const allCoords = [...pengeboranData.flatMap(a => a.coordinates), ...flowLineCoordinates];
       if (allCoords.length) {
         mapRef.current.fitBounds(allCoords, { padding: [40, 40] });
       }
@@ -233,7 +293,7 @@ const WilayahKerja = () => {
             whenCreated={handleMapCreated}
             minZoom={6}
             maxZoom={16}
-            maxBounds={[[-12, 95], [6, 141]]} // contoh batas Indonesia luas
+            maxBounds={[[-12, 95], [6, 141]]}
             className="rounded-lg"
           >
             <TileLayer
@@ -265,11 +325,51 @@ const WilayahKerja = () => {
                 </LayerGroup>
               </LayersControl.Overlay>
 
-              {/* TJSL markers (dimasukkan ke cluster group using leaflet.markercluster) */}
+              {/* Flow Points - Circle Markers */}
+              <LayersControl.Overlay name="Flow Points" checked={filter !== 'tjsl'}>
+                <LayerGroup>
+                  {(filter === 'semua' || filter === 'pengeboran') && flowPointsData.map((point, idx) => (
+                    <CircleMarker
+                      key={point.id}
+                      center={point.position}
+                      radius={8}
+                      pathOptions={{
+                        fillColor: '#3B82F6',
+                        fillOpacity: 0.9,
+                        color: '#FFFFFF',
+                        weight: 2,
+                        opacity: 1
+                      }}
+                      eventHandlers={{
+                        click: () => openModal(point),
+                        mouseover: (e) => {
+                          e.target.setStyle({
+                            radius: 12,
+                            fillOpacity: 1,
+                            weight: 3
+                          });
+                        },
+                        mouseout: (e) => {
+                          e.target.setStyle({
+                            radius: 8,
+                            fillOpacity: 0.9,
+                            weight: 2
+                          });
+                        }
+                      }}
+                    >
+                      <Tooltip direction="top" offset={[0, -10]} opacity={1} permanent={zoomLevel >= 11}>
+                        {idx + 1}
+                      </Tooltip>
+                    </CircleMarker>
+                  ))}
+                </LayerGroup>
+              </LayersControl.Overlay>
+
+              {/* TJSL markers */}
               <LayersControl.Overlay name="TJSL" checked={filter !== 'pengeboran'}>
                 <LayerGroup>
                   {(filter === 'semua' || filter === 'tjsl') && (
-                    // our MarkerCluster creates native Leaflet markers and clusters them
                     <MarkerCluster markers={tjslData} onMarkerClick={openModal} zoomLevel={zoomLevel} />
                   )}
                 </LayerGroup>
@@ -277,74 +377,193 @@ const WilayahKerja = () => {
             </LayersControl>
           </MapContainer>
         </div>
+
+        {/* Legend */}
+        <div className="max-w-6xl mx-auto mt-4 bg-white rounded-xl shadow-lg p-4 border border-gray-200">
+          <h4 className="font-semibold text-lg mb-3">📊 Legenda Peta</h4>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 bg-red-500 rounded opacity-60"></div>
+              <span className="text-sm">Area A (Pengeboran)</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 bg-orange-500 rounded opacity-60"></div>
+              <span className="text-sm">Area B (Pengeboran)</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 bg-blue-500 rounded-full"></div>
+              <span className="text-sm">Flow Points</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-12 h-1 bg-blue-500" style={{borderTop: '3px dashed #3B82F6'}}></div>
+              <span className="text-sm">Flow Line</span>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Modal (sama pola seperti sebelumnya) */}
+      {/* Modal */}
       {showModal && activeItem && (
         <div className="modal-backdrop" onClick={(e) => { if (e.target.classList.contains('modal-backdrop')) closeModal(); }}>
           <div className="modal-content">
             <div className="modal-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ width: 14, height: 14, borderRadius: 4, backgroundColor: activeItem.color || '#FFEB3B' }} />
-                <h3 className="modal-title">📍 Detail: {activeItem.name}</h3>
+                <div style={{ 
+                  width: 14, 
+                  height: 14, 
+                  borderRadius: activeItem.type === 'flow' ? '50%' : 4, 
+                  backgroundColor: activeItem.type === 'flow' ? '#3B82F6' : (activeItem.color || '#FFEB3B') 
+                }} />
+                <h3 className="modal-title">
+                  {activeItem.type === 'flow' ? '🔵' : '📍'} Detail: {activeItem.name}
+                </h3>
               </div>
               <button className="modal-close-btn" onClick={closeModal}>✕</button>
             </div>
 
             <div className="modal-body">
-              <div className="modal-grid">
-                <div className="modal-column">
-                  <div className="modal-section">
-                    <h4 className="modal-section-title">📋 Deskripsi</h4>
-                    <p className="modal-text">{activeItem.description}</p>
-                  </div>
-
-                  <div className="modal-section">
-                    <h4 className="modal-section-title">📐 Data Teknis</h4>
+              {activeItem.type === 'flow' ? (
+                // Modal untuk Flow Point dengan data produksi
+                <div>
+                  <div className="modal-section mb-4">
+                    <h4 className="modal-section-title">📋 Informasi Flow Point</h4>
+                    <p className="modal-text mb-3">{activeItem.description}</p>
                     <div className="modal-data-grid">
                       <div className="modal-data-item">
-                        <div className="modal-data-label">Entity Type:</div>
-                        <div className="modal-data-value">{activeItem.entity || (activeItem.type === 'tjsl' ? 'Point' : 'Polygon')}</div>
+                        <div className="modal-data-label">ID:</div>
+                        <div className="modal-data-value">{activeItem.id}</div>
                       </div>
                       <div className="modal-data-item">
-                        <div className="modal-data-label">Layer:</div>
-                        <div className="modal-data-value">{activeItem.layer || (activeItem.type === 'tjsl' ? '_TJSL' : '_BATAS')}</div>
+                        <div className="modal-data-label">Koordinat:</div>
+                        <div className="modal-data-value">{activeItem.coordinates}</div>
                       </div>
                       <div className="modal-data-item">
-                        <div className="modal-data-label">Line Type:</div>
-                        <div className="modal-data-value">{activeItem.linetype || (activeItem.type === 'tjsl' ? 'POINT' : 'DASHED2')}</div>
+                        <div className="modal-data-label">Status:</div>
+                        <div className="modal-data-value text-green-600">{activeItem.status}</div>
                       </div>
                       <div className="modal-data-item">
-                        <div className="modal-data-label">Total Koordinat:</div>
-                        <div className="modal-data-value">{activeItem.totalPoints ?? (activeItem.coordinates ? activeItem.coordinates.length : 1)} titik</div>
+                        <div className="modal-data-label">Tekanan:</div>
+                        <div className="modal-data-value">{activeItem.pressure}</div>
+                      </div>
+                      <div className="modal-data-item">
+                        <div className="modal-data-label">Temperatur:</div>
+                        <div className="modal-data-value">{activeItem.temperature}</div>
+                      </div>
+                      <div className="modal-data-item">
+                        <div className="modal-data-label">Flow Rate:</div>
+                        <div className="modal-data-value">{activeItem.flowRate}</div>
                       </div>
                     </div>
                   </div>
 
-                  <div className="modal-section">
-                    <h4 className="modal-section-title">📍 Wilayah Geografis</h4>
-                    <p className="modal-text">{activeItem.region || (activeItem.position ? activeItem.position.join(', ') : '—')}</p>
-                  </div>
-                </div>
-
-                <div className="modal-column">
-                  <div className="modal-section">
-                    <h4 className="modal-section-title">{activeItem.type === 'pengeboran' ? '🏭 Fasilitas & Infrastruktur' : '💙 Program & Fasilitas'}</h4>
-                    {activeItem.facilities && activeItem.facilities.length ? (
-                      <ul className="modal-list">
-                        {activeItem.facilities.map((f, i) => <li key={i} className="modal-list-item">→ {f}</li>)}
-                      </ul>
-                    ) : (
-                      <p className="modal-text">Informasi fasilitas tidak tersedia.</p>
-                    )}
+                  <div className="modal-section mb-4">
+                    <h4 className="modal-section-title">⚙️ Fasilitas</h4>
+                    <ul className="modal-list">
+                      {activeItem.facilities.map((f, i) => (
+                        <li key={i} className="modal-list-item">{f}</li>
+                      ))}
+                    </ul>
                   </div>
 
                   <div className="modal-section">
-                    <h4 className="modal-section-title">📊 Produksi / Target</h4>
-                    <p className="modal-text">{activeItem.production || 'Tidak tersedia'}</p>
+                    <h4 className="modal-section-title">📈 Data Produksi Tahun 2025</h4>
+                    <div className="overflow-x-auto">
+                      <table className="production-table w-full">
+                        <thead>
+                          <tr className="bg-blue-50">
+                            <th className="px-4 py-2 text-left border">Bulan</th>
+                            <th className="px-4 py-2 text-right border">Minyak (BOPD)</th>
+                            <th className="px-4 py-2 text-right border">Gas (MMSCFD)</th>
+                            <th className="px-4 py-2 text-right border">Air (BWPD)</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {activeItem.production.map((data, idx) => (
+                            <tr key={idx} className="hover:bg-gray-50">
+                              <td className="px-4 py-2 border">{data.month}</td>
+                              <td className="px-4 py-2 text-right border font-mono">{data.oil.toLocaleString()}</td>
+                              <td className="px-4 py-2 text-right border font-mono">{data.gas.toLocaleString()}</td>
+                              <td className="px-4 py-2 text-right border font-mono">{data.water.toLocaleString()}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                        <tfoot>
+                          <tr className="bg-blue-100 font-bold">
+                            <td className="px-4 py-2 border">Total Tahunan</td>
+                            <td className="px-4 py-2 text-right border font-mono">
+                              {activeItem.production.reduce((sum, d) => sum + d.oil, 0).toLocaleString()}
+                            </td>
+                            <td className="px-4 py-2 text-right border font-mono">
+                              {activeItem.production.reduce((sum, d) => sum + d.gas, 0).toLocaleString()}
+                            </td>
+                            <td className="px-4 py-2 text-right border font-mono">
+                              {activeItem.production.reduce((sum, d) => sum + d.water, 0).toLocaleString()}
+                            </td>
+                          </tr>
+                        </tfoot>
+                      </table>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-2 italic">
+                      * Data produksi adalah simulasi untuk keperluan demonstrasi
+                    </p>
                   </div>
                 </div>
-              </div>
+              ) : (
+                // Modal untuk area pengeboran dan TJSL (existing)
+                <div className="modal-grid">
+                  <div className="modal-column">
+                    <div className="modal-section">
+                      <h4 className="modal-section-title">📋 Deskripsi</h4>
+                      <p className="modal-text">{activeItem.description}</p>
+                    </div>
+
+                    <div className="modal-section">
+                      <h4 className="modal-section-title">📐 Data Teknis</h4>
+                      <div className="modal-data-grid">
+                        <div className="modal-data-item">
+                          <div className="modal-data-label">Entity Type:</div>
+                          <div className="modal-data-value">{activeItem.entity || (activeItem.type === 'tjsl' ? 'Point' : 'Polygon')}</div>
+                        </div>
+                        <div className="modal-data-item">
+                          <div className="modal-data-label">Layer:</div>
+                          <div className="modal-data-value">{activeItem.layer || (activeItem.type === 'tjsl' ? '_TJSL' : '_BATAS')}</div>
+                        </div>
+                        <div className="modal-data-item">
+                          <div className="modal-data-label">Line Type:</div>
+                          <div className="modal-data-value">{activeItem.linetype || (activeItem.type === 'tjsl' ? 'POINT' : 'DASHED2')}</div>
+                        </div>
+                        <div className="modal-data-item">
+                          <div className="modal-data-label">Total Koordinat:</div>
+                          <div className="modal-data-value">{activeItem.totalPoints ?? (activeItem.coordinates ? activeItem.coordinates.length : 1)} titik</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="modal-section">
+                      <h4 className="modal-section-title">📍 Wilayah Geografis</h4>
+                      <p className="modal-text">{activeItem.region || (activeItem.position ? activeItem.position.join(', ') : '—')}</p>
+                    </div>
+                  </div>
+
+                  <div className="modal-column">
+                    <div className="modal-section">
+                      <h4 className="modal-section-title">{activeItem.type === 'pengeboran' ? '🏭 Fasilitas & Infrastruktur' : '💙 Program & Fasilitas'}</h4>
+                      {activeItem.facilities && activeItem.facilities.length ? (
+                        <ul className="modal-list">
+                          {activeItem.facilities.map((f, i) => <li key={i} className="modal-list-item">{f}</li>)}
+                        </ul>
+                      ) : (
+                        <p className="modal-text">Informasi fasilitas tidak tersedia.</p>
+                      )}
+                    </div>
+
+                    <div className="modal-section">
+                      <h4 className="modal-section-title">📊 Produksi / Target</h4>
+                      <p className="modal-text">{activeItem.production || 'Tidak tersedia'}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
