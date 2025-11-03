@@ -97,7 +97,6 @@ const WilayahKerja = () => {
       month,
       oil: Math.floor(Math.random() * 3000) + 1500 + (pointIndex * 100), // BOPD
       gas: Math.floor(Math.random() * 8000) + 3000 + (pointIndex * 200), // MMSCFD
-      water: Math.floor(Math.random() * 1000) + 200, // BWPD
     }));
   };
 
@@ -283,20 +282,8 @@ const WilayahKerja = () => {
           <h4 className="font-semibold text-lg mb-3">📊 Legenda Peta</h4>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 bg-red-500 rounded opacity-60"></div>
-              <span className="text-sm">Area A (Pengeboran)</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 bg-orange-500 rounded opacity-60"></div>
-              <span className="text-sm">Area B (Pengeboran)</span>
-            </div>
-            <div className="flex items-center gap-2">
               <div className="w-6 h-6 bg-blue-500 rounded-full"></div>
               <span className="text-sm">Flow Points</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-12 h-1 bg-blue-500" style={{borderTop: '3px dashed #3B82F6'}}></div>
-              <span className="text-sm">Flow Line</span>
             </div>
           </div>
         </div>
@@ -374,7 +361,6 @@ const WilayahKerja = () => {
                             <th className="px-4 py-2 text-left border">Bulan</th>
                             <th className="px-4 py-2 text-right border">Minyak (BOPD)</th>
                             <th className="px-4 py-2 text-right border">Gas (MMSCFD)</th>
-                            <th className="px-4 py-2 text-right border">Air (BWPD)</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -383,7 +369,6 @@ const WilayahKerja = () => {
                               <td className="px-4 py-2 border">{data.month}</td>
                               <td className="px-4 py-2 text-right border font-mono">{data.oil.toLocaleString()}</td>
                               <td className="px-4 py-2 text-right border font-mono">{data.gas.toLocaleString()}</td>
-                              <td className="px-4 py-2 text-right border font-mono">{data.water.toLocaleString()}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -395,9 +380,6 @@ const WilayahKerja = () => {
                             </td>
                             <td className="px-4 py-2 text-right border font-mono">
                               {activeItem.production.reduce((sum, d) => sum + d.gas, 0).toLocaleString()}
-                            </td>
-                            <td className="px-4 py-2 text-right border font-mono">
-                              {activeItem.production.reduce((sum, d) => sum + d.water, 0).toLocaleString()}
                             </td>
                           </tr>
                         </tfoot>

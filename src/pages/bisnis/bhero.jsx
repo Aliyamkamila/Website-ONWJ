@@ -1,5 +1,7 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import platformImage from '../../assets/contoh1.png';
+import { FaHome } from 'react-icons/fa';
 
 const BHero = () => {
   return (
@@ -15,11 +17,13 @@ const BHero = () => {
       <div className="relative container mx-auto px-8 lg:px-16 h-full flex items-center">
         <div className="max-w-2xl text-white">
           <div className="flex items-center gap-2 mb-4">
-            <span className="text-sm">Home</span>
+            <Link to="/" className="text-gray-300 hover:text-white flex items-center gap-1">
+             <FaHome /> Home
+            </Link>
             <span>/</span>
-            <span className="text-sm text-blue-400">Tentang Kami</span>
+            <span className="text-sm text-blue-400">Bisnis Kami</span>
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold mb-6">Tentang Kami</h1>
+          <h1 className="text-4xl md:text-5xl font-bold mb-6">Bisnis Kami</h1>
           <p className="text-lg text-gray-200">
             Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
           </p>
