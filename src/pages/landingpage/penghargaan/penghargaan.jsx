@@ -10,7 +10,7 @@ import contoh3 from '../../../assets/contoh3.png';
 const awardsData = [
   {
     id: 1,
-    title: 'National Photography Awards 2019',
+    title: 'National Awards 2019',
     // Ganti dengan path gambar Anda
     image: contoh1,
     description: 'award winner',
@@ -18,7 +18,7 @@ const awardsData = [
   },
   {
     id: 2,
-    title: 'W. Eugene Smith Grant Awards 2017',
+    title: 'National Awards 2019',
     // Ganti dengan path gambar Anda
     image: contoh2,
     description: 'Lorem ipsum dolor sit amet consectetur adipiscing elit',
@@ -26,7 +26,7 @@ const awardsData = [
   },
   {
     id: 3,
-    title: 'IPhone Photography Awards 2009',
+    title: 'National Awards 2019',
     // Ganti dengan path gambar Anda
     image: contoh3,
     description: 'award winner',

@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 import bannerImage from '../../assets/hero-bg.png';
 import awardImage from '../../assets/rectangle.png';
 import logo from '../../assets/logo.webp';
+import { FaHome, FaYoutube, FaInstagram } from 'react-icons/fa';
 
 const awardsData = [
   { year: 2024, title: 'Best HSE Performance Award', givenBy: 'Kementerian ESDM' },
@@ -41,6 +42,7 @@ const AwardCard = ({ award, index, visible }) => (
   </div>
 );
 
+
 const PenghargaanPage = () => {
   const [visible, setVisible] = useState(false);
 
@@ -49,35 +51,60 @@ const PenghargaanPage = () => {
     return () => clearTimeout(timeout);
   }, []);
 
+  const SubNav = () => {
+    const activeStyle = "font-semibold text-blue-600 border-b-2 border-blue-600 py-4";
+    const inactiveStyle = "font-medium text-gray-500 hover:text-blue-600 border-b-2 border-transparent py-4 transition-colors";
+
+    return (
+        <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-sm shadow-sm border-b border-gray-200">
+            <nav className="container mx-auto px-8 lg:px-16 flex space-x-8">
+                <NavLink 
+                    to="/media-informasi" 
+                    end
+                    className={({ isActive }) => isActive ? activeStyle : inactiveStyle}
+                >
+                    Media & Berita
+                </NavLink>
+                <NavLink 
+                    to="/penghargaan" 
+                    className={({ isActive }) => isActive ? activeStyle : inactiveStyle}
+                >
+                    Penghargaan
+                </NavLink>
+            </nav>
+        </div>
+    );
+};
+
+const MediaHero = () => (
+    <div className="relative h-[60vh] overflow-hidden">
+        <div className="absolute inset-0">
+            <img src={bannerImage} alt="Banner Media" className="w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-black/50" />
+        </div>
+        <div className="relative container mx-auto px-8 lg:px-16 h-full flex items-center">
+            <div className="max-w-3xl text-white">
+                <div className="flex items-center gap-2 mb-4 text-sm">
+                    <Link to="/" className="text-gray-300 hover:text-white flex items-center gap-1">
+                        <FaHome /> Home
+                    </Link>
+                    <span>/</span>
+                    <span className="font-semibold text-white">Media & Informasi</span>
+                </div>
+                <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">Media & Informasi</h1>
+                <p className="text-lg text-gray-200 leading-relaxed">
+                    Kumpulan berita, rilis media, dan galeri video terbaru dari aktivitas perusahaan kami.
+                </p>
+            </div>
+        </div>
+    </div>
+);
+
   return (
     <div className="bg-gray-50">
-      <section className="relative h-72 md:h-80 w-full">
-        <img
-          src={bannerImage}
-          alt="Banner Penghargaan"
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/70" />
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6">
-          <h1 className="text-white text-4xl md:text-5xl font-extrabold relative pb-4">
-            Penghargaan
-            <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-20 h-1 bg-blue-500 rounded-full"></span>
-          </h1>
-          <p className="mt-4 text-gray-200 text-base md:text-lg max-w-xl">
-            Bukti komitmen kami terhadap inovasi, keberlanjutan, dan keselamatan.
-          </p>
-        </div>
-        <img
-          src={logo}
-          alt="Logo"
-          className="h-10 absolute top-8 right-8 lg:right-16"
-        />
-      </section>
+      <MediaHero />
+      <SubNav />
       <div className="max-w-screen-xl mx-auto px-6 md:px-10 lg:px-16 py-16">
-        <nav className="text-sm text-gray-500 mb-10">
-          <Link to="/" className="hover:text-blue-600">Beranda</Link> <span>/</span>{' '}
-          <span className="text-gray-700 font-semibold">Penghargaan</span>
-        </nav>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {awardsData.map((award, index) => (
             <AwardCard key={index} award={award} index={index} visible={visible} />
