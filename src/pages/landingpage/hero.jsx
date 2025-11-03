@@ -25,11 +25,6 @@ const Hero = () => {
               Energi Untuk<br />
               Kemakmuran Daerah
             </h1>
-            
-            <button className="group inline-flex items-center space-x-2 px-8 py-3 border-2 border-white text-white text-lg font-medium transition-all duration-300 hover:bg-white hover:text-gray-900 rounded-full">
-              <span>Read More</span>
-              <span className="transform group-hover:translate-x-1 transition-transform">→</span>
-            </button>
           </div>
         </div>
       </div>

@@ -20,6 +20,7 @@ import Mainwk from "./pages/wk/mainwk";
 import KontakPage from "./pages/KontakPage";
 import UmkmPage from "./pages/UmkmPage";
 import Header from './pages/landingpage/header';
+import Profile from './pages/landingpage/profile';
 
 
 const router = createBrowserRouter([
@@ -48,6 +49,7 @@ const router = createBrowserRouter([
       { path: 'wilayah-kerja', element: <Mainwk /> },
       {path: 'kontak', element: <KontakPage />,},
       {path: 'umkm-binaan', element: <UmkmPage />,},
+      {path: 'Tentang', element: <Tentang/>,},
     ],
   },
 ]);
