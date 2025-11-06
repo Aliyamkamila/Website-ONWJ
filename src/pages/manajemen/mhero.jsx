@@ -1,5 +1,7 @@
 import React from 'react';
 import platformImage from '../../assets/contoh1.png';
+import { Link } from 'react-router-dom';
+import { FaHome } from 'react-icons/fa';
 
 const Hero = () => {
   return (
@@ -15,7 +17,9 @@ const Hero = () => {
       <div className="relative container mx-auto px-8 lg:px-16 h-full flex items-center">
         <div className="max-w-2xl text-white">
           <div className="flex items-center gap-2 mb-4">
-            <span className="text-sm">Home</span>
+            <Link to="/" className="text-gray-300 hover:text-white flex items-center gap-1">
+              <FaHome /> Home
+            </Link>
             <span>/</span>
             <span className="text-sm text-blue-400">Tentang Kami</span>
           </div>
