@@ -30,6 +30,7 @@ import LoginPage from './pages/admin/LoginPage';
 import AdminLayout from './pages/admin/AdminLayout';
 import DashboardPage from './pages/admin/DashboardPage';
 import ManageBerita from './pages/admin/ManageBerita';
+// import ManagePenghargaan from './pages/admin/ManagePenghargaan'; // bisa ditambah nanti
 
 // ==== DEFINISI RUTE ====
 const router = createBrowserRouter([
@@ -65,8 +66,8 @@ const router = createBrowserRouter([
   },
 
   {
-    // --- RUTE ADMIN (SETELAH LOGIN) ---
-    path: '/admin',
+    // --- RUTE ADMIN (AREA KHUSUS "TUKANG MINYAK DAN GAS") ---
+    path: '/tukang-minyak-dan-gas',
     element: <AdminLayout />,
     children: [
       { index: true, element: <DashboardPage /> },
@@ -77,8 +78,8 @@ const router = createBrowserRouter([
   },
 
   {
-    // --- RUTE LOGIN ADMIN (TANPA LAYOUT ADMIN) ---
-    path: '/admin/login',
+    // --- RUTE LOGIN ADMIN (PINTU MASUK TUKANG MINYAK DAN GAS) ---
+    path: '/tukang-minyak-dan-gas/login',
     element: <LoginPage />,
   },
 ]);
