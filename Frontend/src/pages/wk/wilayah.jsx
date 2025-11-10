@@ -15,9 +15,6 @@ const samplePengeboran = () => ([
   {
     id: 'BRAVO',
     name: 'BRAVO',
-    // Position calculated from image-map coords: 2520,2157 on 4959x3509 image
-    // x = (2520/4959)*100 = 50.82%
-    // y = (2157/3509)*100 = 61.47%
     position: { x: 50.82, y: 61.47 },
     color: '#EF4444',
     description: 'Area pengeboran BRAVO. Lokasi strategis untuk eksplorasi dan produksi hidrokarbon di Wilayah Kerja ONWJ.',
@@ -26,7 +23,142 @@ const samplePengeboran = () => ([
     status: 'Operasional',
     wells: 12,
     depth: '3,450 m',
-  }
+  },
+  {
+    id: 'UNIFORM',
+    name: 'UNIFORM',
+    // Position: 2918,2547 on 4959x3509 image
+    // x = (2918/4959)*100 = 58.83%
+    // y = (2547/3509)*100 = 72.58%
+    position: { x: 58.83, y: 72.58 },
+    color: '#10B981',
+    description: 'Area pengeboran UNIFORM. Fasilitas modern dengan teknologi terkini untuk optimalisasi produksi di Wilayah Kerja ONWJ.',
+    facilities: ['Platform UNIFORM', 'Wellheads', 'Production Facilities', 'Control Room', 'Pipeline System'],
+    production: '4,800 BOPD',
+    status: 'Operasional',
+    wells: 10,
+    depth: '3,200 m',
+  },
+  {
+    id: 'ECHO',
+    name: 'ECHO',
+    // Position: 3093,2017 on 4959x3509 image
+    // x = (3093/4959)*100 = 62.36%
+    // y = (2017/3509)*100 = 57.47%
+    position: { x: 62.36, y: 57.47 },
+    color: '#F59E0B',
+    description: 'Area pengeboran ECHO. Lokasi produksi dengan potensi hidrokarbon tinggi di Wilayah Kerja ONWJ.',
+    facilities: ['Platform ECHO', 'Wellheads', 'Production Facilities', 'Control Room', 'Pipeline System'],
+    production: '6,100 BOPD',
+    status: 'Operasional',
+    wells: 14,
+    depth: '3,650 m',
+  },
+  {
+    id: 'FOXTROT',
+    name: 'FOXTROT',
+    // Position: 3448,2338 on 4959x3509 image
+    // x = (3448/4959)*100 = 69.52%
+    // y = (2338/3509)*100 = 66.62%
+    position: { x: 69.52, y: 66.62 },
+    color: '#8B5CF6',
+    description: 'Area pengeboran FOXTROT. Fasilitas produksi terintegrasi dengan sistem monitoring canggih di Wilayah Kerja ONWJ.',
+    facilities: ['Platform FOXTROT', 'Wellheads', 'Production Facilities', 'Control Room', 'Pipeline System'],
+    production: '5,500 BOPD',
+    status: 'Operasional',
+    wells: 11,
+    depth: '3,380 m',
+  },
+  {
+    id: 'GG',
+    name: 'GG',
+    // Position: 1706,1511 on 4959x3509 image
+    // x = (1706/4959)*100 = 34.41%
+    // y = (1511/3509)*100 = 43.06%
+    position: { x: 34.41, y: 43.06 },
+    color: '#EC4899',
+    description: 'Area pengeboran GG. Lokasi eksplorasi dan produksi dengan infrastruktur lengkap di Wilayah Kerja ONWJ.',
+    facilities: ['Platform GG', 'Wellheads', 'Production Facilities', 'Control Room', 'Pipeline System'],
+    production: '4,300 BOPD',
+    status: 'Operasional',
+    wells: 9,
+    depth: '3,100 m',
+  },
+  {
+    id: 'LIMA',
+    name: 'LIMA',
+    // Position: 2143,2027 on 4959x3509 image
+    // x = (2143/4959)*100 = 43.22%
+    // y = (2027/3509)*100 = 57.76%
+    position: { x: 43.22, y: 57.76 },
+    color: '#06B6D4',
+    description: 'Area pengeboran LIMA. Fasilitas strategis dengan kapasitas produksi optimal di Wilayah Kerja ONWJ.',
+    facilities: ['Platform LIMA', 'Wellheads', 'Production Facilities', 'Control Room', 'Pipeline System'],
+    production: '5,700 BOPD',
+    status: 'Operasional',
+    wells: 13,
+    depth: '3,520 m',
+  },
+  {
+    id: 'KL',
+    name: 'KL',
+    // Position: 2121,2316 on 4959x3509 image
+    // x = (2121/4959)*100 = 42.77%
+    // y = (2316/3509)*100 = 65.99%
+    position: { x: 42.77, y: 65.99 },
+    color: '#84CC16',
+    description: 'Area pengeboran KL. Lokasi produksi dengan teknologi ramah lingkungan di Wilayah Kerja ONWJ.',
+    facilities: ['Platform KL', 'Wellheads', 'Production Facilities', 'Control Room', 'Pipeline System'],
+    production: '4,900 BOPD',
+    status: 'Operasional',
+    wells: 10,
+    depth: '3,280 m',
+  },
+  {
+    id: 'MB',
+    name: 'MB',
+    // Position: 1771,1895 on 4959x3509 image
+    // x = (1771/4959)*100 = 35.71%
+    // y = (1895/3509)*100 = 54.00%
+    position: { x: 35.71, y: 54.00 },
+    color: '#F97316',
+    description: 'Area pengeboran MB. Fasilitas produksi dengan sistem keamanan tinggi di Wilayah Kerja ONWJ.',
+    facilities: ['Platform MB', 'Wellheads', 'Production Facilities', 'Control Room', 'Pipeline System'],
+    production: '5,300 BOPD',
+    status: 'Operasional',
+    wells: 11,
+    depth: '3,410 m',
+  },
+  {
+    id: 'ZULU',
+    name: 'ZULU',
+    // Position: 340,820 on 4959x3509 image
+    // x = (340/4959)*100 = 6.86%
+    // y = (820/3509)*100 = 23.37%
+    position: { x: 6.86, y: 23.37 },
+    color: '#6366F1',
+    description: 'Area pengeboran ZULU. Lokasi eksplorasi baru dengan potensi cadangan besar di Wilayah Kerja ONWJ.',
+    facilities: ['Platform ZULU', 'Wellheads', 'Production Facilities', 'Control Room', 'Pipeline System'],
+    production: '3,800 BOPD',
+    status: 'Operasional',
+    wells: 8,
+    depth: '2,950 m',
+  },
+  {
+    id: 'PAPA',
+    name: 'PAPA',
+    // Position: 1250,1823 on 4959x3509 image
+    // x = (1250/4959)*100 = 25.21%
+    // y = (1823/3509)*100 = 51.95%
+    position: { x: 25.21, y: 51.95 },
+    color: '#14B8A6',
+    description: 'Area pengeboran PAPA. Fasilitas terintegrasi dengan sistem distribusi modern di Wilayah Kerja ONWJ.',
+    facilities: ['Platform PAPA', 'Wellheads', 'Production Facilities', 'Control Room', 'Pipeline System'],
+    production: '4,600 BOPD',
+    status: 'Operasional',
+    wells: 10,
+    depth: '3,180 m',
+  },
 ]);
 
 const Wilayah = () => {
@@ -86,37 +218,48 @@ const Wilayah = () => {
                 }}
                 aria-label={`Area pengeboran ${area.name}`}
               >
-                {/* Marker Circle */}
+                {/* Map Pin Marker */}
                 <div style={{
-                  width: hoveredId === area.id ? '48px' : '36px',
-                  height: hoveredId === area.id ? '48px' : '36px',
-                  borderRadius: '50%',
+                  fontSize: hoveredId === area.id ? '48px' : '36px',
+                  lineHeight: '1',
+                  filter: hoveredId === area.id 
+                    ? 'drop-shadow(0 8px 16px rgba(0,0,0,0.4))' 
+                    : 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))',
+                  transition: 'all 0.2s ease',
+                  animation: hoveredId === area.id ? 'pulse 1.5s infinite' : 'none',
+                  color: area.color
+                }}>
+                  📍
+                </div>
+
+                {/* Badge with well count */}
+                <div style={{
+                  position: 'absolute',
+                  top: hoveredId === area.id ? '-8px' : '-6px',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
                   backgroundColor: area.color,
-                  border: '3px solid white',
-                  boxShadow: hoveredId === area.id 
-                    ? '0 8px 16px rgba(0,0,0,0.3), 0 0 0 4px rgba(59,130,246,0.3)' 
-                    : '0 4px 8px rgba(0,0,0,0.2)',
+                  color: 'white',
+                  borderRadius: '50%',
+                  width: hoveredId === area.id ? '24px' : '20px',
+                  height: hoveredId === area.id ? '24px' : '20px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  transition: 'all 0.2s ease',
-                  animation: hoveredId === area.id ? 'pulse 1.5s infinite' : 'none'
+                  fontSize: hoveredId === area.id ? '11px' : '10px',
+                  fontWeight: 'bold',
+                  border: '2px solid white',
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
+                  transition: 'all 0.2s ease'
                 }}>
-                  <span style={{
-                    color: 'white',
-                    fontWeight: 'bold',
-                    fontSize: hoveredId === area.id ? '16px' : '14px',
-                    textShadow: '0 1px 2px rgba(0,0,0,0.5)'
-                  }}>
-                    {area.wells || '?'}
-                  </span>
+                  {area.wells}
                 </div>
 
                 {/* Tooltip Label */}
                 {hoveredId === area.id && (
                   <div style={{
                     position: 'absolute',
-                    top: '-45px',
+                    top: '-60px',
                     left: '50%',
                     transform: 'translateX(-50%)',
                     backgroundColor: 'rgba(17, 24, 39, 0.95)',
@@ -154,13 +297,13 @@ const Wilayah = () => {
               {pengeboranData.map((area) => (
                 <div key={area.id} className="flex items-center gap-2">
                   <div style={{
-                    width: '16px',
-                    height: '16px',
-                    borderRadius: '50%',
-                    backgroundColor: area.color,
-                    border: '2px solid white',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-                  }} />
+                    fontSize: '20px',
+                    color: area.color,
+                    lineHeight: '1',
+                    filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))'
+                  }}>
+                    📍
+                  </div>
                   <span className="text-xs font-medium text-gray-700">{area.name}</span>
                 </div>
               ))}
@@ -205,13 +348,13 @@ const Wilayah = () => {
             }}>
               <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
                 <div style={{ 
-                  width: '20px', 
-                  height: '20px', 
-                  borderRadius: '50%', 
-                  backgroundColor: active.color,
-                  border: '3px solid white',
-                  boxShadow: '0 2px 6px rgba(0,0,0,0.2)'
-                }} />
+                  fontSize: '28px',
+                  color: active.color,
+                  lineHeight: '1',
+                  filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.2))'
+                }}>
+                  📍
+                </div>
                 <h3 className="modal-title" style={{ fontSize: '20px', fontWeight: '700', color: '#111827' }}>
                   🛢️ Area Pengeboran: {active.name}
                 </h3>
@@ -373,10 +516,10 @@ const Wilayah = () => {
       <style>{`
         @keyframes pulse {
           0%, 100% {
-            box-shadow: 0 8px 16px rgba(0,0,0,0.3), 0 0 0 0 rgba(59,130,246,0.7);
+            transform: scale(1);
           }
           50% {
-            box-shadow: 0 8px 16px rgba(0,0,0,0.3), 0 0 0 8px rgba(59,130,246,0);
+            transform: scale(1.1);
           }
         }
       `}</style>
