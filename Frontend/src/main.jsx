@@ -30,7 +30,11 @@ import LoginPage from './pages/admin/LoginPage';
 import AdminLayout from './pages/admin/AdminLayout';
 import DashboardPage from './pages/admin/DashboardPage';
 import ManageBerita from './pages/admin/ManageBerita';
-// import ManagePenghargaan from './pages/admin/ManagePenghargaan'; // bisa ditambah nanti
+import ManagePenghargaan from './pages/admin/ManagePenghargaan';
+import ManageProgram from './pages/admin/ManageProgram';
+import ManageUmkm from './pages/admin/ManageUmkm';
+import ManageLaporan from './pages/admin/ManageLaporan';
+import ManageKeuangan from './pages/admin/ManageKeuangan';
 
 // ==== DEFINISI RUTE ====
 const router = createBrowserRouter([
@@ -66,19 +70,23 @@ const router = createBrowserRouter([
   },
 
   {
-    // --- RUTE ADMIN (AREA KHUSUS "TUKANG MINYAK DAN GAS") ---
+    // --- RUTE ADMIN (AREA TUKANG MINYAK DAN GAS) ---
     path: '/tukang-minyak-dan-gas',
     element: <AdminLayout />,
     children: [
       { index: true, element: <DashboardPage /> },
       { path: 'dashboard', element: <DashboardPage /> },
       { path: 'manage-berita', element: <ManageBerita /> },
-      // { path: 'manage-penghargaan', element: <ManagePenghargaan /> },
+      { path: 'manage-program', element: <ManageProgram /> },
+      { path: 'manage-umkm', element: <ManageUmkm /> },
+      { path: 'manage-penghargaan', element: <ManagePenghargaan /> },
+      { path: 'manage-laporan', element: <ManageLaporan /> },
+      { path: 'manage-keuangan', element: <ManageKeuangan /> },
     ],
   },
 
   {
-    // --- RUTE LOGIN ADMIN (PINTU MASUK TUKANG MINYAK DAN GAS) ---
+    // --- LOGIN ADMIN ---
     path: '/tukang-minyak-dan-gas/login',
     element: <LoginPage />,
   },

@@ -52,4 +52,4 @@ const ManagePenghargaan = () => {
     );
 };
 
-export default ManagePenghargaan;
+export default ManagePenghargaan;   
