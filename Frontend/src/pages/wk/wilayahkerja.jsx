@@ -125,17 +125,144 @@ const WilayahKerja = () => {
   , [flowLineCoordinates]);
 
   const pengeboranData = useMemo(() => ([
-    
+    // Data pengeboran kosong - bisa diisi nanti jika diperlukan
   ]), []);
 
+  // Data Program TJSL (Lengkap)
   const tjslData = useMemo(() => ([
-    { name: 'Program Ekowisata (Kepulauan Seribu)', position: [-5.55, 106.55], description: 'Pengembangan wisata ramah lingkungan dan edukasi laut.' },
-    { name: 'Program Pendidikan (Kalibaru)', position: [-6.1026, 106.9192], description: 'Bantuan renovasi sekolah dan beasiswa.', facilities: ['Renovasi ruang kelas','Beasiswa siswa berprestasi']},
-    { name: 'Program Mangrove (Muara Gembong)', position: [-5.9972, 107.0394], description: 'Penanaman 5.000 bibit mangrove.', facilities: ['Penanaman bibit','Edukasi lingkungan'], region: 'Muara Gembong'},
-    { name: 'Program Kesehatan (Sungai Buntu)', position: [-6.0563, 107.4026], description: 'Pusat layanan kesehatan air bersih.', facilities: ['Klinik lapangan','Penyuluhan kesehatan'], region: 'Sungai Buntu'},
-    { name: 'Program UKM (Mayangan)', position: [-6.2177, 107.7800], description: 'Pelatihan dan modal usaha untuk UKM lokal.', facilities: ['Pelatihan bisnis','Modal usaha mikro'], region: 'Mayangan'},
-    { name: 'Program Lingkungan (Balongan)', position: [-6.3971, 108.3682], description: 'Konservasi terumbu karang.', facilities: ['Restorasi terumbu','Monitoring biodiversitas'], region: 'Balongan'},
-    { name: 'Program Sosial (Jawa Barat)', position: [-6.9147, 107.6098], description: 'Program pemberdayaan masyarakat dan pelatihan keterampilan di wilayah Jawa Barat.', facilities: ['Pelatihan']},
+    { 
+      id: 1,
+      name: 'Program Ekowisata (Kepulauan Seribu)', 
+      position: [-5.55, 106.55], 
+      description: 'Pengembangan wisata ramah lingkungan dan edukasi laut di kawasan Kepulauan Seribu. Program ini bertujuan untuk meningkatkan kesadaran masyarakat tentang pentingnya menjaga ekosistem laut sambil memberikan manfaat ekonomi bagi masyarakat lokal.',
+      category: 'Lingkungan',
+      facilities: [
+        'Jalur wisata edukasi laut',
+        'Pusat informasi konservasi',
+        'Pelatihan guide wisata lokal',
+        'Pembersihan pantai berkelanjutan'
+      ],
+      region: 'Kepulauan Seribu',
+      status: 'Aktif',
+      year: 2025,
+      target: '500 wisatawan/bulan',
+      production: '3 pulau wisata dikelola',
+      imageUrl: null
+    },
+    { 
+      id: 2,
+      name: 'Program Pendidikan (Kalibaru)', 
+      position: [-6.1026, 106.9192], 
+      description: 'Bantuan renovasi sekolah dan pemberian beasiswa pendidikan untuk siswa berprestasi di wilayah Kalibaru. Program ini juga menyediakan pelatihan guru dan penyediaan sarana pembelajaran modern untuk meningkatkan kualitas pendidikan.',
+      category: 'Pendidikan',
+      facilities: [
+        'Renovasi 5 ruang kelas',
+        'Beasiswa untuk 100 siswa',
+        'Pelatihan guru berkala',
+        'Donasi buku dan alat tulis'
+      ],
+      region: 'Kalibaru, Jakarta Utara',
+      status: 'Aktif',
+      year: 2025,
+      target: '500 siswa',
+      production: '5 sekolah terbantu',
+      imageUrl: null
+    },
+    { 
+      id: 3,
+      name: 'Program Mangrove (Muara Gembong)', 
+      position: [-5.9972, 107.0394], 
+      description: 'Penanaman 5.000 bibit mangrove untuk rehabilitasi kawasan pesisir dan pencegahan abrasi. Program ini melibatkan masyarakat lokal dalam kegiatan penanaman dan pemeliharaan untuk menjaga kelestarian ekosistem pesisir.',
+      category: 'Lingkungan',
+      facilities: [
+        'Penanaman 5.000 bibit mangrove',
+        'Edukasi konservasi lingkungan',
+        'Monitoring pertumbuhan bibit',
+        'Pemberdayaan masyarakat pesisir'
+      ],
+      region: 'Muara Gembong, Bekasi',
+      status: 'Aktif',
+      year: 2025,
+      target: '10 hektar kawasan pesisir',
+      production: '5.000 bibit ditanam',
+      imageUrl: null
+    },
+    { 
+      id: 4,
+      name: 'Program Kesehatan (Sungai Buntu)', 
+      position: [-6.0563, 107.4026], 
+      description: 'Pusat layanan kesehatan dan penyediaan air bersih untuk masyarakat Sungai Buntu. Program ini mencakup pemeriksaan kesehatan gratis, penyuluhan kesehatan, dan instalasi sarana air bersih untuk meningkatkan kualitas hidup masyarakat.',
+      category: 'Kesehatan',
+      facilities: [
+        'Klinik lapangan mobile',
+        'Penyuluhan kesehatan rutin',
+        'Instalasi sarana air bersih',
+        'Pemeriksaan kesehatan gratis'
+      ],
+      region: 'Sungai Buntu, Karawang',
+      status: 'Aktif',
+      year: 2025,
+      target: '500 keluarga',
+      production: '2 klinik beroperasi',
+      imageUrl: null
+    },
+    { 
+      id: 5,
+      name: 'Program UKM (Mayangan)', 
+      position: [-6.2177, 107.7800], 
+      description: 'Pelatihan kewirausahaan dan pemberian modal usaha untuk UMKM lokal di wilayah Mayangan. Program ini membantu meningkatkan kapasitas dan daya saing pelaku UMKM melalui pendampingan bisnis dan akses ke pasar digital.',
+      category: 'Ekonomi',
+      facilities: [
+        'Pelatihan manajemen bisnis',
+        'Modal usaha mikro',
+        'Pendampingan usaha',
+        'Akses ke pasar digital'
+      ],
+      region: 'Mayangan, Subang',
+      status: 'Aktif',
+      year: 2025,
+      target: '100 UMKM',
+      production: '50 UMKM binaan aktif',
+      imageUrl: null
+    },
+    { 
+      id: 6,
+      name: 'Program Lingkungan (Balongan)', 
+      position: [-6.3971, 108.3682], 
+      description: 'Konservasi dan restorasi terumbu karang di perairan Balongan. Program ini bertujuan menjaga keanekaragaman hayati laut dan mendukung keberlanjutan ekosistem pesisir melalui pelatihan diving konservasi dan monitoring biodiversitas.',
+      category: 'Lingkungan',
+      facilities: [
+        'Restorasi terumbu karang',
+        'Monitoring biodiversitas laut',
+        'Pelatihan diving konservasi',
+        'Edukasi masyarakat nelayan'
+      ],
+      region: 'Balongan, Indramayu',
+      status: 'Selesai',
+      year: 2024,
+      target: '2 lokasi terumbu karang',
+      production: '1 hektar terumbu pulih',
+      imageUrl: null
+    },
+    { 
+      id: 7,
+      name: 'Program Sosial (Jawa Barat)', 
+      position: [-6.9147, 107.6098], 
+      description: 'Program pemberdayaan masyarakat dan pelatihan keterampilan di berbagai wilayah Jawa Barat. Mencakup pelatihan vokasi, pemberdayaan perempuan, dan peningkatan kesejahteraan masyarakat melalui pendampingan komunitas berkelanjutan.',
+      category: 'Sosial',
+      facilities: [
+        'Pelatihan keterampilan vokasi',
+        'Pemberdayaan perempuan',
+        'Program kesejahteraan sosial',
+        'Pendampingan komunitas'
+      ],
+      region: 'Jawa Barat',
+      status: 'Dalam Proses',
+      year: 2025,
+      target: '10 desa',
+      production: '5 desa terlayani',
+      imageUrl: null
+    },
   ]), []);
 
   const center = [-6.2, 107.5];
@@ -179,9 +306,30 @@ const WilayahKerja = () => {
       <div className="container mx-auto px-4 lg:px-16">
         {/* Buttons */}
         <div className="flex flex-wrap justify-center gap-4 mb-4">
-          <button onClick={() => setFilter('semua')} className={`px-4 py-2 rounded-full ${filter === 'semua' ? 'bg-blue-600 text-white' : 'bg-white'}`}>Tampilkan Semua</button>
-          <button onClick={() => setFilter('pengeboran')} className={`px-4 py-2 rounded-full ${filter === 'pengeboran' ? 'bg-blue-600 text-white' : 'bg-white'}`}>Peta Pengeboran</button>
-          <button onClick={() => setFilter('tjsl')} className={`px-4 py-2 rounded-full ${filter === 'tjsl' ? 'bg-blue-600 text-white' : 'bg-white'}`}>Peta TJSL</button>
+          <button 
+            onClick={() => setFilter('semua')} 
+            className={`px-6 py-2 rounded-full font-medium transition-colors ${
+              filter === 'semua' ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-gray-700 hover:bg-gray-100'
+            }`}
+          >
+            Tampilkan Semua
+          </button>
+          <button 
+            onClick={() => setFilter('pengeboran')} 
+            className={`px-6 py-2 rounded-full font-medium transition-colors ${
+              filter === 'pengeboran' ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-gray-700 hover:bg-gray-100'
+            }`}
+          >
+            Peta Pengeboran
+          </button>
+          <button 
+            onClick={() => setFilter('tjsl')} 
+            className={`px-6 py-2 rounded-full font-medium transition-colors ${
+              filter === 'tjsl' ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-gray-700 hover:bg-gray-100'
+            }`}
+          >
+            Peta TJSL
+          </button>
         </div>
 
         <div className="max-w-6xl mx-auto bg-white rounded-xl shadow-lg p-2 border border-gray-200">
@@ -283,7 +431,11 @@ const WilayahKerja = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="flex items-center gap-2">
               <div className="w-6 h-6 bg-blue-500 rounded-full"></div>
-              <span className="text-sm">Flow Points</span>
+              <span className="text-sm">Flow Points ({flowPointsData.length})</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <img src={icon} alt="TJSL marker" className="w-6 h-6" />
+              <span className="text-sm">Program TJSL ({tjslData.length})</span>
             </div>
           </div>
         </div>
@@ -391,12 +543,56 @@ const WilayahKerja = () => {
                   </div>
                 </div>
               ) : (
-                // Modal untuk area pengeboran dan TJSL (existing)
+                // Modal untuk TJSL Program
                 <div className="modal-grid">
                   <div className="modal-column">
                     <div className="modal-section">
-                      <h4 className="modal-section-title">📋 Deskripsi</h4>
+                      <h4 className="modal-section-title">📋 Deskripsi Program</h4>
                       <p className="modal-text">{activeItem.description}</p>
+                    </div>
+
+                    <div className="modal-section">
+                      <h4 className="modal-section-title">📊 Informasi Program</h4>
+                      <div className="modal-data-grid">
+                        {activeItem.category && (
+                          <div className="modal-data-item">
+                            <div className="modal-data-label">Kategori:</div>
+                            <div className="modal-data-value">
+                              <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-semibold">
+                                {activeItem.category}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+                        {activeItem.year && (
+                          <div className="modal-data-item">
+                            <div className="modal-data-label">Tahun:</div>
+                            <div className="modal-data-value">{activeItem.year}</div>
+                          </div>
+                        )}
+                        {activeItem.status && (
+                          <div className="modal-data-item">
+                            <div className="modal-data-label">Status:</div>
+                            <div className="modal-data-value">
+                              <span className={`px-2 py-1 rounded text-xs font-semibold ${
+                                activeItem.status === 'Aktif' 
+                                  ? 'bg-green-100 text-green-800'
+                                  : activeItem.status === 'Selesai'
+                                  ? 'bg-gray-100 text-gray-800'
+                                  : 'bg-yellow-100 text-yellow-800'
+                              }`}>
+                                {activeItem.status}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+                        {activeItem.target && (
+                          <div className="modal-data-item">
+                            <div className="modal-data-label">Target:</div>
+                            <div className="modal-data-value">{activeItem.target}</div>
+                          </div>
+                        )}
+                      </div>
                     </div>
 
                     <div className="modal-section">
@@ -404,32 +600,32 @@ const WilayahKerja = () => {
                       <div className="modal-data-grid">
                         <div className="modal-data-item">
                           <div className="modal-data-label">Entity Type:</div>
-                          <div className="modal-data-value">{activeItem.entity || (activeItem.type === 'tjsl' ? 'Point' : 'Polygon')}</div>
+                          <div className="modal-data-value">Point</div>
                         </div>
                         <div className="modal-data-item">
                           <div className="modal-data-label">Layer:</div>
-                          <div className="modal-data-value">{activeItem.layer || (activeItem.type === 'tjsl' ? '_TJSL' : '_BATAS')}</div>
+                          <div className="modal-data-value">_TJSL</div>
                         </div>
                         <div className="modal-data-item">
                           <div className="modal-data-label">Line Type:</div>
-                          <div className="modal-data-value">{activeItem.linetype || (activeItem.type === 'tjsl' ? 'POINT' : 'DASHED2')}</div>
+                          <div className="modal-data-value">POINT</div>
                         </div>
                         <div className="modal-data-item">
                           <div className="modal-data-label">Total Koordinat:</div>
-                          <div className="modal-data-value">{activeItem.totalPoints ?? (activeItem.coordinates ? activeItem.coordinates.length : 1)} titik</div>
+                          <div className="modal-data-value">1 titik</div>
                         </div>
                       </div>
                     </div>
 
                     <div className="modal-section">
                       <h4 className="modal-section-title">📍 Wilayah Geografis</h4>
-                      <p className="modal-text">{activeItem.region || (activeItem.position ? activeItem.position.join(', ') : '—')}</p>
+                      <p className="modal-text">{activeItem.region || '—'}</p>
                     </div>
                   </div>
 
                   <div className="modal-column">
                     <div className="modal-section">
-                      <h4 className="modal-section-title">{activeItem.type === 'pengeboran' ? '🏭 Fasilitas & Infrastruktur' : '💙 Program & Fasilitas'}</h4>
+                      <h4 className="modal-section-title">💙 Program & Fasilitas</h4>
                       {activeItem.facilities && activeItem.facilities.length ? (
                         <ul className="modal-list">
                           {activeItem.facilities.map((f, i) => <li key={i} className="modal-list-item">{f}</li>)}
@@ -440,9 +636,20 @@ const WilayahKerja = () => {
                     </div>
 
                     <div className="modal-section">
-                      <h4 className="modal-section-title">📊 Produksi / Target</h4>
+                      <h4 className="modal-section-title">📊 Pencapaian / Output</h4>
                       <p className="modal-text">{activeItem.production || 'Tidak tersedia'}</p>
                     </div>
+
+                    {activeItem.imageUrl && (
+                      <div className="modal-section">
+                        <h4 className="modal-section-title">🖼️ Dokumentasi Program</h4>
+                        <img 
+                          src={activeItem.imageUrl} 
+                          alt={activeItem.name} 
+                          className="w-full rounded-lg shadow-md"
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

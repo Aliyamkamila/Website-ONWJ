@@ -50,64 +50,76 @@ const SidebarDropdown = ({ title, icon, children }) => {
 const AdminLayout = () => {
     const navigate = useNavigate();
     const handleLogout = () => {
-        alert('Logout berhasil!');
-        navigate('/admin/login');
+        if (window.confirm('Apakah Anda yakin ingin logout?')) {
+            // Nanti tambahkan logic hapus token/session di sini
+            alert('Logout berhasil!');
+            navigate('/tukang-minyak-dan-gas/login');
+        }
     };
 
     const subLinkClasses = ({ isActive }) =>
-        `block px-3 py-2 rounded-md text-sm transition-colors ${
+        `block px-4 py-2 rounded-lg text-sm transition-colors ${
             isActive
-                ? 'bg-blue-100 text-blue-700 font-medium'
-                : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'
+                ? 'bg-blue-100 text-blue-700 font-semibold'
+                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
         }`;
 
     return (
         <div className="flex min-h-screen bg-gray-50">
             {/* Sidebar */}
-            <aside className="w-72 bg-white border-r border-gray-200 shadow-sm flex flex-col">
+            <aside className="w-64 bg-white shadow-lg flex flex-col">
+                {/* Logo & Branding */}
                 <div className="p-6 border-b border-gray-200">
-                    <Link to="/admin/dashboard" className="flex items-center gap-3">
-                        <img src={logo} alt="Logo" className="w-10 h-auto" />
-                        <span className="text-lg font-bold text-gray-800">Admin Panel</span>
+                    <Link to="/tukang-minyak-dan-gas/dashboard" className="flex items-center gap-3">
+                        <img src={logo} alt="Logo" className="h-10 w-10" />
+                        <div>
+                            <h2 className="font-bold text-gray-900">Admin Panel</h2>
+                            <p className="text-xs text-gray-500">MHJ ONWJ</p>
+                        </div>
                     </Link>
                 </div>
-                
+
+                {/* Navigation */}
                 <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-                    <SidebarLink to="/admin/dashboard" icon={<FaTachometerAlt />} label="Dashboard" />
-                    
-                    <hr className="my-4" />
-                    
+                    {/* Dashboard */}
+                    <SidebarLink 
+                        to="/tukang-minyak-dan-gas/dashboard" 
+                        icon={<FaTachometerAlt />} 
+                        label="Dashboard" 
+                    />
+
                     {/* Dropdown Divisi TJSL */}
                     <SidebarDropdown title="Divisi TJSL" icon={<FaUsers />}>
-                        <NavLink to="/admin/manage-berita" className={subLinkClasses}>
+                        <NavLink to="/tukang-minyak-dan-gas/manage-berita" className={subLinkClasses}>
                             Kelola Berita
                         </NavLink>
-                        <NavLink to="/admin/manage-program" className={subLinkClasses}>
+                        <NavLink to="/tukang-minyak-dan-gas/manage-program" className={subLinkClasses}>
                             Kelola Program
                         </NavLink>
-                        <NavLink to="/admin/manage-umkm" className={subLinkClasses}>
+                        <NavLink to="/tukang-minyak-dan-gas/manage-umkm" className={subLinkClasses}>
                             Kelola UMKM Binaan
                         </NavLink>
                     </SidebarDropdown>
 
                     {/* Dropdown Divisi Tekom */}
                     <SidebarDropdown title="Divisi Tekom" icon={<FaBroadcastTower />}>
-                        <NavLink to="/admin/manage-penghargaan" className={subLinkClasses}>
+                        <NavLink to="/tukang-minyak-dan-gas/manage-penghargaan" className={subLinkClasses}>
                             Kelola Penghargaan
                         </NavLink>
-                        <NavLink to="/admin/manage-laporan" className={subLinkClasses}>
+                        <NavLink to="/tukang-minyak-dan-gas/manage-laporan" className={subLinkClasses}>
                             Kelola Laporan
                         </NavLink>
                     </SidebarDropdown>
 
                     {/* Dropdown Divisi Keuangan */}
                     <SidebarDropdown title="Divisi Keuangan" icon={<FaWallet />}>
-                        <NavLink to="/admin/manage-keuangan" className={subLinkClasses}>
+                        <NavLink to="/tukang-minyak-dan-gas/manage-keuangan" className={subLinkClasses}>
                             Lihat Anggaran
                         </NavLink>
                     </SidebarDropdown>
                 </nav>
 
+                {/* Logout Button */}
                 <div className="p-4 border-t border-gray-200">
                     <button
                         onClick={handleLogout}
