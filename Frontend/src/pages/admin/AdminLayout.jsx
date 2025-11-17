@@ -3,8 +3,8 @@ import React, { useState } from 'react';
 import { Link, Outlet, NavLink, useNavigate } from 'react-router-dom';
 import logo from '../../assets/logo.webp';
 import { 
-    FaTachometerAlt, FaNewspaper, FaAward, FaSignOutAlt, 
-    FaChevronDown, FaUsers, FaBroadcastTower, FaWallet 
+    FaTachometerAlt, FaSignOutAlt, FaChevronDown, 
+    FaUsers, FaHardHat, FaWallet, FaBuilding
 } from 'react-icons/fa';
 
 // Komponen untuk satu link di sidebar
@@ -99,22 +99,38 @@ const AdminLayout = () => {
                         <NavLink to="/tukang-minyak-dan-gas/manage-umkm" className={subLinkClasses}>
                             Kelola UMKM Binaan
                         </NavLink>
+                        <NavLink to="/tukang-minyak-dan-gas/manage-testimonial" className={subLinkClasses}>
+                            Kelola Testimonial
+                        </NavLink>
+                        <NavLink to="/tukang-minyak-dan-gas/manage-angka-statistik-tjsl" className={subLinkClasses}>
+                            Kelola Statistik TJSL
+                        </NavLink>
                     </SidebarDropdown>
 
-                    {/* Dropdown Divisi Tekom */}
-                    <SidebarDropdown title="Divisi Tekom" icon={<FaBroadcastTower />}>
-                        <NavLink to="/tukang-minyak-dan-gas/manage-penghargaan" className={subLinkClasses}>
-                            Kelola Penghargaan
-                        </NavLink>
-                        <NavLink to="/tukang-minyak-dan-gas/manage-laporan" className={subLinkClasses}>
-                            Kelola Laporan
-                        </NavLink>
+                    {/* Dropdown Divisi Teknik Komersial dan K3LL */}
+                    <SidebarDropdown title="Divisi Tekkom & K3LL" icon={<FaHardHat />}>
+                        <div className="px-4 py-3 text-xs text-gray-500 italic">
+                            Menu dalam pengembangan
+                        </div>
                     </SidebarDropdown>
 
                     {/* Dropdown Divisi Keuangan */}
                     <SidebarDropdown title="Divisi Keuangan" icon={<FaWallet />}>
                         <NavLink to="/tukang-minyak-dan-gas/manage-keuangan" className={subLinkClasses}>
                             Lihat Anggaran
+                        </NavLink>
+                    </SidebarDropdown>
+
+                    {/* Dropdown Sekretaris Perusahaan */}
+                    <SidebarDropdown title="Sekretaris Perusahaan" icon={<FaBuilding />}>
+                        <NavLink to="/tukang-minyak-dan-gas/manage-penghargaan" className={subLinkClasses}>
+                            Kelola Penghargaan
+                        </NavLink>
+                        <NavLink to="/tukang-minyak-dan-gas/manage-laporan" className={subLinkClasses}>
+                            Kelola Laporan Tahunan
+                        </NavLink>
+                        <NavLink to="/tukang-minyak-dan-gas/manage-statistik-landing" className={subLinkClasses}>
+                            Kelola Statistik Landing
                         </NavLink>
                     </SidebarDropdown>
                 </nav>

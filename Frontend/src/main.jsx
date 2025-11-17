@@ -29,11 +29,20 @@ import Profile from './pages/landingpage/profile';
 import LoginPage from './pages/admin/LoginPage';
 import AdminLayout from './pages/admin/AdminLayout';
 import DashboardPage from './pages/admin/DashboardPage';
+
+// Admin - Divisi TJSL
 import ManageBerita from './pages/admin/ManageBerita';
-import ManagePenghargaan from './pages/admin/ManagePenghargaan';
 import ManageProgram from './pages/admin/ManageProgram';
 import ManageUmkm from './pages/admin/ManageUmkm';
+import ManageTestimonial from './pages/admin/ManageTestimonial';
+import ManageAngkaStatistikTJSL from './pages/admin/ManageAngkaStatistikTJSL';
+
+// Admin - Sekretaris Perusahaan
+import ManagePenghargaan from './pages/admin/ManagePenghargaan';
 import ManageLaporan from './pages/admin/ManageLaporan';
+import ManageStatistikLanding from './pages/admin/ManageStatistikLanding';
+
+// Admin - Divisi Keuangan
 import ManageKeuangan from './pages/admin/ManageKeuangan';
 
 // ==== DEFINISI RUTE ====
@@ -74,13 +83,23 @@ const router = createBrowserRouter([
     path: '/tukang-minyak-dan-gas',
     element: <AdminLayout />,
     children: [
+      // Dashboard
       { index: true, element: <DashboardPage /> },
       { path: 'dashboard', element: <DashboardPage /> },
+      
+      // Divisi TJSL
       { path: 'manage-berita', element: <ManageBerita /> },
       { path: 'manage-program', element: <ManageProgram /> },
       { path: 'manage-umkm', element: <ManageUmkm /> },
+      { path: 'manage-testimonial', element: <ManageTestimonial /> },
+      { path: 'manage-angka-statistik-tjsl', element: <ManageAngkaStatistikTJSL /> },
+      
+      // Sekretaris Perusahaan
       { path: 'manage-penghargaan', element: <ManagePenghargaan /> },
       { path: 'manage-laporan', element: <ManageLaporan /> },
+      { path: 'manage-statistik-landing', element: <ManageStatistikLanding /> },
+      
+      // Divisi Keuangan
       { path: 'manage-keuangan', element: <ManageKeuangan /> },
     ],
   },
