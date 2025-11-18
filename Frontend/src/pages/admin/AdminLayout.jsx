@@ -1,10 +1,11 @@
-// src/pages/admin/AdminLayout.jsx
 import React, { useState } from 'react';
 import { Link, Outlet, NavLink, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../hooks/useAuth';
+import { useToast } from '../../hooks/useToast';
 import logo from '../../assets/logo.webp';
 import { 
     FaTachometerAlt, FaSignOutAlt, FaChevronDown, 
-    FaUsers, FaHardHat, FaWallet, FaBuilding
+    FaUsers, FaHardHat, FaWallet, FaBuilding, FaUser
 } from 'react-icons/fa';
 
 // Komponen untuk satu link di sidebar
@@ -49,11 +50,19 @@ const SidebarDropdown = ({ title, icon, children }) => {
 
 const AdminLayout = () => {
     const navigate = useNavigate();
-    const handleLogout = () => {
+    const { user, logout, loading } = useAuth();
+    const { showSuccess, showError } = useToast();
+    const [showUserDropdown, setShowUserDropdown] = useState(false);
+
+    const handleLogout = async () => {
         if (window.confirm('Apakah Anda yakin ingin logout?')) {
-            // Nanti tambahkan logic hapus token/session di sini
-            alert('Logout berhasil!');
-            navigate('/tukang-minyak-dan-gas/login');
+            try {
+                await logout();
+                showSuccess('Logout berhasil!');
+                navigate('/tukang-minyak-dan-gas/login');
+            } catch (error) {
+                showError('Gagal logout');
+            }
         }
     };
 
@@ -63,6 +72,14 @@ const AdminLayout = () => {
                 ? 'bg-blue-100 text-blue-700 font-semibold'
                 : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
         }`;
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            </div>
+        );
+    }
 
     return (
         <div className="flex min-h-screen bg-gray-50">
@@ -78,6 +95,25 @@ const AdminLayout = () => {
                         </div>
                     </Link>
                 </div>
+
+                {/* User Info */}
+                {user && (
+                    <div className="p-4 border-b border-gray-200">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
+                                {user.name?.charAt(0).toUpperCase()}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-sm font-semibold text-gray-900 truncate">
+                                    {user.name}
+                                </p>
+                                <p className="text-xs text-gray-500 truncate">
+                                    {user.email}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Navigation */}
                 <nav className="flex-1 p-4 space-y-2 overflow-y-auto">

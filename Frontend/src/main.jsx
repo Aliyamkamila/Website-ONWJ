@@ -1,7 +1,9 @@
-// src/main.jsx
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, RouterProvider, ScrollRestoration } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
+import { AuthProvider } from './context/AuthContext';
+import ProtectedRoute from './utils/ProtectedRoute';
 import './index.css';
 
 // ==== HALAMAN PUBLIK ====
@@ -79,9 +81,19 @@ const router = createBrowserRouter([
   },
 
   {
-    // --- RUTE ADMIN (AREA TUKANG MINYAK DAN GAS) ---
+    // --- LOGIN ADMIN ---
+    path: '/tukang-minyak-dan-gas/login',
+    element: <LoginPage />,
+  },
+
+  {
+    // --- RUTE ADMIN (PROTECTED) ---
     path: '/tukang-minyak-dan-gas',
-    element: <AdminLayout />,
+    element: (
+      <ProtectedRoute>
+        <AdminLayout />
+      </ProtectedRoute>
+    ),
     children: [
       // Dashboard
       { index: true, element: <DashboardPage /> },
@@ -103,17 +115,14 @@ const router = createBrowserRouter([
       { path: 'manage-keuangan', element: <ManageKeuangan /> },
     ],
   },
-
-  {
-    // --- LOGIN ADMIN ---
-    path: '/tukang-minyak-dan-gas/login',
-    element: <LoginPage />,
-  },
 ]);
 
 // ==== RENDER APLIKASI ====
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <AuthProvider>
+      <RouterProvider router={router} />
+      <Toaster />
+    </AuthProvider>
   </StrictMode>
 );
