@@ -1,43 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaEdit, FaTrash, FaPlus, FaImage, FaTimes, FaStore, FaStar } from 'react-icons/fa';
-
-// Data Dummy - nanti diganti dengan API
-const dummyUmkm = [
-    { 
-        id: 1,
-        name: 'Kopi Mangrove Segara',
-        category: 'Kuliner',
-        owner: 'Ibu Siti',
-        location: 'Muara Gembong, Bekasi',
-        description: 'Kopi olahan dari biji kopi lokal dengan sentuhan aroma mangrove khas pesisir. Dikemas higienis dan ramah lingkungan.',
-        testimonial: 'Dulu saya cuma bisa jual 10 bungkus, setelah dapat pelatihan pengemasan dari MUJ ONWJ, sekarang bisa kirim ke luar kota. Omzet naik 300%!',
-        shopLink: 'https://tokopedia.com/kopi-mangrove',
-        contactNumber: '0812-3456-7890',
-        status: 'Aktif',
-        yearStarted: 2024,
-        achievement: 'Omzet naik 300%, ekspor ke 5 kota',
-        isFeatured: true,
-        imageUrl: null
-    },
-    { 
-        id: 2,
-        name: 'Kerajinan Enceng Gondok',
-        category: 'Kerajinan',
-        owner: 'Bapak Joko',
-        location: 'Kalibaru, Jakarta Utara',
-        description: 'Produk kerajinan tangan dari enceng gondok yang ramah lingkungan. Berbagai macam tas, tempat pensil, dan aksesori rumah.',
-        testimonial: '',
-        shopLink: 'https://shopee.co.id/kerajinan-gondok',
-        contactNumber: '0813-9876-5432',
-        status: 'Aktif',
-        yearStarted: 2023,
-        achievement: '50 produk terjual/bulan',
-        isFeatured: false,
-        imageUrl: null
-    },
-];
+import { umkmService } from '../../services/umkmService';
+import toast from 'react-hot-toast';
 
 const ManageUmkm = () => {
+    const [umkmList, setUmkmList] = useState([]);
+    const [loading, setLoading] = useState(true);
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState(null);
     const [formData, setFormData] = useState({
@@ -47,12 +15,12 @@ const ManageUmkm = () => {
         location: '',
         description: '',
         testimonial: '',
-        shopLink: '',
-        contactNumber: '',
+        shop_link: '',
+        contact_number: '',
         status: 'Aktif',
-        yearStarted: new Date().getFullYear(),
+        year_started: new Date().getFullYear(),
         achievement: '',
-        isFeatured: false,
+        is_featured: false,
         image: null,
         imagePreview: null
     });
@@ -68,6 +36,29 @@ const ManageUmkm = () => {
 
     const statusOptions = ['Aktif', 'Lulus Binaan', 'Dalam Proses'];
 
+    // Fetch UMKM data from API
+    useEffect(() => {
+        fetchUmkmData();
+    }, []);
+
+    const fetchUmkmData = async () => {
+        try {
+            setLoading(true);
+            const response = await umkmService.adminGetAllUmkm();
+            
+            if (response.success) {
+                setUmkmList(response.data);
+            } else {
+                throw new Error(response.message);
+            }
+        } catch (error) {
+            console.error('Error fetching UMKM:', error);
+            toast.error('Gagal memuat data UMKM');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleInputChange = (e) => {
         const { name, value, type, checked } = e.target;
         setFormData(prev => ({
@@ -80,7 +71,7 @@ const ManageUmkm = () => {
         const file = e.target.files[0];
         if (file) {
             if (file.size > 5 * 1024 * 1024) {
-                alert('Ukuran file terlalu besar! Maksimal 5MB');
+                toast.error('Ukuran file terlalu besar! Maksimal 5MB');
                 return;
             }
             
@@ -93,7 +84,7 @@ const ManageUmkm = () => {
     };
 
     const removeImage = () => {
-        if (formData.imagePreview) {
+        if (formData.imagePreview && !formData.imagePreview.startsWith('http')) {
             URL.revokeObjectURL(formData.imagePreview);
         }
         setFormData(prev => ({
@@ -104,7 +95,7 @@ const ManageUmkm = () => {
     };
 
     const resetForm = () => {
-        if (formData.imagePreview) {
+        if (formData.imagePreview && !formData.imagePreview.startsWith('http')) {
             URL.revokeObjectURL(formData.imagePreview);
         }
         setFormData({
@@ -114,83 +105,132 @@ const ManageUmkm = () => {
             location: '',
             description: '',
             testimonial: '',
-            shopLink: '',
-            contactNumber: '',
+            shop_link: '',
+            contact_number: '',
             status: 'Aktif',
-            yearStarted: new Date().getFullYear(),
+            year_started: new Date().getFullYear(),
             achievement: '',
-            isFeatured: false,
+            is_featured: false,
             image: null,
             imagePreview: null
         });
         setEditingId(null);
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         
         // Validasi
         if (!formData.name || !formData.category || !formData.owner || !formData.location || !formData.description) {
-            alert('Mohon lengkapi semua field yang wajib diisi!');
+            toast.error('Mohon lengkapi semua field yang wajib diisi!');
             return;
         }
 
         if (!formData.image && !editingId) {
-            alert('Mohon upload foto produk!');
+            toast.error('Mohon upload foto produk!');
             return;
         }
 
         // Validasi featured harus ada testimonial
-        if (formData.isFeatured && !formData.testimonial.trim()) {
-            alert('Untuk UMKM Featured, mohon isi Cerita Sukses/Testimonial!');
+        if (formData.is_featured && !formData.testimonial.trim()) {
+            toast.error('Untuk UMKM Featured, mohon isi Cerita Sukses/Testimonial!');
             return;
         }
 
-        const dataToSubmit = {
-            ...formData,
-            id: editingId || Date.now()
-        };
-
-        console.log('Submitting:', dataToSubmit);
+        // Prepare FormData for API
+        const submitData = new FormData();
+        submitData.append('name', formData.name);
+        submitData.append('category', formData.category);
+        submitData.append('owner', formData.owner);
+        submitData.append('location', formData.location);
+        submitData.append('description', formData.description);
+        submitData.append('testimonial', formData.testimonial || '');
+        submitData.append('shop_link', formData.shop_link || '');
+        submitData.append('contact_number', formData.contact_number || '');
+        submitData.append('status', formData.status);
+        submitData.append('year_started', formData.year_started);
+        submitData.append('achievement', formData.achievement || '');
+        submitData.append('is_featured', formData.is_featured ? 1 : 0);
         
-        if (editingId) {
-            alert('UMKM berhasil diupdate!');
-        } else {
-            alert('UMKM berhasil ditambahkan!');
+        if (formData.image) {
+            submitData.append('image', formData.image);
         }
-        
-        setShowForm(false);
-        resetForm();
+
+        try {
+            const loadingToast = toast.loading(editingId ? 'Mengupdate UMKM...' : 'Menambahkan UMKM...');
+            
+            let response;
+            if (editingId) {
+                response = await umkmService.updateUmkm(editingId, submitData);
+            } else {
+                response = await umkmService.createUmkm(submitData);
+            }
+
+            toast.dismiss(loadingToast);
+
+            if (response.success) {
+                toast.success(editingId ? 'UMKM berhasil diupdate!' : 'UMKM berhasil ditambahkan!');
+                setShowForm(false);
+                resetForm();
+                fetchUmkmData(); // Refresh data
+            } else {
+                throw new Error(response.message);
+            }
+        } catch (error) {
+            console.error('Error submitting UMKM:', error);
+            
+            // Handle validation errors
+            if (error.errors) {
+                Object.keys(error.errors).forEach(key => {
+                    toast.error(error.errors[key][0]);
+                });
+            } else {
+                toast.error(error.message || 'Gagal menyimpan data UMKM');
+            }
+        }
     };
 
-    const handleEdit = (id) => {
-        const umkm = dummyUmkm.find(u => u.id === id);
-        if (umkm) {
-            setFormData({
-                name: umkm.name,
-                category: umkm.category,
-                owner: umkm.owner,
-                location: umkm.location,
-                description: umkm.description,
-                testimonial: umkm.testimonial || '',
-                shopLink: umkm.shopLink || '',
-                contactNumber: umkm.contactNumber || '',
-                status: umkm.status,
-                yearStarted: umkm.yearStarted,
-                achievement: umkm.achievement || '',
-                isFeatured: umkm.isFeatured,
-                image: null,
-                imagePreview: umkm.imageUrl || null
-            });
-            setEditingId(id);
-            setShowForm(true);
-        }
+    const handleEdit = (umkm) => {
+        setFormData({
+            name: umkm.name,
+            category: umkm.category,
+            owner: umkm.owner,
+            location: umkm.location,
+            description: umkm.description,
+            testimonial: umkm.testimonial || '',
+            shop_link: umkm.shop_link || '',
+            contact_number: umkm.contact_number || '',
+            status: umkm.status,
+            year_started: umkm.year_started,
+            achievement: umkm.achievement || '',
+            is_featured: umkm.is_featured,
+            image: null,
+            imagePreview: umkm.full_image_url || umkm.image_url || null
+        });
+        setEditingId(umkm.id);
+        setShowForm(true);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-    const handleDelete = (id) => {
-        if (window.confirm('Apakah Anda yakin ingin menghapus UMKM ini?')) {
-            console.log('Delete UMKM:', id);
-            alert('UMKM berhasil dihapus!');
+    const handleDelete = async (id) => {
+        if (!window.confirm('Apakah Anda yakin ingin menghapus UMKM ini?')) {
+            return;
+        }
+
+        try {
+            const loadingToast = toast.loading('Menghapus UMKM...');
+            const response = await umkmService.deleteUmkm(id);
+            toast.dismiss(loadingToast);
+
+            if (response.success) {
+                toast.success('UMKM berhasil dihapus!');
+                fetchUmkmData(); // Refresh data
+            } else {
+                throw new Error(response.message);
+            }
+        } catch (error) {
+            console.error('Error deleting UMKM:', error);
+            toast.error(error.message || 'Gagal menghapus UMKM');
         }
     };
 
@@ -343,7 +383,7 @@ const ManageUmkm = () => {
                         <div className="mt-6">
                             <label className="block text-sm font-semibold text-gray-700 mb-2">
                                 Cerita Sukses/Testimonial Pemilik
-                                {formData.isFeatured && <span className="text-red-500">*</span>}
+                                {formData.is_featured && <span className="text-red-500">*</span>}
                             </label>
                             <textarea
                                 name="testimonial"
@@ -352,10 +392,10 @@ const ManageUmkm = () => {
                                 rows="4"
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                                 placeholder="Contoh: Dulu saya cuma bisa jual 10 bungkus, setelah dapat pelatihan pengemasan dari MUJ ONWJ, sekarang bisa kirim ke luar kota. Omzet naik 300%!"
-                                required={formData.isFeatured}
+                                required={formData.is_featured}
                             />
                             <p className="text-sm text-gray-500 mt-1">
-                                💡 {formData.isFeatured ? 'Wajib diisi untuk UMKM Featured' : 'Digunakan untuk menampilkan UMKM di section unggulan (jika dicentang)'}
+                                💡 {formData.is_featured ? 'Wajib diisi untuk UMKM Featured' : 'Digunakan untuk menampilkan UMKM di section unggulan (jika dicentang)'}
                             </p>
                         </div>
 
@@ -416,8 +456,8 @@ const ManageUmkm = () => {
                                 </label>
                                 <input
                                     type="url"
-                                    name="shopLink"
-                                    value={formData.shopLink}
+                                    name="shop_link"
+                                    value={formData.shop_link}
                                     onChange={handleInputChange}
                                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                                     placeholder="https://tokopedia.com/..."
@@ -434,11 +474,11 @@ const ManageUmkm = () => {
                                 </label>
                                 <input
                                     type="tel"
-                                    name="contactNumber"
-                                    value={formData.contactNumber}
+                                    name="contact_number"
+                                    value={formData.contact_number}
                                     onChange={handleInputChange}
                                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                                    placeholder="0812-xxxx-xxxx"
+                                    placeholder="62812xxxx atau 0812xxxx"
                                 />
                             </div>
 
@@ -449,8 +489,8 @@ const ManageUmkm = () => {
                                 </label>
                                 <input
                                     type="number"
-                                    name="yearStarted"
-                                    value={formData.yearStarted}
+                                    name="year_started"
+                                    value={formData.year_started}
                                     onChange={handleInputChange}
                                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                                     min="2020"
@@ -483,13 +523,13 @@ const ManageUmkm = () => {
                             <div className="flex items-start gap-3">
                                 <input
                                     type="checkbox"
-                                    id="isFeatured"
-                                    name="isFeatured"
-                                    checked={formData.isFeatured}
+                                    id="is_featured"
+                                    name="is_featured"
+                                    checked={formData.is_featured}
                                     onChange={handleInputChange}
                                     className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 mt-1"
                                 />
-                                <label htmlFor="isFeatured" className="flex-1">
+                                <label htmlFor="is_featured" className="flex-1">
                                     <div className="flex items-center gap-2 mb-2">
                                         <FaStar className="text-yellow-500" />
                                         <span className="font-semibold text-gray-800">Jadikan Featured UMKM</span>
@@ -515,15 +555,23 @@ const ManageUmkm = () => {
                                 type="submit"
                                 className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-md"
                             >
-                                {editingId ? 'Update UMKM' : 'Save UMKM'}
+                                {editingId ? 'Update UMKM' : 'Simpan UMKM'}
                             </button>
                         </div>
                     </form>
                 </div>
             )}
 
+            {/* Loading State */}
+            {loading && !showForm && (
+                <div className="text-center py-12">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                    <p className="text-gray-600 mt-4">Memuat data UMKM...</p>
+                </div>
+            )}
+
             {/* Tabel List UMKM */}
-            {!showForm && (
+            {!showForm && !loading && (
                 <div className="bg-white rounded-lg shadow-md overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="min-w-full divide-y divide-gray-200">
@@ -553,12 +601,16 @@ const ManageUmkm = () => {
                                 </tr>
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-200">
-                                {dummyUmkm.map((item) => (
+                                {umkmList.map((item) => (
                                     <tr key={item.id} className="hover:bg-gray-50 transition-colors">
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
-                                                {item.imageUrl ? (
-                                                    <img src={item.imageUrl} alt={item.name} className="w-12 h-12 rounded-lg object-cover" />
+                                                {item.full_image_url || item.image_url ? (
+                                                    <img 
+                                                        src={item.full_image_url || item.image_url} 
+                                                        alt={item.name} 
+                                                        className="w-12 h-12 rounded-lg object-cover" 
+                                                    />
                                                 ) : (
                                                     <div className="w-12 h-12 rounded-lg bg-gray-200 flex items-center justify-center">
                                                         <FaStore className="text-gray-400" />
@@ -566,7 +618,9 @@ const ManageUmkm = () => {
                                                 )}
                                                 <div>
                                                     <div className="text-sm font-medium text-gray-900">{item.name}</div>
-                                                    <div className="text-sm text-gray-500 line-clamp-1">{item.description.substring(0, 40)}...</div>
+                                                    <div className="text-sm text-gray-500 line-clamp-1">
+                                                        {item.description.substring(0, 40)}...
+                                                    </div>
                                                 </div>
                                             </div>
                                         </td>
@@ -591,10 +645,10 @@ const ManageUmkm = () => {
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
-                                            {item.yearStarted}
+                                            {item.year_started}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            {item.isFeatured && (
+                                            {item.is_featured && (
                                                 <span className="inline-flex items-center gap-1 px-3 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
                                                     <FaStar className="w-3 h-3" />
                                                     Featured
@@ -604,7 +658,7 @@ const ManageUmkm = () => {
                                         <td className="px-6 py-4 text-sm font-medium whitespace-nowrap">
                                             <div className="flex gap-3">
                                                 <button
-                                                    onClick={() => handleEdit(item.id)}
+                                                    onClick={() => handleEdit(item)}
                                                     className="text-blue-600 hover:text-blue-900 transition-colors"
                                                     title="Edit"
                                                 >
@@ -626,7 +680,7 @@ const ManageUmkm = () => {
                     </div>
                     
                     {/* Empty State */}
-                    {dummyUmkm.length === 0 && (
+                    {umkmList.length === 0 && (
                         <div className="text-center py-12">
                             <FaStore className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                             <p className="text-gray-500 text-lg mb-2">Belum ada UMKM binaan yang ditambahkan.</p>

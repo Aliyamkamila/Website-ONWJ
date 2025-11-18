@@ -1,16 +1,15 @@
-// src/pages/UmkmPage.jsx
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { FaHome, FaStore, FaBookOpen, FaPhone, FaWhatsapp } from 'react-icons/fa';
+import { umkmService } from '../services/umkmService';
+import toast from 'react-hot-toast';
 
 // --- Aset Placeholder ---
 import bannerImage from '../assets/hero-bg.png';
 import featuredImage from '../assets/contoh1.png';
 import productImage from '../assets/rectangle.png';
 
-// --- SUB-KOMPONEN HALAMAN ---
-
-// 1. Hero Banner
+// --- SUB-KOMPONEN HALAMAN (sama seperti sebelumnya, tidak perlu diubah) ---
 const UmkmHero = () => (
     <div className="relative h-[60vh] overflow-hidden">
         <div className="absolute inset-0">
@@ -37,7 +36,6 @@ const UmkmHero = () => (
     </div>
 );
 
-// 2. Featured Story Section
 const FeaturedUmkm = ({ item }) => {
     if (!item) return null;
     
@@ -48,7 +46,7 @@ const FeaturedUmkm = ({ item }) => {
                     <div className="lg:w-1/2">
                         <div className="rounded-2xl overflow-hidden shadow-xl">
                             <img 
-                                src={item.imageUrl || featuredImage} 
+                                src={item.full_image_url || item.image_url || featuredImage} 
                                 alt={item.name} 
                                 className="w-full h-full object-cover aspect-[4/3]" 
                             />
@@ -82,9 +80,9 @@ const FeaturedUmkm = ({ item }) => {
                         )}
 
                         <div className="flex flex-wrap gap-3">
-                            {item.shopLink && (
+                            {item.shop_link && (
                                 <a 
-                                    href={item.shopLink} 
+                                    href={item.shop_link} 
                                     target="_blank" 
                                     rel="noopener noreferrer" 
                                     className="inline-flex items-center gap-2 bg-green-500 text-white font-semibold py-3 px-6 rounded-lg shadow-lg hover:bg-green-600 transition-colors"
@@ -92,9 +90,9 @@ const FeaturedUmkm = ({ item }) => {
                                     <FaStore /> Kunjungi Toko
                                 </a>
                             )}
-                            {item.contactNumber && (
+                            {item.contact_number && (
                                 <a 
-                                    href={`https://wa.me/${item.contactNumber.replace(/\D/g, '')}`} 
+                                    href={`https://wa.me/${item.contact_number.replace(/\D/g, '')}`} 
                                     target="_blank" 
                                     rel="noopener noreferrer" 
                                     className="inline-flex items-center gap-2 bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-lg hover:bg-blue-700 transition-colors"
@@ -110,12 +108,11 @@ const FeaturedUmkm = ({ item }) => {
     );
 };
 
-// 3. Kartu Galeri UMKM
 const UmkmCard = ({ item }) => (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden group transition-all duration-300 hover:shadow-xl hover:-translate-y-1 flex flex-col">
         <div className="h-48 overflow-hidden relative">
             <img 
-                src={item.imageUrl || productImage} 
+                src={item.full_image_url || item.image_url || productImage} 
                 alt={item.name} 
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" 
                 loading="lazy" 
@@ -152,9 +149,9 @@ const UmkmCard = ({ item }) => (
             </div>
             
             <div className="mt-auto flex flex-col gap-2">
-                {item.shopLink && (
+                {item.shop_link && (
                     <a 
-                        href={item.shopLink} 
+                        href={item.shop_link} 
                         target="_blank" 
                         rel="noopener noreferrer" 
                         className="inline-flex items-center justify-center gap-2 bg-green-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-green-600 transition-colors text-sm"
@@ -162,9 +159,9 @@ const UmkmCard = ({ item }) => (
                         <FaStore /> Kunjungi Toko
                     </a>
                 )}
-                {item.contactNumber && (
+                {item.contact_number && (
                     <a 
-                        href={`https://wa.me/${item.contactNumber.replace(/\D/g, '')}`} 
+                        href={`https://wa.me/${item.contact_number.replace(/\D/g, '')}`} 
                         target="_blank" 
                         rel="noopener noreferrer" 
                         className="inline-flex items-center justify-center gap-2 bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors text-sm"
@@ -172,7 +169,7 @@ const UmkmCard = ({ item }) => (
                         <FaWhatsapp /> WhatsApp
                     </a>
                 )}
-                {!item.shopLink && !item.contactNumber && (
+                {!item.shop_link && !item.contact_number && (
                     <div className="text-center py-2 text-gray-500 text-sm">
                         Informasi kontak tersedia
                     </div>
@@ -182,7 +179,6 @@ const UmkmCard = ({ item }) => (
     </div>
 );
 
-// 4. Filter Categories
 const CategoryFilter = ({ categories, activeCategory, onCategoryChange }) => (
     <div className="flex flex-wrap justify-center gap-3 mb-8">
         <button
@@ -193,7 +189,7 @@ const CategoryFilter = ({ categories, activeCategory, onCategoryChange }) => (
                     : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
             }`}
         >
-            Semua ({categories.all})
+            Semua ({categories.all || 0})
         </button>
         {Object.entries(categories).map(([cat, count]) => {
             if (cat === 'all') return null;
@@ -219,132 +215,46 @@ const UmkmPage = () => {
     const [umkmData, setUmkmData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [activeCategory, setActiveCategory] = useState('Semua');
+    const [categoryCounts, setCategoryCounts] = useState({});
 
-    // Fetch data dari API
+    // Fetch data dari API Laravel
     useEffect(() => {
         const fetchUmkmData = async () => {
             try {
                 setLoading(true);
                 
-                // TODO: Ganti dengan endpoint API yang sebenarnya
-                // const response = await fetch('/api/umkm');
-                // const data = await response.json();
+                const response = await umkmService.getAllUmkm({ 
+                    category: activeCategory 
+                });
                 
-                // SEMENTARA: Gunakan data dummy untuk testing
-                const dummyData = [
-                    { 
-                        id: 1,
-                        name: 'Kopi Mangrove Segara',
-                        category: 'Kuliner',
-                        owner: 'Ibu Siti',
-                        location: 'Muara Gembong, Bekasi',
-                        description: 'Kopi olahan dari biji kopi lokal dengan sentuhan aroma mangrove khas pesisir. Dikemas higienis dan ramah lingkungan.',
-                        testimonial: 'Dulu saya cuma bisa jual 10 bungkus, setelah dapat pelatihan pengemasan dari MUJ ONWJ, sekarang bisa kirim ke luar kota. Omzet naik 300%!',
-                        shopLink: 'https://tokopedia.com/kopi-mangrove',
-                        contactNumber: '6281234567890',
-                        status: 'Aktif',
-                        yearStarted: 2024,
-                        achievement: 'Omzet naik 300%, ekspor ke 5 kota',
-                        isFeatured: true,
-                        imageUrl: null
-                    },
-                    { 
-                        id: 2,
-                        name: 'Kerajinan Enceng Gondok',
-                        category: 'Kerajinan',
-                        owner: 'Bapak Joko',
-                        location: 'Kalibaru, Jakarta Utara',
-                        description: 'Produk kerajinan tangan dari enceng gondok yang ramah lingkungan. Berbagai macam tas, tempat pensil, dan aksesori rumah.',
-                        testimonial: '',
-                        shopLink: 'https://shopee.co.id/kerajinan-gondok',
-                        contactNumber: '6281398765432',
-                        status: 'Aktif',
-                        yearStarted: 2023,
-                        achievement: '50 produk terjual/bulan',
-                        isFeatured: false,
-                        imageUrl: null
-                    },
-                    { 
-                        id: 3,
-                        name: 'Madu Hutan Asli Subang',
-                        category: 'Agribisnis',
-                        owner: 'Ibu Aminah',
-                        location: 'Mayangan, Subang',
-                        description: 'Madu murni dari hutan Subang, dipanen langsung dari sarang lebah liar. Kualitas terjamin dan organik.',
-                        testimonial: '',
-                        shopLink: '',
-                        contactNumber: '6281222333444',
-                        status: 'Aktif',
-                        yearStarted: 2023,
-                        achievement: '100 botol/bulan',
-                        isFeatured: false,
-                        imageUrl: null
-                    },
-                    { 
-                        id: 4,
-                        name: 'Olahan Ikan Balongan',
-                        category: 'Kuliner',
-                        owner: 'Bapak Udin',
-                        location: 'Balongan, Indramayu',
-                        description: 'Berbagai olahan ikan segar khas Balongan. Ikan asin, kerupuk ikan, dan produk laut berkualitas.',
-                        testimonial: '',
-                        shopLink: 'https://shopee.co.id/olahan-ikan',
-                        contactNumber: '',
-                        status: 'Aktif',
-                        yearStarted: 2024,
-                        achievement: 'Distribusi ke 10 toko',
-                        isFeatured: false,
-                        imageUrl: null
-                    },
-                    { 
-                        id: 5,
-                        name: 'Batik Pesisir',
-                        category: 'Fashion',
-                        owner: 'Ibu Dewi',
-                        location: 'Sungai Buntu, Karawang',
-                        description: 'Batik tulis khas pesisir dengan motif tradisional dan modern. Kualitas premium dengan pewarna alami.',
-                        testimonial: '',
-                        shopLink: '',
-                        contactNumber: '6281555666777',
-                        status: 'Lulus Binaan',
-                        yearStarted: 2022,
-                        achievement: 'Pameran di Jakarta Fashion Week',
-                        isFeatured: false,
-                        imageUrl: null
-                    },
-                ];
-
-                // Simulasi delay API
-                await new Promise(resolve => setTimeout(resolve, 500));
+                if (response.success) {
+                    // Combine featured and regular UMKM
+                    const allUmkm = response.data.featured 
+                        ? [response.data.featured, ...response.data.umkm]
+                        : response.data.umkm;
+                    
+                    setUmkmData(allUmkm);
+                    setCategoryCounts(response.data.categories || {});
+                } else {
+                    throw new Error(response.message || 'Gagal memuat data');
+                }
                 
-                setUmkmData(dummyData);
                 setLoading(false);
             } catch (error) {
                 console.error('Error fetching UMKM data:', error);
                 setLoading(false);
-                alert('Gagal memuat data UMKM. Silakan refresh halaman.');
+                toast.error('Gagal memuat data UMKM. Silakan refresh halaman.');
             }
         };
 
         fetchUmkmData();
-    }, []);
+    }, [activeCategory]);
 
     // Get featured UMKM
-    const featuredUmkm = umkmData.find(item => item.isFeatured);
+    const featuredUmkm = umkmData.find(item => item.is_featured);
 
-    // Filter UMKM by category
-    const filteredUmkm = activeCategory === 'Semua' 
-        ? umkmData.filter(item => !item.isFeatured) // Exclude featured from gallery
-        : umkmData.filter(item => !item.isFeatured && item.category === activeCategory);
-
-    // Count categories
-    const categoryCounts = umkmData.reduce((acc, item) => {
-        if (!item.isFeatured) { // Don't count featured in gallery
-            acc.all = (acc.all || 0) + 1;
-            acc[item.category] = (acc[item.category] || 0) + 1;
-        }
-        return acc;
-    }, {});
+    // Filter UMKM by category (exclude featured from gallery)
+    const filteredUmkm = umkmData.filter(item => !item.is_featured);
 
     return (
         <div className="bg-gray-50 min-h-screen">
@@ -382,7 +292,7 @@ const UmkmPage = () => {
                     )}
 
                     {/* Category Filter */}
-                    {!loading && Object.keys(categoryCounts).length > 1 && (
+                    {!loading && Object.keys(categoryCounts).length > 0 && (
                         <CategoryFilter 
                             categories={categoryCounts}
                             activeCategory={activeCategory}
