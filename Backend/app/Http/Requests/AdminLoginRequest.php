@@ -18,7 +18,7 @@ class AdminLoginRequest extends FormRequest
         return [
             'email' => [
                 'required',
-                'email:rfc', // HAPUS dns, hanya pakai rfc
+                'email:rfc,dns',
                 'max:100',
                 'regex:/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/'
             ],
@@ -60,8 +60,8 @@ class AdminLoginRequest extends FormRequest
     {
         // Sanitize input to prevent XSS
         $this->merge([
-            'email' => strip_tags($this->email ?? ''),
-            'password' => $this->password ?? '',
+            'email' => strip_tags($this->email),
+            'password' => $this->password, // Don't strip password
         ]);
     }
 }
