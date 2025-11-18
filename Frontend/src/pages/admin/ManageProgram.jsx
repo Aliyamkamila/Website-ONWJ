@@ -1,41 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaEdit, FaTrash, FaPlus, FaImage, FaTimes, FaMapMarkerAlt } from 'react-icons/fa';
-
-// Data Dummy - nanti diganti dengan API
-const dummyPrograms = [
-    { 
-        id: 1,
-        name: 'Program Kesehatan (Sungai Buntu)',
-        category: 'Kesehatan',
-        location: 'Sungai Buntu',
-        latitude: -6.0563,
-        longitude: 107.4026,
-        description: 'Pusat layanan kesehatan air bersih.',
-        facilities: ['Klinik lapangan', 'Penyuluhan kesehatan'],
-        status: 'Aktif',
-        year: 2025,
-        target: '500 keluarga',
-        imageUrl: null
-    },
-    { 
-        id: 2,
-        name: 'Program Mangrove (Muara Gembong)',
-        category: 'Lingkungan',
-        location: 'Muara Gembong',
-        latitude: -5.9972,
-        longitude: 107.0394,
-        description: 'Penanaman 5.000 bibit mangrove.',
-        facilities: ['Penanaman bibit', 'Edukasi lingkungan'],
-        status: 'Aktif',
-        year: 2025,
-        target: '3 desa pesisir',
-        imageUrl: null
-    },
-];
+import programService from '../../services/programService';
+import toast from 'react-hot-toast';
 
 const ManageProgram = () => {
+    const [programs, setPrograms] = useState([]);
+    const [loading, setLoading] = useState(true);
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState(null);
+    const [submitting, setSubmitting] = useState(false);
     const [formData, setFormData] = useState({
         name: '',
         category: '',
@@ -48,7 +21,8 @@ const ManageProgram = () => {
         year: new Date().getFullYear(),
         target: '',
         image: null,
-        imagePreview: null
+        imagePreview: null,
+        removeImage: false
     });
 
     const categories = [
@@ -61,6 +35,26 @@ const ManageProgram = () => {
     ];
 
     const statusOptions = ['Aktif', 'Selesai', 'Dalam Proses'];
+
+    useEffect(() => {
+        fetchPrograms();
+    }, []);
+
+    const fetchPrograms = async () => {
+        try {
+            setLoading(true);
+            const response = await programService.adminGetAllPrograms({ all: 'true' });
+            
+            if (response.success) {
+                setPrograms(response.data.data || response.data || []);
+            }
+        } catch (error) {
+            console.error('Error fetching programs:', error);
+            toast.error('Failed to load programs');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -100,14 +94,15 @@ const ManageProgram = () => {
         const file = e.target.files[0];
         if (file) {
             if (file.size > 5 * 1024 * 1024) {
-                alert('Ukuran file terlalu besar! Maksimal 5MB');
+                toast.error('Ukuran file terlalu besar! Maksimal 5MB');
                 return;
             }
             
             setFormData(prev => ({
                 ...prev,
                 image: file,
-                imagePreview: URL.createObjectURL(file)
+                imagePreview: URL.createObjectURL(file),
+                removeImage: false
             }));
         }
     };
@@ -119,12 +114,13 @@ const ManageProgram = () => {
         setFormData(prev => ({
             ...prev,
             image: null,
-            imagePreview: null
+            imagePreview: null,
+            removeImage: editingId ? true : false
         }));
     };
 
     const resetForm = () => {
-        if (formData.imagePreview) {
+        if (formData.imagePreview && !editingId) {
             URL.revokeObjectURL(formData.imagePreview);
         }
         setFormData({
@@ -139,17 +135,18 @@ const ManageProgram = () => {
             year: new Date().getFullYear(),
             target: '',
             image: null,
-            imagePreview: null
+            imagePreview: null,
+            removeImage: false
         });
         setEditingId(null);
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         
         // Validasi
         if (!formData.name || !formData.category || !formData.location || !formData.latitude || !formData.longitude || !formData.description) {
-            alert('Mohon lengkapi semua field yang wajib diisi!');
+            toast.error('Mohon lengkapi semua field yang wajib diisi!');
             return;
         }
 
@@ -158,12 +155,12 @@ const ManageProgram = () => {
         const lng = parseFloat(formData.longitude);
         
         if (isNaN(lat) || lat < -90 || lat > 90) {
-            alert('Latitude harus antara -90 dan 90!');
+            toast.error('Latitude harus antara -90 dan 90!');
             return;
         }
         
         if (isNaN(lng) || lng < -180 || lng > 180) {
-            alert('Longitude harus antara -180 dan 180!');
+            toast.error('Longitude harus antara -180 dan 180!');
             return;
         }
 
@@ -171,56 +168,86 @@ const ManageProgram = () => {
         const filteredFacilities = formData.facilities.filter(f => f.trim() !== '');
         
         if (filteredFacilities.length === 0) {
-            alert('Minimal ada 1 fasilitas/kegiatan program!');
+            toast.error('Minimal ada 1 fasilitas/kegiatan program!');
             return;
         }
 
         const dataToSubmit = {
-            ...formData,
-            facilities: filteredFacilities,
+            name: formData.name,
+            category: formData.category,
+            location: formData.location,
             latitude: lat,
             longitude: lng,
-            id: editingId || Date.now()
+            description: formData.description,
+            facilities: filteredFacilities,
+            status: formData.status,
+            year: formData.year,
+            target: formData.target,
+            image: formData.image,
+            removeImage: formData.removeImage
         };
 
-        console.log('Submitting:', dataToSubmit);
-        
-        if (editingId) {
-            alert('Program berhasil diupdate!');
-        } else {
-            alert('Program berhasil ditambahkan!');
-        }
-        
-        setShowForm(false);
-        resetForm();
-    };
-
-    const handleEdit = (id) => {
-        const program = dummyPrograms.find(p => p.id === id);
-        if (program) {
-            setFormData({
-                name: program.name,
-                category: program.category,
-                location: program.location,
-                latitude: program.latitude,
-                longitude: program.longitude,
-                description: program.description,
-                facilities: program.facilities.length > 0 ? program.facilities : [''],
-                status: program.status,
-                year: program.year,
-                target: program.target || '',
-                image: null,
-                imagePreview: program.imageUrl || null
-            });
-            setEditingId(id);
-            setShowForm(true);
+        try {
+            setSubmitting(true);
+            
+            if (editingId) {
+                const response = await programService.adminUpdateProgram(editingId, dataToSubmit);
+                if (response.success) {
+                    toast.success('Program berhasil diupdate!');
+                    fetchPrograms();
+                    setShowForm(false);
+                    resetForm();
+                }
+            } else {
+                const response = await programService.adminCreateProgram(dataToSubmit);
+                if (response.success) {
+                    toast.success('Program berhasil ditambahkan!');
+                    fetchPrograms();
+                    setShowForm(false);
+                    resetForm();
+                }
+            }
+        } catch (error) {
+            console.error('Error submitting program:', error);
+            const errorMessage = error.response?.data?.message || 'Failed to save program';
+            toast.error(errorMessage);
+        } finally {
+            setSubmitting(false);
         }
     };
 
-    const handleDelete = (id) => {
+    const handleEdit = (program) => {
+        setFormData({
+            name: program.name,
+            category: program.category,
+            location: program.location,
+            latitude: program.latitude,
+            longitude: program.longitude,
+            description: program.description,
+            facilities: program.facilities.length > 0 ? program.facilities : [''],
+            status: program.status,
+            year: program.year,
+            target: program.target || '',
+            image: null,
+            imagePreview: program.imageUrl || null,
+            removeImage: false
+        });
+        setEditingId(program.id);
+        setShowForm(true);
+    };
+
+    const handleDelete = async (id) => {
         if (window.confirm('Apakah Anda yakin ingin menghapus program ini?')) {
-            console.log('Delete program:', id);
-            alert('Program berhasil dihapus!');
+            try {
+                const response = await programService.adminDeleteProgram(id);
+                if (response.success) {
+                    toast.success('Program berhasil dihapus!');
+                    fetchPrograms();
+                }
+            } catch (error) {
+                console.error('Error deleting program:', error);
+                toast.error('Failed to delete program');
+            }
         }
     };
 
@@ -230,6 +257,14 @@ const ManageProgram = () => {
             resetForm();
         }
     };
+
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center h-64">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            </div>
+        );
+    }
 
     return (
         <div>
@@ -534,14 +569,23 @@ const ManageProgram = () => {
                                 type="button"
                                 onClick={handleCancel}
                                 className="px-6 py-3 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition-colors"
+                                disabled={submitting}
                             >
                                 Batal
                             </button>
                             <button
                                 type="submit"
-                                className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-md"
+                                className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-md disabled:bg-blue-400 disabled:cursor-not-allowed"
+                                disabled={submitting}
                             >
-                                {editingId ? 'Update Program' : 'Save Program'}
+                                {submitting ? (
+                                    <span className="flex items-center gap-2">
+                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                        {editingId ? 'Updating...' : 'Saving...'}
+                                    </span>
+                                ) : (
+                                    editingId ? 'Update Program' : 'Save Program'
+                                )}
                             </button>
                         </div>
                     </form>
@@ -576,7 +620,7 @@ const ManageProgram = () => {
                                 </tr>
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-200">
-                                {dummyPrograms.map((item) => (
+                                {programs.map((item) => (
                                     <tr key={item.id} className="hover:bg-gray-50 transition-colors">
                                         <td className="px-6 py-4">
                                             <div className="text-sm font-medium text-gray-900">{item.name}</div>
@@ -593,7 +637,7 @@ const ManageProgram = () => {
                                                 {item.location}
                                             </div>
                                             <div className="text-xs text-gray-400 mt-1">
-                                                {item.latitude.toFixed(4)}, {item.longitude.toFixed(4)}
+                                                {parseFloat(item.latitude).toFixed(4)}, {parseFloat(item.longitude).toFixed(4)}
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
@@ -613,7 +657,7 @@ const ManageProgram = () => {
                                         <td className="px-6 py-4 text-sm font-medium whitespace-nowrap">
                                             <div className="flex gap-3">
                                                 <button
-                                                    onClick={() => handleEdit(item.id)}
+                                                    onClick={() => handleEdit(item)}
                                                     className="text-blue-600 hover:text-blue-900 transition-colors"
                                                     title="Edit"
                                                 >
@@ -635,7 +679,7 @@ const ManageProgram = () => {
                     </div>
                     
                     {/* Empty State */}
-                    {dummyPrograms.length === 0 && (
+                    {programs.length === 0 && (
                         <div className="text-center py-12">
                             <p className="text-gray-500 text-lg">Belum ada program yang ditambahkan.</p>
                             <button

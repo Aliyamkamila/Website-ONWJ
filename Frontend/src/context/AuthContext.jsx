@@ -1,5 +1,6 @@
 import { createContext, useState, useEffect } from 'react';
 import { authApi } from '../api/authApi';
+import Cookies from 'js-cookie';
 
 export const AuthContext = createContext(null);
 
@@ -14,7 +15,8 @@ export function AuthProvider({ children }) {
 
   const checkAuth = async () => {
     try {
-      if (authApi.isAuthenticated()) {
+      const token = Cookies.get('admin_token');
+      if (token) {
         const userData = authApi.getCurrentUser();
         setUser(userData);
         setIsAuthenticated(true);
@@ -47,6 +49,8 @@ export function AuthProvider({ children }) {
     } finally {
       setUser(null);
       setIsAuthenticated(false);
+      Cookies.remove('admin_token');
+      Cookies.remove('admin_user');
     }
   };
 

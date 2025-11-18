@@ -1,12 +1,15 @@
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+import axiosInstance from '../api/axios';
 
 const programService = {
-    // Public APIs
+    // ==================== PUBLIC APIs ====================
+    
+    /**
+     * Get all programs with filters, search, and pagination
+     * @param {Object} params - Query parameters (category, status, year, search, page, per_page, etc.)
+     */
     getAllPrograms: async (params = {}) => {
         try {
-            const response = await axios.get(`${API_URL}/v1/programs`, { params });
+            const response = await axiosInstance.get('/v1/programs', { params });
             return response.data;
         } catch (error) {
             console.error('Error fetching programs:', error);
@@ -14,9 +17,13 @@ const programService = {
         }
     },
 
+    /**
+     * Get single program detail by slug
+     * @param {String} slug - Program slug
+     */
     getProgramBySlug: async (slug) => {
         try {
-            const response = await axios.get(`${API_URL}/v1/programs/${slug}`);
+            const response = await axiosInstance.get(`/v1/programs/${slug}`);
             return response.data;
         } catch (error) {
             console.error('Error fetching program:', error);
@@ -24,9 +31,13 @@ const programService = {
         }
     },
 
+    /**
+     * Get recent programs for sidebar
+     * @param {Number} limit - Number of programs to fetch (default: 3)
+     */
     getRecentPrograms: async (limit = 3) => {
         try {
-            const response = await axios.get(`${API_URL}/v1/programs-recent`, {
+            const response = await axiosInstance.get('/v1/programs-recent', {
                 params: { limit }
             });
             return response.data;
@@ -36,9 +47,12 @@ const programService = {
         }
     },
 
+    /**
+     * Get all program categories
+     */
     getCategories: async () => {
         try {
-            const response = await axios.get(`${API_URL}/v1/program-categories`);
+            const response = await axiosInstance.get('/v1/program-categories');
             return response.data;
         } catch (error) {
             console.error('Error fetching categories:', error);
@@ -46,9 +60,12 @@ const programService = {
         }
     },
 
+    /**
+     * Get program status options
+     */
     getStatusOptions: async () => {
         try {
-            const response = await axios.get(`${API_URL}/v1/program-status-options`);
+            const response = await axiosInstance.get('/v1/program-status-options');
             return response.data;
         } catch (error) {
             console.error('Error fetching status options:', error);
@@ -56,9 +73,12 @@ const programService = {
         }
     },
 
+    /**
+     * Get program statistics
+     */
     getStatistics: async () => {
         try {
-            const response = await axios.get(`${API_URL}/v1/program-statistics`);
+            const response = await axiosInstance.get('/v1/program-statistics');
             return response.data;
         } catch (error) {
             console.error('Error fetching statistics:', error);
@@ -66,16 +86,15 @@ const programService = {
         }
     },
 
-    // Admin APIs
+    // ==================== ADMIN APIs ====================
+
+    /**
+     * Admin: Get all programs with filters
+     * @param {Object} params - Query parameters
+     */
     adminGetAllPrograms: async (params = {}) => {
         try {
-            const token = localStorage.getItem('admin_token');
-            const response = await axios.get(`${API_URL}/v1/admin/programs`, {
-                params,
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            });
+            const response = await axiosInstance.get('/v1/admin/programs', { params });
             return response.data;
         } catch (error) {
             console.error('Error fetching programs:', error);
@@ -83,13 +102,41 @@ const programService = {
         }
     },
 
-    adminCreateProgram: async (formData) => {
+    /**
+     * Admin: Create new program
+     * @param {Object} programData - Program data including image file
+     */
+    adminCreateProgram: async (programData) => {
         try {
-            const token = localStorage.getItem('admin_token');
-            const response = await axios.post(`${API_URL}/v1/admin/programs`, formData, {
+            const formData = new FormData();
+            
+            // Append all fields to FormData
+            formData.append('name', programData.name);
+            formData.append('category', programData.category);
+            formData.append('location', programData.location);
+            formData.append('latitude', programData.latitude);
+            formData.append('longitude', programData.longitude);
+            formData.append('description', programData.description);
+            formData.append('status', programData.status);
+            formData.append('year', programData.year);
+            
+            if (programData.target) {
+                formData.append('target', programData.target);
+            }
+
+            // Append facilities array
+            programData.facilities.forEach((facility, index) => {
+                formData.append(`facilities[${index}]`, facility);
+            });
+
+            // Append image if exists
+            if (programData.image) {
+                formData.append('image', programData.image);
+            }
+
+            const response = await axiosInstance.post('/v1/admin/programs', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
-                    Authorization: `Bearer ${token}`
                 }
             });
             return response.data;
@@ -99,13 +146,47 @@ const programService = {
         }
     },
 
-    adminUpdateProgram: async (id, formData) => {
+    /**
+     * Admin: Update existing program
+     * @param {Number} id - Program ID
+     * @param {Object} programData - Updated program data
+     */
+    adminUpdateProgram: async (id, programData) => {
         try {
-            const token = localStorage.getItem('admin_token');
-            const response = await axios.post(`${API_URL}/v1/admin/programs/${id}`, formData, {
+            const formData = new FormData();
+            
+            // Append all fields to FormData
+            formData.append('name', programData.name);
+            formData.append('category', programData.category);
+            formData.append('location', programData.location);
+            formData.append('latitude', programData.latitude);
+            formData.append('longitude', programData.longitude);
+            formData.append('description', programData.description);
+            formData.append('status', programData.status);
+            formData.append('year', programData.year);
+            
+            if (programData.target) {
+                formData.append('target', programData.target);
+            }
+
+            // Append facilities array
+            programData.facilities.forEach((facility, index) => {
+                formData.append(`facilities[${index}]`, facility);
+            });
+
+            // Append new image if exists
+            if (programData.image && programData.image instanceof File) {
+                formData.append('image', programData.image);
+            }
+
+            // Mark if image should be removed
+            if (programData.removeImage) {
+                formData.append('remove_image', '1');
+            }
+
+            const response = await axiosInstance.post(`/v1/admin/programs/${id}`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
-                    Authorization: `Bearer ${token}`
                 }
             });
             return response.data;
@@ -115,14 +196,13 @@ const programService = {
         }
     },
 
+    /**
+     * Admin: Delete program
+     * @param {Number} id - Program ID
+     */
     adminDeleteProgram: async (id) => {
         try {
-            const token = localStorage.getItem('admin_token');
-            const response = await axios.delete(`${API_URL}/v1/admin/programs/${id}`, {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            });
+            const response = await axiosInstance.delete(`/v1/admin/programs/${id}`);
             return response.data;
         } catch (error) {
             console.error('Error deleting program:', error);
