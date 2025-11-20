@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { FaEdit, FaTrash, FaPlus, FaTimes } from 'react-icons/fa';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
@@ -6,8 +7,9 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
 const ManageWkTjsl = () => {
   const [areas, setAreas] = useState([]);
+  const [beritaList, setBeritaList] = useState([]); // ✅ BARU: List berita
   const [loading, setLoading] = useState(false);
-  const [showModal, setShowModal] = useState(false);
+  const [showForm, setShowForm] = useState(false);
   const [editingArea, setEditingArea] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
@@ -31,13 +33,14 @@ const ManageWkTjsl = () => {
     impact: '',
     order: 0,
     is_active: true,
+    related_news_id: '', // ✅ BARU: ID berita terkait
   });
 
-  // Dynamic fields state
   const [programInput, setProgramInput] = useState('');
 
   useEffect(() => {
     fetchAreas();
+    fetchBeritaList(); // ✅ BARU: Fetch list berita
   }, [currentPage, searchTerm, filterStatus]);
 
   const fetchAreas = async () => {
@@ -62,6 +65,25 @@ const ManageWkTjsl = () => {
       toast.error('Gagal memuat data program TJSL');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // ✅ BARU: Fetch list berita untuk dropdown
+  const fetchBeritaList = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/v1/admin/berita`, {
+        params: {
+          per_page: 999, // Ambil semua berita
+          status: 'published', // Hanya berita published
+        },
+      });
+
+      if (response.data.success) {
+        setBeritaList(response.data.data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching berita list:', error);
+      // Tidak perlu toast error karena ini optional
     }
   };
 
@@ -105,7 +127,7 @@ const ManageWkTjsl = () => {
 
       if (response.data.success) {
         toast.success(editingArea ? 'Program TJSL berhasil diperbarui!' : 'Program TJSL berhasil ditambahkan!');
-        setShowModal(false);
+        setShowForm(false);
         resetForm();
         fetchAreas();
       }
@@ -141,8 +163,9 @@ const ManageWkTjsl = () => {
       impact: area.impact || '',
       order: area.order || 0,
       is_active: area.is_active,
+      related_news_id: area.related_news_id || '', // ✅ BARU
     });
-    setShowModal(true);
+    setShowForm(true);
   };
 
   const handleDelete = async (id) => {
@@ -180,244 +203,113 @@ const ManageWkTjsl = () => {
       impact: '',
       order: 0,
       is_active: true,
+      related_news_id: '', // ✅ BARU
     });
     setProgramInput('');
   };
 
-  const openAddModal = () => {
-    resetForm();
-    setShowModal(true);
+  const handleCancel = () => {
+    if (window.confirm('Apakah Anda yakin ingin membatalkan? Data yang belum disimpan akan hilang.')) {
+      setShowForm(false);
+      resetForm();
+    }
   };
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div>
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">🤝 Manajemen Wilayah Kerja TJSL</h1>
-        <p className="text-gray-600">Kelola data program tanggung jawab sosial dan lingkungan</p>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-sm text-gray-600 mb-1">Total Program TJSL</div>
-          <div className="text-2xl font-bold text-blue-600">{totalItems}</div>
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Kelola Wilayah Kerja TJSL</h1>
+          <p className="text-gray-600 mt-1">Manajemen program tanggung jawab sosial dan lingkungan</p>
         </div>
-        <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-sm text-gray-600 mb-1">Program Aktif</div>
-          <div className="text-2xl font-bold text-green-600">
-            {areas.filter(a => a.status === 'Aktif').length}
-          </div>
-        </div>
-        <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-sm text-gray-600 mb-1">Program Non-Aktif</div>
-          <div className="text-2xl font-bold text-red-600">
-            {areas.filter(a => a.status === 'Non-Aktif').length}
-          </div>
-        </div>
-        <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-sm text-gray-600 mb-1">Status Tampil</div>
-          <div className="text-2xl font-bold text-orange-600">
-            {areas.filter(a => a.is_active).length}
-          </div>
-        </div>
-      </div>
-
-      {/* Filters & Search */}
-      <div className="bg-white rounded-lg shadow p-4 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <input
-            type="text"
-            placeholder="🔍 Cari program TJSL..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="">Semua Status</option>
-            <option value="Aktif">Aktif</option>
-            <option value="Non-Aktif">Non-Aktif</option>
-          </select>
+        {!showForm && (
           <button
-            onClick={openAddModal}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center justify-center gap-2"
+            onClick={() => setShowForm(true)}
+            className="flex items-center gap-2 bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-blue-700 transition-colors"
           >
-            <span className="text-xl">+</span> Tambah Program TJSL
+            <FaPlus />
+            Tambah Program TJSL Baru
           </button>
-        </div>
-      </div>
-
-      {/* Table */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-100 border-b border-gray-200">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">ID Area</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Nama</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Penerima</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Anggaran</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Posisi</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Warna</th>
-                <th className="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Aktif</th>
-                <th className="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {loading ? (
-                <tr>
-                  <td colSpan="9" className="px-6 py-12 text-center">
-                    <div className="flex justify-center items-center">
-                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-                    </div>
-                  </td>
-                </tr>
-              ) : areas.length === 0 ? (
-                <tr>
-                  <td colSpan="9" className="px-6 py-12 text-center text-gray-500">
-                    Tidak ada data program TJSL
-                  </td>
-                </tr>
-              ) : (
-                areas.map((area) => (
-                  <tr key={area.id} className="hover:bg-gray-50 transition">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {area.area_id}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {area.name}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                        area.status === 'Aktif'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-red-100 text-red-800'
-                      }`}>
-                        {area.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                      {area.beneficiaries || '-'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 font-mono">
-                      {area.budget || '-'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 font-mono text-xs">
-                      {area.position_x}, {area.position_y}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <div className="flex items-center gap-2">
-                        <div
-                          className="w-6 h-6 rounded border border-gray-300"
-                          style={{ backgroundColor: area.color }}
-                        ></div>
-                        <span className="text-xs text-gray-600">{area.color}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center">
-                      {area.is_active ? (
-                        <span className="text-green-600 text-xl">✓</span>
-                      ) : (
-                        <span className="text-red-600 text-xl">✗</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-                      <button
-                        onClick={() => handleEdit(area)}
-                        className="text-blue-600 hover:text-blue-800 mr-3"
-                      >
-                        ✏️
-                      </button>
-                      <button
-                        onClick={() => handleDelete(area.id)}
-                        className="text-red-600 hover:text-red-800"
-                      >
-                        🗑️
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="bg-gray-50 px-6 py-4 flex items-center justify-between border-t border-gray-200">
-            <div className="text-sm text-gray-600">
-              Menampilkan {areas.length} dari {totalItems} data
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                disabled={currentPage === 1}
-                className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 transition"
-              >
-                ← Sebelumnya
-              </button>
-              <div className="flex items-center gap-2">
-                {[...Array(totalPages)].map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setCurrentPage(i + 1)}
-                    className={`px-3 py-2 rounded-lg transition ${
-                      currentPage === i + 1
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-white border border-gray-300 hover:bg-gray-100'
-                    }`}
-                  >
-                    {i + 1}
-                  </button>
-                ))}
-              </div>
-              <button
-                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                disabled={currentPage === totalPages}
-                className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 transition"
-              >
-                Selanjutnya →
-              </button>
-            </div>
-          </div>
         )}
       </div>
 
-      {/* Modal Form */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-gray-800">
-                {editingArea ? '✏️ Edit Program TJSL' : '➕ Tambah Program TJSL'}
-              </h2>
-              <button
-                onClick={() => {
-                  setShowModal(false);
-                  resetForm();
-                }}
-                className="text-gray-500 hover:text-gray-700 text-2xl"
-              >
-                ✕
-              </button>
+      {/* Stats Cards */}
+      {!showForm && (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="text-sm text-gray-600 mb-2">Total Program TJSL</div>
+            <div className="text-3xl font-bold text-blue-600">{totalItems}</div>
+          </div>
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="text-sm text-gray-600 mb-2">Program Aktif</div>
+            <div className="text-3xl font-bold text-green-600">
+              {areas.filter(a => a.status === 'Aktif').length}
             </div>
+          </div>
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="text-sm text-gray-600 mb-2">Program Non-Aktif</div>
+            <div className="text-3xl font-bold text-red-600">
+              {areas.filter(a => a.status === 'Non-Aktif').length}
+            </div>
+          </div>
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="text-sm text-gray-600 mb-2">Status Tampil</div>
+            <div className="text-3xl font-bold text-purple-600">
+              {areas.filter(a => a.is_active).length}
+            </div>
+          </div>
+        </div>
+      )}
 
-            <form onSubmit={handleSubmit} className="p-6">
+      {/* Search & Filter */}
+      {!showForm && (
+        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input
+              type="text"
+              placeholder="🔍 Cari program TJSL..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+            />
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+            >
+              <option value="">Semua Status</option>
+              <option value="Aktif">Aktif</option>
+              <option value="Non-Aktif">Non-Aktif</option>
+            </select>
+          </div>
+        </div>
+      )}
+
+      {/* Form Input */}
+      {showForm && (
+        <div className="bg-white rounded-lg shadow-md p-8 mb-8">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold text-gray-900">
+              {editingArea ? 'Edit Program TJSL' : 'Input Program TJSL Baru'}
+            </h2>
+            <button
+              onClick={handleCancel}
+              className="text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <FaTimes className="w-6 h-6" />
+            </button>
+          </div>
+
+          <form onSubmit={handleSubmit}>
+            {/* Basic Information */}
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold text-gray-700 mb-4 pb-2 border-b border-gray-200">
+                📋 Informasi Dasar
+              </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Basic Information */}
-                <div className="col-span-2">
-                  <h3 className="text-lg font-semibold text-gray-700 mb-4 pb-2 border-b border-gray-200">
-                    📋 Informasi Dasar
-                  </h3>
-                </div>
-
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
                     ID Area <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -426,13 +318,13 @@ const ManageWkTjsl = () => {
                     value={formData.area_id}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     placeholder="Contoh: KEPULAUAN_SERIBU"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
                     Nama Program <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -441,13 +333,13 @@ const ManageWkTjsl = () => {
                     value={formData.name}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     placeholder="Nama program TJSL"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
                     Status <span className="text-red-500">*</span>
                   </label>
                   <select
@@ -455,7 +347,7 @@ const ManageWkTjsl = () => {
                     value={formData.status}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                   >
                     <option value="Aktif">Aktif</option>
                     <option value="Non-Aktif">Non-Aktif</option>
@@ -463,7 +355,7 @@ const ManageWkTjsl = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
                     Urutan Tampilan
                   </label>
                   <input
@@ -471,20 +363,21 @@ const ManageWkTjsl = () => {
                     name="order"
                     value={formData.order}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     placeholder="0"
                   />
                 </div>
+              </div>
+            </div>
 
-                {/* Position & Color */}
-                <div className="col-span-2">
-                  <h3 className="text-lg font-semibold text-gray-700 mb-4 pb-2 border-b border-gray-200">
-                    📍 Posisi & Tampilan
-                  </h3>
-                </div>
-
+            {/* Position & Color */}
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold text-gray-700 mb-4 pb-2 border-b border-gray-200">
+                📍 Posisi & Tampilan di Peta
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
                     Position X (%) <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -494,16 +387,16 @@ const ManageWkTjsl = () => {
                     value={formData.position_x}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     placeholder="0.00"
                     min="0"
                     max="100"
                   />
-                  <p className="text-xs text-gray-500 mt-1">Koordinat X pada peta (0-100)</p>
+                  <p className="text-sm text-gray-500 mt-1">Koordinat X pada peta (0-100)</p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
                     Position Y (%) <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -513,16 +406,16 @@ const ManageWkTjsl = () => {
                     value={formData.position_y}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     placeholder="0.00"
                     min="0"
                     max="100"
                   />
-                  <p className="text-xs text-gray-500 mt-1">Koordinat Y pada peta (0-100)</p>
+                  <p className="text-sm text-gray-500 mt-1">Koordinat Y pada peta (0-100)</p>
                 </div>
 
-                <div className="col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
                     Warna Marker <span className="text-red-500">*</span>
                   </label>
                   <div className="flex gap-2">
@@ -532,44 +425,46 @@ const ManageWkTjsl = () => {
                       value={formData.color}
                       onChange={handleInputChange}
                       required
-                      className="h-10 w-20 border border-gray-300 rounded-lg cursor-pointer"
+                      className="h-12 w-20 border border-gray-300 rounded-lg cursor-pointer"
                     />
                     <input
                       type="text"
                       value={formData.color}
                       onChange={(e) => setFormData(prev => ({ ...prev, color: e.target.value }))}
-                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="#000000"
+                      className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      placeholder="#0EA5E9"
                       pattern="^#[0-9A-Fa-f]{6}$"
                     />
                   </div>
+                  <p className="text-sm text-gray-500 mt-1">Warna yang akan ditampilkan pada marker peta</p>
                 </div>
+              </div>
+            </div>
 
-                {/* Description */}
-                <div className="col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Deskripsi <span className="text-red-500">*</span>
-                  </label>
-                  <textarea
-                    name="description"
-                    value={formData.description}
-                    onChange={handleInputChange}
-                    required
-                    rows="4"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Deskripsi lengkap program TJSL"
-                  />
-                </div>
+            {/* Description */}
+            <div className="mb-6">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Deskripsi Program <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                name="description"
+                value={formData.description}
+                onChange={handleInputChange}
+                required
+                rows="4"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                placeholder="Deskripsi lengkap program TJSL..."
+              />
+            </div>
 
-                {/* Program Data */}
-                <div className="col-span-2">
-                  <h3 className="text-lg font-semibold text-gray-700 mb-4 pb-2 border-b border-gray-200">
-                    🤝 Data Program
-                  </h3>
-                </div>
-
+            {/* Program Data */}
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold text-gray-700 mb-4 pb-2 border-b border-gray-200">
+                🤝 Data Program
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
                     Penerima Manfaat
                   </label>
                   <input
@@ -577,13 +472,13 @@ const ManageWkTjsl = () => {
                     name="beneficiaries"
                     value={formData.beneficiaries}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     placeholder="Contoh: 850 Keluarga"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
                     Anggaran
                   </label>
                   <input
@@ -591,13 +486,13 @@ const ManageWkTjsl = () => {
                     name="budget"
                     value={formData.budget}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     placeholder="Contoh: Rp 2.8 Miliar"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
                     Durasi Program
                   </label>
                   <input
@@ -605,13 +500,13 @@ const ManageWkTjsl = () => {
                     name="duration"
                     value={formData.duration}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     placeholder="Contoh: 2023-2025"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
                     Dampak Program
                   </label>
                   <input
@@ -619,91 +514,258 @@ const ManageWkTjsl = () => {
                     name="impact"
                     value={formData.impact}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     placeholder="Contoh: Peningkatan 35% pendapatan"
                   />
                 </div>
-
-                {/* Programs */}
-                <div className="col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Program & Kegiatan
-                  </label>
-                  <div className="flex gap-2 mb-3">
-                    <input
-                      type="text"
-                      value={programInput}
-                      onChange={(e) => setProgramInput(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addProgram())}
-                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Nama program (tekan Enter)"
-                    />
-                    <button
-                      type="button"
-                      onClick={addProgram}
-                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
-                    >
-                      + Tambah
-                    </button>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {formData.programs.map((program, index) => (
-                      <span
-                        key={index}
-                        className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm flex items-center gap-2"
-                      >
-                        {program}
-                        <button
-                          type="button"
-                          onClick={() => removeProgram(index)}
-                          className="text-purple-600 hover:text-purple-800 font-bold"
-                        >
-                          ✕
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Active Status */}
-                <div className="col-span-2">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      name="is_active"
-                      checked={formData.is_active}
-                      onChange={handleInputChange}
-                      className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
-                    />
-                    <span className="text-sm font-medium text-gray-700">
-                      Status Aktif (Tampil di website)
-                    </span>
-                  </label>
-                </div>
               </div>
+            </div>
 
-              {/* Form Actions */}
-              <div className="flex gap-3 mt-8 pt-6 border-t border-gray-200">
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
-                >
-                  {loading ? '⏳ Menyimpan...' : editingArea ? '💾 Update Program TJSL' : '➕ Tambah Program TJSL'}
-                </button>
+            {/* Programs List */}
+            <div className="mb-6">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Program & Kegiatan
+              </label>
+              <div className="flex gap-2 mb-3">
+                <input
+                  type="text"
+                  value={programInput}
+                  onChange={(e) => setProgramInput(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addProgram())}
+                  className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  placeholder="Nama program/kegiatan (tekan Enter untuk menambah)"
+                />
                 <button
                   type="button"
-                  onClick={() => {
-                    setShowModal(false);
-                    resetForm();
-                  }}
-                  className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-100 transition font-semibold"
+                  onClick={addProgram}
+                  className="px-6 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors"
                 >
-                  ❌ Batal
+                  + Tambah
                 </button>
               </div>
-            </form>
+              <div className="flex flex-wrap gap-2">
+                {formData.programs.map((program, index) => (
+                  <span
+                    key={index}
+                    className="bg-purple-100 text-purple-800 px-4 py-2 rounded-full text-sm flex items-center gap-2 font-medium"
+                  >
+                    {program}
+                    <button
+                      type="button"
+                      onClick={() => removeProgram(index)}
+                      className="text-purple-600 hover:text-purple-900 font-bold"
+                    >
+                      ✕
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* ✅ BARU: Link Berita Terkait */}
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold text-gray-700 mb-4 pb-2 border-b border-gray-200">
+                📰 Berita Terkait
+              </h3>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Pilih Berita Terkait (Opsional)
+                </label>
+                <select
+                  name="related_news_id"
+                  value={formData.related_news_id}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                >
+                  <option value="">-- Tidak ada berita terkait --</option>
+                  {beritaList.map((berita) => (
+                    <option key={berita.id} value={berita.id}>
+                      {berita.title} ({new Date(berita.date).toLocaleDateString('id-ID')})
+                    </option>
+                  ))}
+                </select>
+                <p className="text-sm text-gray-500 mt-1">
+                  Berita ini akan ditampilkan di button "Lihat Berita Terkait" pada modal detail program
+                </p>
+              </div>
+            </div>
+
+            {/* Active Status */}
+            <div className="mb-6">
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  name="is_active"
+                  checked={formData.is_active}
+                  onChange={handleInputChange}
+                  className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                />
+                <span className="text-sm font-semibold text-gray-700">
+                  Tampilkan di website (Status Aktif)
+                </span>
+              </label>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="mt-8 flex flex-col sm:flex-row justify-end gap-3">
+              <button
+                type="button"
+                onClick={handleCancel}
+                className="px-6 py-3 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition-colors"
+              >
+                Batal
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? 'Menyimpan...' : editingArea ? 'Update Program TJSL' : 'Save Program TJSL'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Table List */}
+      {!showForm && (
+        <div className="bg-white rounded-lg shadow-md overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    ID Area & Nama
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Penerima Manfaat
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Berita Terkait
+                  </th>
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Aktif
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Aksi
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {loading ? (
+                  <tr>
+                    <td colSpan="6" className="px-6 py-12 text-center">
+                      <div className="flex justify-center items-center">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                      </div>
+                    </td>
+                  </tr>
+                ) : areas.length === 0 ? (
+                  <tr>
+                    <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
+                      Tidak ada data program TJSL
+                    </td>
+                  </tr>
+                ) : (
+                  areas.map((area) => (
+                    <tr key={area.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="text-sm font-medium text-gray-900">{area.area_id}</div>
+                        <div className="text-sm text-gray-500">{area.name}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          area.status === 'Aktif'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {area.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        {area.beneficiaries || '-'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        {area.related_news_id ? (
+                          <span className="text-blue-600 font-medium">✓ Terlink</span>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                        {area.is_active ? (
+                          <span className="text-green-600 text-2xl">✓</span>
+                        ) : (
+                          <span className="text-red-600 text-2xl">✗</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-sm font-medium whitespace-nowrap">
+                        <div className="flex gap-3">
+                          <button
+                            onClick={() => handleEdit(area)}
+                            className="text-blue-600 hover:text-blue-900 transition-colors"
+                            title="Edit"
+                          >
+                            <FaEdit className="w-5 h-5" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(area.id)}
+                            className="text-red-600 hover:text-red-900 transition-colors"
+                            title="Hapus"
+                          >
+                            <FaTrash className="w-5 h-5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="bg-gray-50 px-6 py-4 flex items-center justify-between border-t border-gray-200">
+              <div className="text-sm text-gray-600">
+                Menampilkan {areas.length} dari {totalItems} data
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 transition"
+                >
+                  ← Sebelumnya
+                </button>
+                <div className="flex items-center gap-2">
+                  {[...Array(totalPages)].map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setCurrentPage(i + 1)}
+                      className={`px-3 py-2 rounded-lg transition ${
+                        currentPage === i + 1
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-white border border-gray-300 hover:bg-gray-100'
+                      }`}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 transition"
+                >
+                  Selanjutnya →
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

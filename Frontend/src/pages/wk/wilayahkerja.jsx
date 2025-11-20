@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom'; // ✅ BARU
 import axios from 'axios';
 import './wilayahkerja.css';
 import Peta from './Peta.png';
@@ -6,9 +7,10 @@ import Peta from './Peta.png';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
 const Wilayah = () => {
+  const navigate = useNavigate(); // ✅ BARU
   const [active, setActive] = useState(null);
   const [hoveredId, setHoveredId] = useState(null);
-  const [activeTab, setActiveTab] = useState('all'); // 'all', 'tekkom', 'tjsl'
+  const [activeTab, setActiveTab] = useState('all');
   const [allData, setAllData] = useState([]);
   const [loading, setLoading] = useState(true);
   
@@ -39,6 +41,9 @@ const Wilayah = () => {
             budget: area.budget || '',
             duration: area.duration || '',
             impact: area.impact || '',
+            related_news_id: area.related_news_id || null, // ✅ BARU
+            related_news_slug: area.related_news_slug || null, // ✅ BARU
+            related_news_title: area.related_news_title || null, // ✅ BARU
           }));
           setAllData(transformedData);
         }
@@ -55,7 +60,6 @@ const Wilayah = () => {
   const pengeboranData = useMemo(() => allData.filter(d => d.category === 'TEKKOM'), [allData]);
   const tjslData = useMemo(() => allData.filter(d => d.category === 'TJSL'), [allData]);
   
-  // Filter data berdasarkan tab aktif
   const filteredData = useMemo(() => {
     if (activeTab === 'tekkom') return pengeboranData;
     if (activeTab === 'tjsl') return tjslData;
@@ -64,6 +68,14 @@ const Wilayah = () => {
 
   const openModal = (item) => setActive(item);
   const closeModal = () => setActive(null);
+
+  // ✅ BARU: Handler untuk navigasi ke berita
+  const handleViewNews = (newsSlug) => {
+    if (newsSlug) {
+      navigate(`/artikel/${newsSlug}`);
+      closeModal();
+    }
+  };
 
   if (loading) {
     return (
@@ -482,7 +494,7 @@ const Wilayah = () => {
                   </div>
                 </div>
               ) : (
-                // TJSL Modal Content
+                // ✅ TJSL Modal Content - UPDATED
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
                   {/* Left Column */}
                   <div>
@@ -571,26 +583,44 @@ const Wilayah = () => {
                       <p className="modal-text">Tidak ada data program.</p>
                     )}
 
+                    {/* ✅ UPDATED: Buttons dengan Berita Terkait */}
                     <div style={{ marginTop: '20px', display: 'flex', gap: '8px', flexDirection: 'column' }}>
-                      <button
-                        style={{
+                      {/* Button Berita Terkait - Show jika ada related_news_slug */}
+                      {active.related_news_slug ? (
+                        <button
+                          style={{
+                            padding: '12px 16px',
+                            borderRadius: '8px',
+                            border: 'none',
+                            backgroundColor: '#059669',
+                            color: 'white',
+                            fontSize: '14px',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            boxShadow: '0 2px 4px rgba(5,150,105,0.3)'
+                          }}
+                          onClick={() => handleViewNews(active.related_news_slug)}
+                          onMouseEnter={(e) => e.target.style.backgroundColor = '#047857'}
+                          onMouseLeave={(e) => e.target.style.backgroundColor = '#059669'}
+                        >
+                          📰 Lihat Berita Terkait
+                        </button>
+                      ) : (
+                        <div style={{
                           padding: '12px 16px',
                           borderRadius: '8px',
-                          border: 'none',
-                          backgroundColor: '#059669',
-                          color: 'white',
+                          backgroundColor: '#f3f4f6',
+                          color: '#9ca3af',
                           fontSize: '14px',
                           fontWeight: '600',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s',
-                          boxShadow: '0 2px 4px rgba(5,150,105,0.3)'
-                        }}
-                        onClick={() => alert(`Membuka detail program TJSL ${active.name}`)}
-                        onMouseEnter={(e) => e.target.style.backgroundColor = '#047857'}
-                        onMouseLeave={(e) => e.target.style.backgroundColor = '#059669'}
-                      >
-                        📈 Lihat Laporan Dampak
-                      </button>
+                          textAlign: 'center',
+                          border: '2px dashed #e5e7eb'
+                        }}>
+                          📰 Belum ada berita terkait
+                        </div>
+                      )}
+                      
                       <button
                         style={{
                           padding: '12px 16px',

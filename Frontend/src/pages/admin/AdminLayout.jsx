@@ -129,9 +129,6 @@ const AdminLayout = () => {
                         <NavLink to="/tukang-minyak-dan-gas/manage-berita" className={subLinkClasses}>
                             Kelola Berita
                         </NavLink>
-                        <NavLink to="/tukang-minyak-dan-gas/manage-program" className={subLinkClasses}>
-                            Kelola Program
-                        </NavLink>
                         <NavLink to="/tukang-minyak-dan-gas/manage-umkm" className={subLinkClasses}>
                             Kelola UMKM Binaan
                         </NavLink>
@@ -142,7 +139,7 @@ const AdminLayout = () => {
                             Kelola Statistik TJSL
                         </NavLink>
                         <NavLink to="/tukang-minyak-dan-gas/manage-wk-tjsl" className={subLinkClasses}>
-                            🌱 Kelola WK TJSL
+                            Kelola WK TJSL
                         </NavLink>
                     </SidebarDropdown>
 

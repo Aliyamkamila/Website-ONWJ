@@ -5,7 +5,7 @@ import { FaSave, FaEdit, FaUsers, FaBuilding, FaSolarPanel, FaBook, FaHandsHelpi
 const initialStatistik = {
     penerimaManfaat: {
         value: 99500,
-        label: 'Penerimaan Manfaat',
+        label: 'Penerima Manfaat',
         unit: 'Jiwa',
         icon: <FaUsers className="w-8 h-8" />,
         description: 'Total masyarakat yang menerima manfaat dari program TJSL'
@@ -101,7 +101,7 @@ const ManageAngkaStatistikTJSL = () => {
             {/* Header */}
             <div className="flex justify-between items-center mb-8">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900">Kelola Angka Statistik TJSL</h1>
+                    <h1 className="text-3xl font-bold text-gray-900">Kelola Statistik TJSL</h1>
                     <p className="text-gray-600 mt-1">Update angka "Fokus Utama TJSL Kami" di halaman TJSL</p>
                 </div>
                 <div className="flex gap-3">
