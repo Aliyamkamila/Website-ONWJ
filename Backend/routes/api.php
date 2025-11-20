@@ -6,6 +6,8 @@ use App\Http\Controllers\AdminController;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Api\UmkmController;
 use App\Http\Controllers\Api\ProgramController;
+use App\Http\Controllers\Api\WkTekkomController;
+use App\Http\Controllers\Api\WkTjslController;
 
 // Guest routes (public access)
 Route::middleware(['guest.only'])->group(function () {
@@ -114,4 +116,92 @@ Route::prefix('v1/admin')->group(function () {
     Route::get('/programs/{id}', [ProgramController::class, 'show']);
     Route::post('/programs/{id}', [ProgramController::class, 'update']); // POST for FormData with image
     Route::delete('/programs/{id}', [ProgramController::class, 'destroy']);
+});
+
+/*
+|--------------------------------------------------------------------------
+| Wilayah Kerja TEKKOM Routes
+|--------------------------------------------------------------------------
+*/
+
+// Public routes (untuk frontend)
+Route::prefix('v1')->group(function () {
+    // Get all TEKKOM areas for public display
+    Route::get('/wk-tekkom', [WkTekkomController::class, 'index']);
+
+    // Get single TEKKOM area detail
+    Route::get('/wk-tekkom/{id}', [WkTekkomController::class, 'show']);
+
+    // Get status options
+    Route::get('/wk-tekkom-status-options', [WkTekkomController::class, 'statusOptions']);
+});
+
+// Admin routes
+Route::prefix('v1/admin')->group(function () {
+// Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin'])->group(function () {
+    // TEKKOM Management
+    Route::get('/wk-tekkom', [WkTekkomController::class, 'adminIndex']);
+    Route::post('/wk-tekkom', [WkTekkomController::class, 'store']);
+    Route::get('/wk-tekkom/{id}', [WkTekkomController::class, 'show']);
+    Route::put('/wk-tekkom/{id}', [WkTekkomController::class, 'update']);
+    Route::patch('/wk-tekkom/{id}', [WkTekkomController::class, 'update']);
+    Route::delete('/wk-tekkom/{id}', [WkTekkomController::class, 'destroy']);
+    Route::post('/wk-tekkom/{id}/restore', [WkTekkomController::class, 'restore']);
+});
+
+/*
+|--------------------------------------------------------------------------
+| Wilayah Kerja TJSL Routes
+|--------------------------------------------------------------------------
+*/
+
+// Public routes (untuk frontend)
+Route::prefix('v1')->group(function () {
+    // Get all TJSL areas for public display
+    Route::get('/wk-tjsl', [WkTjslController::class, 'index']);
+
+    // Get single TJSL area detail
+    Route::get('/wk-tjsl/{id}', [WkTjslController::class, 'show']);
+
+    // Get status options
+    Route::get('/wk-tjsl-status-options', [WkTjslController::class, 'statusOptions']);
+});
+
+// Admin routes
+Route::prefix('v1/admin')->group(function () {
+// Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin'])->group(function () {
+    // TJSL Management
+    Route::get('/wk-tjsl', [WkTjslController::class, 'adminIndex']);
+    Route::post('/wk-tjsl', [WkTjslController::class, 'store']);
+    Route::get('/wk-tjsl/{id}', [WkTjslController::class, 'show']);
+    Route::put('/wk-tjsl/{id}', [WkTjslController::class, 'update']);
+    Route::patch('/wk-tjsl/{id}', [WkTjslController::class, 'update']);
+    Route::delete('/wk-tjsl/{id}', [WkTjslController::class, 'destroy']);
+    Route::post('/wk-tjsl/{id}/restore', [WkTjslController::class, 'restore']);
+});
+
+// Combined endpoint for wilayahkerja page (both TEKKOM and TJSL)
+Route::prefix('v1')->group(function () {
+    Route::get('/wilayah-kerja', function () {
+        $tekkom = \App\Models\WkTekkom::active()->ordered()->get()->map(function ($area) {
+            return array_merge($area->toArray(), ['category' => 'TEKKOM']);
+        });
+        
+        $tjsl = \App\Models\WkTjsl::active()->ordered()->get()->map(function ($area) {
+            return array_merge($area->toArray(), ['category' => 'TJSL']);
+        });
+        
+        $allData = $tekkom->merge($tjsl);
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'All areas retrieved successfully',
+            'data' => $allData,
+            'meta' => [
+                'total' => $allData->count(),
+                'tekkom_count' => $tekkom->count(),
+                'tjsl_count' => $tjsl->count(),
+            ]
+        ], 200);
+    });
 });

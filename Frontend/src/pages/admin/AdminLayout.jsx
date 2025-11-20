@@ -141,13 +141,16 @@ const AdminLayout = () => {
                         <NavLink to="/tukang-minyak-dan-gas/manage-angka-statistik-tjsl" className={subLinkClasses}>
                             Kelola Statistik TJSL
                         </NavLink>
+                        <NavLink to="/tukang-minyak-dan-gas/manage-wk-tjsl" className={subLinkClasses}>
+                            🌱 Kelola WK TJSL
+                        </NavLink>
                     </SidebarDropdown>
 
                     {/* Dropdown Divisi Teknik Komersial dan K3LL */}
                     <SidebarDropdown title="Divisi Tekkom & K3LL" icon={<FaHardHat />}>
-                        <div className="px-4 py-3 text-xs text-gray-500 italic">
-                            Menu dalam pengembangan
-                        </div>
+                        <NavLink to="/tukang-minyak-dan-gas/manage-wk-tekkom" className={subLinkClasses}>
+                            🛢️ Kelola WK TEKKOM
+                        </NavLink>
                     </SidebarDropdown>
 
                     {/* Dropdown Divisi Keuangan */}

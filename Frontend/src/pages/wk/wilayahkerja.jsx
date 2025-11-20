@@ -1,655 +1,615 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react';
-import {
-  MapContainer,
-  TileLayer,
-  Polygon,
-  Marker,
-  Tooltip,
-  LayersControl,
-  LayerGroup,
-  ScaleControl,
-  useMap,
-  CircleMarker,
-  Polyline
-} from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
-import L from 'leaflet';
-import 'leaflet.markercluster/dist/MarkerCluster.css';
-import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
-import 'leaflet.markercluster';
-import icon from 'leaflet/dist/images/marker-icon.png';
-import iconShadow from 'leaflet/dist/images/marker-shadow.png';
+import React, { useState, useMemo, useEffect } from 'react';
+import axios from 'axios';
 import './wilayahkerja.css';
+import Peta from './Peta.png';
 
-const DefaultIcon = L.icon({
-  iconUrl: icon,
-  shadowUrl: iconShadow,
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34]
-});
-L.Marker.prototype.options.icon = DefaultIcon;
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
-function MarkerCluster({ markers = [], onMarkerClick = () => {}, zoomLevel = 8 }) {
-  const map = useMap();
-  const clusterRef = useRef(null);
-
+const Wilayah = () => {
+  const [active, setActive] = useState(null);
+  const [hoveredId, setHoveredId] = useState(null);
+  const [activeTab, setActiveTab] = useState('all'); // 'all', 'tekkom', 'tjsl'
+  const [allData, setAllData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  
+  // Fetch data from API
   useEffect(() => {
-    if (!map) return;
-    const mcg = L.markerClusterGroup({ chunkedLoading: true });
-    clusterRef.current = mcg;
-    markers.forEach((item, idx) => {
-      const m = L.marker(item.position, { title: item.name, riseOnHover: true });
-      m.on('click', () => onMarkerClick({ ...item, type: 'tjsl' }));
-      m.bindTooltip(String(idx + 1), {
-        direction: 'top',
-        offset: [0, -10],
-        permanent: zoomLevel >= 10,
-        opacity: 1
-      });
-
-      mcg.addLayer(m);
-    });
-
-    map.addLayer(mcg);
-
-    return () => {
-      if (map && mcg) {
-        map.removeLayer(mcg);
+    const fetchAreas = async () => {
+      setLoading(true);
+      try {
+        const response = await axios.get(`${API_URL}/v1/wilayah-kerja`);
+        if (response.data.success) {
+          // Transform data to match component structure
+          const transformedData = response.data.data.map(area => ({
+            id: area.area_id,
+            name: area.name,
+            category: area.category,
+            position: { x: parseFloat(area.position_x), y: parseFloat(area.position_y) },
+            color: area.color,
+            description: area.description,
+            facilities: area.facilities || [],
+            programs: area.programs || [],
+            production: area.production || '',
+            status: area.status,
+            wells: area.wells || 0,
+            depth: area.depth || '',
+            pressure: area.pressure || '',
+            temperature: area.temperature || '',
+            beneficiaries: area.beneficiaries || '',
+            budget: area.budget || '',
+            duration: area.duration || '',
+            impact: area.impact || '',
+          }));
+          setAllData(transformedData);
+        }
+      } catch (error) {
+        console.error('Error fetching wilayah kerja:', error);
+      } finally {
+        setLoading(false);
       }
     };
-  }, [map, JSON.stringify(markers), zoomLevel]);
-  return null;
-}
 
-const WilayahKerja = () => {
-  const [activeItem, setActiveItem] = useState(null);
-  const [showModal, setShowModal] = useState(false);
-  const [filter, setFilter] = useState('semua');
-  const [zoomLevel, setZoomLevel] = useState(8);
-  const mapRef = useRef(null);
-
-  const flowLineCoordinates = useMemo(() => ([
-    [-5.355123, 106.600162],
-    [-5.361711, 106.591125],
-    [-5.821120, 107.032625],
-    [-5.827708, 107.023589],
-    [-5.823055, 106.991481],
-    [-5.842273, 107.177863],
-    [-5.910981, 107.301039],
-    [-5.917569, 107.292003],
-    [-5.908607, 107.052618],
-    [-5.915194, 107.517144],
-    [-6.032211, 107.526713],
-    [-6.121081, 107.857525],
-    [-6.079227, 107.716877],
-    [-5.975795, 107.759091],
-    [-5.948672, 107.919132],
-    [-5.954138, 107.909904],
-    [-6.004002, 108.116644],
-    [-6.110974, 108.126987],
-  ]), []);
-
-  // Generate data produksi dummy untuk setiap titik flow
-  const generateProductionData = (pointIndex) => {
-    const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-    return months.map((month, idx) => ({
-      month,
-      oil: Math.floor(Math.random() * 3000) + 1500 + (pointIndex * 100), // BOPD
-      gas: Math.floor(Math.random() * 8000) + 3000 + (pointIndex * 200), // MMSCFD
-    }));
-  };
-
-  // Data untuk setiap titik flow
-  const flowPointsData = useMemo(() => 
-    flowLineCoordinates.map((coord, index) => ({
-      id: `FLOW-${index + 1}`,
-      name: `Flow Point ${index + 1}`,
-      position: coord,
-      type: 'flow',
-      description: `Titik flow ${index + 1} pada jalur pipeline utama. Merupakan bagian dari sistem distribusi minyak dan gas dari platform produksi ke fasilitas pemrosesan.`,
-      facilities: [
-        'Pipeline Connection',
-        'Flow Meter',
-        'Pressure Monitoring',
-        'Safety Valve System',
-        'Control Station'
-      ],
-      production: generateProductionData(index),
-      coordinates: `${coord[0].toFixed(6)}°, ${coord[1].toFixed(6)}°`,
-      status: 'Operational',
-      pressure: `${(Math.random() * 500 + 1000).toFixed(2)} PSI`,
-      temperature: `${(Math.random() * 30 + 50).toFixed(1)}°C`,
-      flowRate: `${(Math.random() * 5000 + 3000).toFixed(0)} BBL/Day`
-    }))
-  , [flowLineCoordinates]);
-
-  const pengeboranData = useMemo(() => ([
-    // Data pengeboran kosong - bisa diisi nanti jika diperlukan
-  ]), []);
-
-  // Data Program TJSL (Lengkap)
-  const tjslData = useMemo(() => ([
-    { 
-      id: 1,
-      name: 'Program Ekowisata (Kepulauan Seribu)', 
-      position: [-5.55, 106.55], 
-      description: 'Pengembangan wisata ramah lingkungan dan edukasi laut di kawasan Kepulauan Seribu. Program ini bertujuan untuk meningkatkan kesadaran masyarakat tentang pentingnya menjaga ekosistem laut sambil memberikan manfaat ekonomi bagi masyarakat lokal.',
-      category: 'Lingkungan',
-      facilities: [
-        'Jalur wisata edukasi laut',
-        'Pusat informasi konservasi',
-        'Pelatihan guide wisata lokal',
-        'Pembersihan pantai berkelanjutan'
-      ],
-      region: 'Kepulauan Seribu',
-      status: 'Aktif',
-      year: 2025,
-      target: '500 wisatawan/bulan',
-      production: '3 pulau wisata dikelola',
-      imageUrl: null
-    },
-    { 
-      id: 2,
-      name: 'Program Pendidikan (Kalibaru)', 
-      position: [-6.1026, 106.9192], 
-      description: 'Bantuan renovasi sekolah dan pemberian beasiswa pendidikan untuk siswa berprestasi di wilayah Kalibaru. Program ini juga menyediakan pelatihan guru dan penyediaan sarana pembelajaran modern untuk meningkatkan kualitas pendidikan.',
-      category: 'Pendidikan',
-      facilities: [
-        'Renovasi 5 ruang kelas',
-        'Beasiswa untuk 100 siswa',
-        'Pelatihan guru berkala',
-        'Donasi buku dan alat tulis'
-      ],
-      region: 'Kalibaru, Jakarta Utara',
-      status: 'Aktif',
-      year: 2025,
-      target: '500 siswa',
-      production: '5 sekolah terbantu',
-      imageUrl: null
-    },
-    { 
-      id: 3,
-      name: 'Program Mangrove (Muara Gembong)', 
-      position: [-5.9972, 107.0394], 
-      description: 'Penanaman 5.000 bibit mangrove untuk rehabilitasi kawasan pesisir dan pencegahan abrasi. Program ini melibatkan masyarakat lokal dalam kegiatan penanaman dan pemeliharaan untuk menjaga kelestarian ekosistem pesisir.',
-      category: 'Lingkungan',
-      facilities: [
-        'Penanaman 5.000 bibit mangrove',
-        'Edukasi konservasi lingkungan',
-        'Monitoring pertumbuhan bibit',
-        'Pemberdayaan masyarakat pesisir'
-      ],
-      region: 'Muara Gembong, Bekasi',
-      status: 'Aktif',
-      year: 2025,
-      target: '10 hektar kawasan pesisir',
-      production: '5.000 bibit ditanam',
-      imageUrl: null
-    },
-    { 
-      id: 4,
-      name: 'Program Kesehatan (Sungai Buntu)', 
-      position: [-6.0563, 107.4026], 
-      description: 'Pusat layanan kesehatan dan penyediaan air bersih untuk masyarakat Sungai Buntu. Program ini mencakup pemeriksaan kesehatan gratis, penyuluhan kesehatan, dan instalasi sarana air bersih untuk meningkatkan kualitas hidup masyarakat.',
-      category: 'Kesehatan',
-      facilities: [
-        'Klinik lapangan mobile',
-        'Penyuluhan kesehatan rutin',
-        'Instalasi sarana air bersih',
-        'Pemeriksaan kesehatan gratis'
-      ],
-      region: 'Sungai Buntu, Karawang',
-      status: 'Aktif',
-      year: 2025,
-      target: '500 keluarga',
-      production: '2 klinik beroperasi',
-      imageUrl: null
-    },
-    { 
-      id: 5,
-      name: 'Program UKM (Mayangan)', 
-      position: [-6.2177, 107.7800], 
-      description: 'Pelatihan kewirausahaan dan pemberian modal usaha untuk UMKM lokal di wilayah Mayangan. Program ini membantu meningkatkan kapasitas dan daya saing pelaku UMKM melalui pendampingan bisnis dan akses ke pasar digital.',
-      category: 'Ekonomi',
-      facilities: [
-        'Pelatihan manajemen bisnis',
-        'Modal usaha mikro',
-        'Pendampingan usaha',
-        'Akses ke pasar digital'
-      ],
-      region: 'Mayangan, Subang',
-      status: 'Aktif',
-      year: 2025,
-      target: '100 UMKM',
-      production: '50 UMKM binaan aktif',
-      imageUrl: null
-    },
-    { 
-      id: 6,
-      name: 'Program Lingkungan (Balongan)', 
-      position: [-6.3971, 108.3682], 
-      description: 'Konservasi dan restorasi terumbu karang di perairan Balongan. Program ini bertujuan menjaga keanekaragaman hayati laut dan mendukung keberlanjutan ekosistem pesisir melalui pelatihan diving konservasi dan monitoring biodiversitas.',
-      category: 'Lingkungan',
-      facilities: [
-        'Restorasi terumbu karang',
-        'Monitoring biodiversitas laut',
-        'Pelatihan diving konservasi',
-        'Edukasi masyarakat nelayan'
-      ],
-      region: 'Balongan, Indramayu',
-      status: 'Selesai',
-      year: 2024,
-      target: '2 lokasi terumbu karang',
-      production: '1 hektar terumbu pulih',
-      imageUrl: null
-    },
-    { 
-      id: 7,
-      name: 'Program Sosial (Jawa Barat)', 
-      position: [-6.9147, 107.6098], 
-      description: 'Program pemberdayaan masyarakat dan pelatihan keterampilan di berbagai wilayah Jawa Barat. Mencakup pelatihan vokasi, pemberdayaan perempuan, dan peningkatan kesejahteraan masyarakat melalui pendampingan komunitas berkelanjutan.',
-      category: 'Sosial',
-      facilities: [
-        'Pelatihan keterampilan vokasi',
-        'Pemberdayaan perempuan',
-        'Program kesejahteraan sosial',
-        'Pendampingan komunitas'
-      ],
-      region: 'Jawa Barat',
-      status: 'Dalam Proses',
-      year: 2025,
-      target: '10 desa',
-      production: '5 desa terlayani',
-      imageUrl: null
-    },
-  ]), []);
-
-  const center = [-6.2, 107.5];
-
-  const openModal = (itemData) => {
-    setActiveItem(itemData);
-    setShowModal(true);
-  };
+    fetchAreas();
+  }, []);
   
-  const closeModal = () => {
-    setShowModal(false);
-    setActiveItem(null);
-  };
+  const pengeboranData = useMemo(() => allData.filter(d => d.category === 'TEKKOM'), [allData]);
+  const tjslData = useMemo(() => allData.filter(d => d.category === 'TJSL'), [allData]);
+  
+  // Filter data berdasarkan tab aktif
+  const filteredData = useMemo(() => {
+    if (activeTab === 'tekkom') return pengeboranData;
+    if (activeTab === 'tjsl') return tjslData;
+    return allData;
+  }, [activeTab, pengeboranData, tjslData, allData]);
 
-  const handleMapCreated = (mapInstance) => {
-    mapRef.current = mapInstance;
-    setZoomLevel(mapInstance.getZoom());
-    mapInstance.on('zoomend', () => setZoomLevel(mapInstance.getZoom()));
-  };
+  const openModal = (item) => setActive(item);
+  const closeModal = () => setActive(null);
 
-  useEffect(() => {
-    if (!mapRef.current) return;
-    if (filter === 'pengeboran') {
-      const allCoords = [...pengeboranData.flatMap(a => a.coordinates), ...flowLineCoordinates];
-      if (allCoords.length) {
-        mapRef.current.fitBounds(allCoords, { padding: [40, 40] });
-      }
-    } else if (filter === 'tjsl') {
-      const allPoints = tjslData.map(p => p.position);
-      if (allPoints.length) {
-        mapRef.current.fitBounds(allPoints, { padding: [40, 40] });
-      }
-    } else {
-      mapRef.current.setView(center, 8);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filter]);
+  if (loading) {
+    return (
+      <div className="bg-gray-50 py-8 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 text-lg">Memuat data wilayah kerja...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-gray-50 py-8">
       <div className="container mx-auto px-4 lg:px-16">
-        {/* Buttons */}
-        <div className="flex flex-wrap justify-center gap-4 mb-4">
-          <button 
-            onClick={() => setFilter('semua')} 
-            className={`px-6 py-2 rounded-full font-medium transition-colors ${
-              filter === 'semua' ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-gray-700 hover:bg-gray-100'
-            }`}
-          >
-            Tampilkan Semua
-          </button>
-          <button 
-            onClick={() => setFilter('pengeboran')} 
-            className={`px-6 py-2 rounded-full font-medium transition-colors ${
-              filter === 'pengeboran' ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-gray-700 hover:bg-gray-100'
-            }`}
-          >
-            Peta Pengeboran
-          </button>
-          <button 
-            onClick={() => setFilter('tjsl')} 
-            className={`px-6 py-2 rounded-full font-medium transition-colors ${
-              filter === 'tjsl' ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-gray-700 hover:bg-gray-100'
-            }`}
-          >
-            Peta TJSL
-          </button>
-        </div>
+        <div className="max-w-6xl mx-auto bg-white rounded-xl shadow-lg p-4 border border-gray-200">
+          <h3 className="font-semibold text-xl mb-3">🗺️ Peta Wilayah Kerja ONWJ 2025</h3>
+          <p className="text-sm text-gray-600 mb-4">
+            Klik pada marker untuk melihat detail area. Filter berdasarkan kategori menggunakan tombol di bawah.
+          </p>
 
-        <div className="max-w-6xl mx-auto bg-white rounded-xl shadow-lg p-2 border border-gray-200">
-          <MapContainer
-            center={center}
-            zoom={8}
-            style={{ height: '620px', width: '100%' }}
-            whenCreated={handleMapCreated}
-            minZoom={6}
-            maxZoom={16}
-            maxBounds={[[-12, 95], [6, 141]]}
-            className="rounded-lg"
-          >
-            <TileLayer
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              attribution='&copy; OpenStreetMap contributors'
+          {/* Filter Tabs */}
+          <div className="flex gap-2 mb-4 flex-wrap">
+            <button
+              onClick={() => setActiveTab('all')}
+              style={{
+                padding: '8px 16px',
+                borderRadius: '8px',
+                border: activeTab === 'all' ? '2px solid #2563eb' : '2px solid #e5e7eb',
+                backgroundColor: activeTab === 'all' ? '#eff6ff' : 'white',
+                color: activeTab === 'all' ? '#2563eb' : '#6b7280',
+                fontSize: '14px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+            >
+              🗺️ Semua Area ({allData.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('tekkom')}
+              style={{
+                padding: '8px 16px',
+                borderRadius: '8px',
+                border: activeTab === 'tekkom' ? '2px solid #2563eb' : '2px solid #e5e7eb',
+                backgroundColor: activeTab === 'tekkom' ? '#eff6ff' : 'white',
+                color: activeTab === 'tekkom' ? '#2563eb' : '#6b7280',
+                fontSize: '14px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+            >
+              🛢️ Area Pengeboran ({pengeboranData.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('tjsl')}
+              style={{
+                padding: '8px 16px',
+                borderRadius: '8px',
+                border: activeTab === 'tjsl' ? '2px solid #2563eb' : '2px solid #e5e7eb',
+                backgroundColor: activeTab === 'tjsl' ? '#eff6ff' : 'white',
+                color: activeTab === 'tjsl' ? '#2563eb' : '#6b7280',
+                fontSize: '14px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+            >
+              🤝 Program TJSL ({tjslData.length})
+            </button>
+          </div>
+
+          {/* Map Container */}
+          <div style={{ 
+            width: '100%', 
+            position: 'relative',
+            backgroundColor: '#f1f5f9',
+            borderRadius: '12px',
+            overflow: 'hidden',
+            boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)'
+          }}>
+            {/* Background Image */}
+            <img 
+              src={Peta} 
+              alt="Peta Wilayah Kerja ONWJ 2025"
+              style={{ 
+                width: '100%', 
+                height: 'auto',
+                display: 'block',
+                userSelect: 'none'
+              }}
+              draggable={false}
             />
 
-            <ScaleControl position="bottomleft" />
+            {/* Clickable Areas Overlay */}
+            {filteredData.map((area) => (
+              <div
+                key={area.id}
+                onClick={() => openModal(area)}
+                onMouseEnter={() => setHoveredId(area.id)}
+                onMouseLeave={() => setHoveredId(null)}
+                style={{
+                  position: 'absolute',
+                  left: `${area.position.x}%`,
+                  top: `${area.position.y}%`,
+                  transform: 'translate(-50%, -50%)',
+                  cursor: 'pointer',
+                  zIndex: hoveredId === area.id ? 20 : 10,
+                  transition: 'all 0.2s ease'
+                }}
+                aria-label={`Area ${area.name}`}
+              >
+                {/* Map Pin Icon */}
+                <svg
+                  width={hoveredId === area.id ? '42' : '32'}
+                  height={hoveredId === area.id ? '42' : '32'}
+                  viewBox="0 0 24 24"
+                  fill={area.color}
+                  style={{
+                    filter: hoveredId === area.id 
+                      ? 'drop-shadow(0 8px 16px rgba(0,0,0,0.4))' 
+                      : 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))',
+                    transition: 'all 0.2s ease',
+                    animation: hoveredId === area.id ? 'pulse 1.5s infinite' : 'none'
+                  }}
+                >
+                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                </svg>
 
-            <LayersControl position="topright">
-              {/* Pengeboran polygons */}
-              <LayersControl.Overlay name="Pengeboran" checked={filter !== 'tjsl'}>
-                <LayerGroup>
-                  {(filter === 'semua' || filter === 'pengeboran') && pengeboranData.map(area => (
-                    <Polygon
-                      key={area.name}
-                      positions={area.coordinates}
-                      pathOptions={{
-                        fillColor: area.color || '#EF4444',
-                        fillOpacity: 0.45,
-                        weight: 2,
-                        color: area.color || '#ffffff',
-                      }}
-                      eventHandlers={{
-                        click: () => openModal({ ...area, type: 'pengeboran' })
-                      }}
-                    />
+                {/* Tooltip Label */}
+                {hoveredId === area.id && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '-60px',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    backgroundColor: 'rgba(17, 24, 39, 0.95)',
+                    color: 'white',
+                    padding: '6px 12px',
+                    borderRadius: '6px',
+                    fontSize: '13px',
+                    fontWeight: '600',
+                    whiteSpace: 'nowrap',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                    pointerEvents: 'none'
+                  }}>
+                    {area.name}
+                    <div style={{
+                      position: 'absolute',
+                      bottom: '-4px',
+                      left: '50%',
+                      transform: 'translateX(-50%)',
+                      width: 0,
+                      height: 0,
+                      borderLeft: '5px solid transparent',
+                      borderRight: '5px solid transparent',
+                      borderTop: '5px solid rgba(17, 24, 39, 0.95)'
+                    }} />
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Legend */}
+          <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+            <h4 className="font-semibold text-sm mb-3 text-gray-700">📊 Legenda</h4>
+            
+            {/* TEKKOM Legend */}
+            {(activeTab === 'all' || activeTab === 'tekkom') && pengeboranData.length > 0 && (
+              <div className="mb-4">
+                <h5 className="text-xs font-semibold text-gray-600 mb-2">🛢️ Area Pengeboran (TEKKOM)</h5>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                  {pengeboranData.map((area) => (
+                    <div key={area.id} className="flex items-center gap-2">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill={area.color} style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))' }}>
+                        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                      </svg>
+                      <span className="text-xs font-medium text-gray-700">{area.name}</span>
+                    </div>
                   ))}
-                </LayerGroup>
-              </LayersControl.Overlay>
+                </div>
+              </div>
+            )}
 
-              {/* Flow Points - Circle Markers */}
-              <LayersControl.Overlay name="Flow Points" checked={filter !== 'tjsl'}>
-                <LayerGroup>
-                  {(filter === 'semua' || filter === 'pengeboran') && flowPointsData.map((point, idx) => (
-                    <CircleMarker
-                      key={point.id}
-                      center={point.position}
-                      radius={8}
-                      pathOptions={{
-                        fillColor: '#3B82F6',
-                        fillOpacity: 0.9,
-                        color: '#FFFFFF',
-                        weight: 2,
-                        opacity: 1
-                      }}
-                      eventHandlers={{
-                        click: () => openModal(point),
-                        mouseover: (e) => {
-                          e.target.setStyle({
-                            radius: 12,
-                            fillOpacity: 1,
-                            weight: 3
-                          });
-                        },
-                        mouseout: (e) => {
-                          e.target.setStyle({
-                            radius: 8,
-                            fillOpacity: 0.9,
-                            weight: 2
-                          });
-                        }
-                      }}
-                    >
-                      <Tooltip direction="top" offset={[0, -10]} opacity={1} permanent={zoomLevel >= 11}>
-                        {idx + 1}
-                      </Tooltip>
-                    </CircleMarker>
+            {/* TJSL Legend */}
+            {(activeTab === 'all' || activeTab === 'tjsl') && tjslData.length > 0 && (
+              <div>
+                <h5 className="text-xs font-semibold text-gray-600 mb-2">🤝 Program TJSL</h5>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                  {tjslData.map((area) => (
+                    <div key={area.id} className="flex items-center gap-2">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill={area.color} style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))' }}>
+                        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                      </svg>
+                      <span className="text-xs font-medium text-gray-700">{area.name}</span>
+                    </div>
                   ))}
-                </LayerGroup>
-              </LayersControl.Overlay>
+                </div>
+              </div>
+            )}
 
-              {/* TJSL markers */}
-              <LayersControl.Overlay name="TJSL" checked={filter !== 'pengeboran'}>
-                <LayerGroup>
-                  {(filter === 'semua' || filter === 'tjsl') && (
-                    <MarkerCluster markers={tjslData} onMarkerClick={openModal} zoomLevel={zoomLevel} />
-                  )}
-                </LayerGroup>
-              </LayersControl.Overlay>
-            </LayersControl>
-          </MapContainer>
-        </div>
-
-        {/* Legend */}
-        <div className="max-w-6xl mx-auto mt-4 bg-white rounded-xl shadow-lg p-4 border border-gray-200">
-          <h4 className="font-semibold text-lg mb-3">📊 Legenda Peta</h4>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 bg-blue-500 rounded-full"></div>
-              <span className="text-sm">Flow Points ({flowPointsData.length})</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <img src={icon} alt="TJSL marker" className="w-6 h-6" />
-              <span className="text-sm">Program TJSL ({tjslData.length})</span>
-            </div>
+            <p className="text-xs text-gray-500 mt-3">
+              💡 <strong>Tip:</strong> Hover pada marker untuk melihat nama area. Klik marker untuk melihat detail lengkap.
+            </p>
           </div>
         </div>
       </div>
 
       {/* Modal */}
-      {showModal && activeItem && (
-        <div className="modal-backdrop" onClick={(e) => { if (e.target.classList.contains('modal-backdrop')) closeModal(); }}>
-          <div className="modal-content">
-            <div className="modal-header">
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ 
-                  width: 14, 
-                  height: 14, 
-                  borderRadius: activeItem.type === 'flow' ? '50%' : 4, 
-                  backgroundColor: activeItem.type === 'flow' ? '#3B82F6' : (activeItem.color || '#FFEB3B') 
-                }} />
-                <h3 className="modal-title">
-                  {activeItem.type === 'flow' ? '🔵' : '📍'} Detail: {activeItem.name}
+      {active && (
+        <div
+          className="modal-backdrop"
+          onClick={(e) => { if (e.target.classList.contains('modal-backdrop')) closeModal(); }}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(17,24,39,0.7)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 60,
+            backdropFilter: 'blur(4px)'
+          }}
+        >
+          <div className="modal-content" style={{ 
+            width: 'min(920px,95%)', 
+            maxHeight: '90vh', 
+            overflowY: 'auto',
+            backgroundColor: 'white',
+            borderRadius: '16px',
+            boxShadow: '0 20px 25px -5px rgba(0,0,0,0.3)'
+          }}>
+            <div className="modal-header" style={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center',
+              padding: '20px 24px',
+              borderBottom: '2px solid #e5e7eb'
+            }}>
+              <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                <svg width="32" height="32" viewBox="0 0 24 24" fill={active.color} style={{ filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.2))' }}>
+                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                </svg>
+                <h3 className="modal-title" style={{ fontSize: '20px', fontWeight: '700', color: '#111827' }}>
+                  {active.category === 'TEKKOM' ? '🛢️ Area Pengeboran' : '🤝 Program TJSL'}: {active.name}
                 </h3>
               </div>
-              <button className="modal-close-btn" onClick={closeModal}>✕</button>
+              <button 
+                className="modal-close-btn" 
+                onClick={closeModal}
+                style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  backgroundColor: '#f3f4f6',
+                  color: '#6b7280',
+                  fontSize: '20px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'all 0.2s'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.backgroundColor = '#ef4444';
+                  e.target.style.color = 'white';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = '#f3f4f6';
+                  e.target.style.color = '#6b7280';
+                }}
+              >
+                ✕
+              </button>
             </div>
 
-            <div className="modal-body">
-              {activeItem.type === 'flow' ? (
-                // Modal untuk Flow Point dengan data produksi
-                <div>
-                  <div className="modal-section mb-4">
-                    <h4 className="modal-section-title">📋 Informasi Flow Point</h4>
-                    <p className="modal-text mb-3">{activeItem.description}</p>
-                    <div className="modal-data-grid">
-                      <div className="modal-data-item">
-                        <div className="modal-data-label">ID:</div>
-                        <div className="modal-data-value">{activeItem.id}</div>
-                      </div>
-                      <div className="modal-data-item">
-                        <div className="modal-data-label">Koordinat:</div>
-                        <div className="modal-data-value">{activeItem.coordinates}</div>
-                      </div>
-                      <div className="modal-data-item">
-                        <div className="modal-data-label">Status:</div>
-                        <div className="modal-data-value text-green-600">{activeItem.status}</div>
-                      </div>
-                      <div className="modal-data-item">
-                        <div className="modal-data-label">Tekanan:</div>
-                        <div className="modal-data-value">{activeItem.pressure}</div>
-                      </div>
-                      <div className="modal-data-item">
-                        <div className="modal-data-label">Temperatur:</div>
-                        <div className="modal-data-value">{activeItem.temperature}</div>
-                      </div>
-                      <div className="modal-data-item">
-                        <div className="modal-data-label">Flow Rate:</div>
-                        <div className="modal-data-value">{activeItem.flowRate}</div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="modal-section mb-4">
-                    <h4 className="modal-section-title">⚙️ Fasilitas</h4>
-                    <ul className="modal-list">
-                      {activeItem.facilities.map((f, i) => (
-                        <li key={i} className="modal-list-item">{f}</li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <div className="modal-section">
-                    <h4 className="modal-section-title">📈 Data Produksi Tahun 2025</h4>
-                    <div className="overflow-x-auto">
-                      <table className="production-table w-full">
-                        <thead>
-                          <tr className="bg-blue-50">
-                            <th className="px-4 py-2 text-left border">Bulan</th>
-                            <th className="px-4 py-2 text-right border">Minyak (BOPD)</th>
-                            <th className="px-4 py-2 text-right border">Gas (MMSCFD)</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {activeItem.production.map((data, idx) => (
-                            <tr key={idx} className="hover:bg-gray-50">
-                              <td className="px-4 py-2 border">{data.month}</td>
-                              <td className="px-4 py-2 text-right border font-mono">{data.oil.toLocaleString()}</td>
-                              <td className="px-4 py-2 text-right border font-mono">{data.gas.toLocaleString()}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                        <tfoot>
-                          <tr className="bg-blue-100 font-bold">
-                            <td className="px-4 py-2 border">Total Tahunan</td>
-                            <td className="px-4 py-2 text-right border font-mono">
-                              {activeItem.production.reduce((sum, d) => sum + d.oil, 0).toLocaleString()}
-                            </td>
-                            <td className="px-4 py-2 text-right border font-mono">
-                              {activeItem.production.reduce((sum, d) => sum + d.gas, 0).toLocaleString()}
-                            </td>
-                          </tr>
-                        </tfoot>
-                      </table>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-2 italic">
-                      * Data produksi adalah simulasi untuk keperluan demonstrasi
+            <div className="modal-body" style={{ padding: '24px' }}>
+              {active.category === 'TEKKOM' ? (
+                // TEKKOM Modal Content
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+                  {/* Left Column */}
+                  <div>
+                    <h4 className="modal-section-title" style={{ fontSize: '16px', fontWeight: '600', marginBottom: '12px', color: '#374151' }}>
+                      📋 Deskripsi
+                    </h4>
+                    <p className="modal-text" style={{ color: '#6b7280', lineHeight: '1.6', marginBottom: '20px' }}>
+                      {active.description}
                     </p>
+
+                    <h4 className="modal-section-title" style={{ fontSize: '16px', fontWeight: '600', marginBottom: '12px', color: '#374151' }}>
+                      📐 Data Teknis
+                    </h4>
+                    <div style={{ 
+                      display: 'grid', 
+                      gridTemplateColumns: '1fr 1fr', 
+                      gap: '12px',
+                      backgroundColor: '#f9fafb',
+                      padding: '16px',
+                      borderRadius: '8px'
+                    }}>
+                      <div>
+                        <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '4px' }}>ID Area:</div>
+                        <div style={{ fontSize: '14px', fontWeight: '600', color: '#111827' }}>{active.id}</div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '4px' }}>Status:</div>
+                        <div style={{ fontSize: '14px', fontWeight: '600', color: active.status === 'Operasional' ? '#059669' : '#f59e0b' }}>
+                          {active.status}
+                        </div>
+                      </div>
+                      {active.wells && (
+                        <div>
+                          <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '4px' }}>Jumlah Sumur:</div>
+                          <div style={{ fontSize: '14px', fontWeight: '600', color: '#111827' }}>{active.wells} sumur</div>
+                        </div>
+                      )}
+                      {active.depth && (
+                        <div>
+                          <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '4px' }}>Kedalaman:</div>
+                          <div style={{ fontSize: '14px', fontWeight: '600', color: '#111827' }}>{active.depth}</div>
+                        </div>
+                      )}
+                      {active.pressure && (
+                        <div>
+                          <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '4px' }}>Tekanan:</div>
+                          <div style={{ fontSize: '14px', fontWeight: '600', color: '#dc2626' }}>{active.pressure}</div>
+                        </div>
+                      )}
+                      {active.temperature && (
+                        <div>
+                          <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '4px' }}>Temperatur:</div>
+                          <div style={{ fontSize: '14px', fontWeight: '600', color: '#ea580c' }}>{active.temperature}</div>
+                        </div>
+                      )}
+                      {active.production && (
+                        <div style={{ gridColumn: '1 / -1' }}>
+                          <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '4px' }}>Produksi:</div>
+                          <div style={{ fontSize: '16px', fontWeight: '700', color: '#2563eb' }}>{active.production}</div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Right Column */}
+                  <div>
+                    <h4 className="modal-section-title" style={{ fontSize: '16px', fontWeight: '600', marginBottom: '12px', color: '#374151' }}>
+                      🏭 Fasilitas & Infrastruktur
+                    </h4>
+                    {active.facilities && active.facilities.length > 0 ? (
+                      <ul style={{ 
+                        listStyle: 'none', 
+                        padding: 0,
+                        margin: 0,
+                        marginBottom: '20px'
+                      }}>
+                        {active.facilities.map((f, i) => (
+                          <li key={i} style={{
+                            padding: '10px 12px',
+                            backgroundColor: '#f9fafb',
+                            marginBottom: '8px',
+                            borderRadius: '6px',
+                            fontSize: '14px',
+                            color: '#374151',
+                            borderLeft: `3px solid ${active.color}`
+                          }}>
+                            ✓ {f}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="modal-text">Tidak ada data fasilitas.</p>
+                    )}
+
+                    <div style={{ marginTop: '20px', display: 'flex', gap: '8px', flexDirection: 'column' }}>
+                      <button
+                        style={{
+                          padding: '12px 16px',
+                          borderRadius: '8px',
+                          border: 'none',
+                          backgroundColor: '#2563eb',
+                          color: 'white',
+                          fontSize: '14px',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          boxShadow: '0 2px 4px rgba(37,99,235,0.3)'
+                        }}
+                        onClick={() => alert(`Membuka detail produksi untuk ${active.name}`)}
+                        onMouseEnter={(e) => e.target.style.backgroundColor = '#1d4ed8'}
+                        onMouseLeave={(e) => e.target.style.backgroundColor = '#2563eb'}
+                      >
+                        📊 Lihat Detail Produksi
+                      </button>
+                      <button
+                        style={{
+                          padding: '12px 16px',
+                          borderRadius: '8px',
+                          border: '2px solid #e5e7eb',
+                          backgroundColor: 'white',
+                          color: '#374151',
+                          fontSize: '14px',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s'
+                        }}
+                        onClick={() => alert(`Membuka rencana kerja untuk ${active.name}`)}
+                        onMouseEnter={(e) => e.target.style.borderColor = '#2563eb'}
+                        onMouseLeave={(e) => e.target.style.borderColor = '#e5e7eb'}
+                      >
+                        📋 Rencana Kerja 2025
+                      </button>
+                    </div>
                   </div>
                 </div>
               ) : (
-                // Modal untuk TJSL Program
-                <div className="modal-grid">
-                  <div className="modal-column">
-                    <div className="modal-section">
-                      <h4 className="modal-section-title">📋 Deskripsi Program</h4>
-                      <p className="modal-text">{activeItem.description}</p>
-                    </div>
+                // TJSL Modal Content
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+                  {/* Left Column */}
+                  <div>
+                    <h4 className="modal-section-title" style={{ fontSize: '16px', fontWeight: '600', marginBottom: '12px', color: '#374151' }}>
+                      📋 Deskripsi Program
+                    </h4>
+                    <p className="modal-text" style={{ color: '#6b7280', lineHeight: '1.6', marginBottom: '20px' }}>
+                      {active.description}
+                    </p>
 
-                    <div className="modal-section">
-                      <h4 className="modal-section-title">📊 Informasi Program</h4>
-                      <div className="modal-data-grid">
-                        {activeItem.category && (
-                          <div className="modal-data-item">
-                            <div className="modal-data-label">Kategori:</div>
-                            <div className="modal-data-value">
-                              <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-semibold">
-                                {activeItem.category}
-                              </span>
-                            </div>
-                          </div>
-                        )}
-                        {activeItem.year && (
-                          <div className="modal-data-item">
-                            <div className="modal-data-label">Tahun:</div>
-                            <div className="modal-data-value">{activeItem.year}</div>
-                          </div>
-                        )}
-                        {activeItem.status && (
-                          <div className="modal-data-item">
-                            <div className="modal-data-label">Status:</div>
-                            <div className="modal-data-value">
-                              <span className={`px-2 py-1 rounded text-xs font-semibold ${
-                                activeItem.status === 'Aktif' 
-                                  ? 'bg-green-100 text-green-800'
-                                  : activeItem.status === 'Selesai'
-                                  ? 'bg-gray-100 text-gray-800'
-                                  : 'bg-yellow-100 text-yellow-800'
-                              }`}>
-                                {activeItem.status}
-                              </span>
-                            </div>
-                          </div>
-                        )}
-                        {activeItem.target && (
-                          <div className="modal-data-item">
-                            <div className="modal-data-label">Target:</div>
-                            <div className="modal-data-value">{activeItem.target}</div>
-                          </div>
-                        )}
+                    <h4 className="modal-section-title" style={{ fontSize: '16px', fontWeight: '600', marginBottom: '12px', color: '#374151' }}>
+                      📊 Informasi Program
+                    </h4>
+                    <div style={{ 
+                      display: 'grid', 
+                      gridTemplateColumns: '1fr', 
+                      gap: '12px',
+                      backgroundColor: '#f9fafb',
+                      padding: '16px',
+                      borderRadius: '8px'
+                    }}>
+                      <div>
+                        <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '4px' }}>ID Area:</div>
+                        <div style={{ fontSize: '14px', fontWeight: '600', color: '#111827' }}>{active.id}</div>
                       </div>
-                    </div>
-
-                    <div className="modal-section">
-                      <h4 className="modal-section-title">📐 Data Teknis</h4>
-                      <div className="modal-data-grid">
-                        <div className="modal-data-item">
-                          <div className="modal-data-label">Entity Type:</div>
-                          <div className="modal-data-value">Point</div>
-                        </div>
-                        <div className="modal-data-item">
-                          <div className="modal-data-label">Layer:</div>
-                          <div className="modal-data-value">_TJSL</div>
-                        </div>
-                        <div className="modal-data-item">
-                          <div className="modal-data-label">Line Type:</div>
-                          <div className="modal-data-value">POINT</div>
-                        </div>
-                        <div className="modal-data-item">
-                          <div className="modal-data-label">Total Koordinat:</div>
-                          <div className="modal-data-value">1 titik</div>
+                      <div>
+                        <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '4px' }}>Status Program:</div>
+                        <div style={{ fontSize: '14px', fontWeight: '600', color: active.status === 'Aktif' ? '#059669' : '#f59e0b' }}>
+                          {active.status}
                         </div>
                       </div>
-                    </div>
-
-                    <div className="modal-section">
-                      <h4 className="modal-section-title">📍 Wilayah Geografis</h4>
-                      <p className="modal-text">{activeItem.region || '—'}</p>
+                      {active.duration && (
+                        <div>
+                          <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '4px' }}>Durasi Program:</div>
+                          <div style={{ fontSize: '14px', fontWeight: '600', color: '#111827' }}>{active.duration}</div>
+                        </div>
+                      )}
+                      {active.beneficiaries && (
+                        <div>
+                          <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '4px' }}>Penerima Manfaat:</div>
+                          <div style={{ fontSize: '14px', fontWeight: '600', color: '#7c3aed' }}>{active.beneficiaries}</div>
+                        </div>
+                      )}
+                      {active.budget && (
+                        <div>
+                          <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '4px' }}>Anggaran Program:</div>
+                          <div style={{ fontSize: '16px', fontWeight: '700', color: '#2563eb' }}>{active.budget}</div>
+                        </div>
+                      )}
+                      {active.impact && (
+                        <div>
+                          <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '4px' }}>Dampak Utama:</div>
+                          <div style={{ fontSize: '14px', fontWeight: '600', color: '#059669' }}>{active.impact}</div>
+                        </div>
+                      )}
                     </div>
                   </div>
 
-                  <div className="modal-column">
-                    <div className="modal-section">
-                      <h4 className="modal-section-title">💙 Program & Fasilitas</h4>
-                      {activeItem.facilities && activeItem.facilities.length ? (
-                        <ul className="modal-list">
-                          {activeItem.facilities.map((f, i) => <li key={i} className="modal-list-item">{f}</li>)}
-                        </ul>
-                      ) : (
-                        <p className="modal-text">Informasi fasilitas tidak tersedia.</p>
-                      )}
-                    </div>
-
-                    <div className="modal-section">
-                      <h4 className="modal-section-title">📊 Pencapaian / Output</h4>
-                      <p className="modal-text">{activeItem.production || 'Tidak tersedia'}</p>
-                    </div>
-
-                    {activeItem.imageUrl && (
-                      <div className="modal-section">
-                        <h4 className="modal-section-title">🖼️ Dokumentasi Program</h4>
-                        <img 
-                          src={activeItem.imageUrl} 
-                          alt={activeItem.name} 
-                          className="w-full rounded-lg shadow-md"
-                        />
-                      </div>
+                  {/* Right Column */}
+                  <div>
+                    <h4 className="modal-section-title" style={{ fontSize: '16px', fontWeight: '600', marginBottom: '12px', color: '#374151' }}>
+                      🎯 Program & Kegiatan
+                    </h4>
+                    {active.programs && active.programs.length > 0 ? (
+                      <ul style={{ 
+                        listStyle: 'none', 
+                        padding: 0,
+                        margin: 0,
+                        marginBottom: '20px'
+                      }}>
+                        {active.programs.map((p, i) => (
+                          <li key={i} style={{
+                            padding: '10px 12px',
+                            backgroundColor: '#f9fafb',
+                            marginBottom: '8px',
+                            borderRadius: '6px',
+                            fontSize: '14px',
+                            color: '#374151',
+                            borderLeft: `3px solid ${active.color}`
+                          }}>
+                            ✓ {p}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="modal-text">Tidak ada data program.</p>
                     )}
+
+                    <div style={{ marginTop: '20px', display: 'flex', gap: '8px', flexDirection: 'column' }}>
+                      <button
+                        style={{
+                          padding: '12px 16px',
+                          borderRadius: '8px',
+                          border: 'none',
+                          backgroundColor: '#059669',
+                          color: 'white',
+                          fontSize: '14px',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          boxShadow: '0 2px 4px rgba(5,150,105,0.3)'
+                        }}
+                        onClick={() => alert(`Membuka detail program TJSL ${active.name}`)}
+                        onMouseEnter={(e) => e.target.style.backgroundColor = '#047857'}
+                        onMouseLeave={(e) => e.target.style.backgroundColor = '#059669'}
+                      >
+                        📈 Lihat Laporan Dampak
+                      </button>
+                      <button
+                        style={{
+                          padding: '12px 16px',
+                          borderRadius: '8px',
+                          border: '2px solid #e5e7eb',
+                          backgroundColor: 'white',
+                          color: '#374151',
+                          fontSize: '14px',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s'
+                        }}
+                        onClick={() => alert(`Membuka dokumentasi program ${active.name}`)}
+                        onMouseEnter={(e) => e.target.style.borderColor = '#059669'}
+                        onMouseLeave={(e) => e.target.style.borderColor = '#e5e7eb'}
+                      >
+                        📸 Galeri Dokumentasi
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}
@@ -657,8 +617,20 @@ const WilayahKerja = () => {
           </div>
         </div>
       )}
+
+      {/* CSS Animation for pulse effect */}
+      <style>{`
+        @keyframes pulse {
+          0%, 100% {
+            transform: scale(1);
+          }
+          50% {
+            transform: scale(1.1);
+          }
+        }
+      `}</style>
     </div>
   );
 };
 
-export default WilayahKerja;
+export default Wilayah;

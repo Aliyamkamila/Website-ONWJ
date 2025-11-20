@@ -22,7 +22,7 @@ import LaporanTahunanPage from './pages/media/LaporanTahunanPage';
 import Mainbisnis from './pages/bisnis/mainbisnis';
 import Mmanajemen from './pages/manajemen/mmanajemen';
 import Mainwk from './pages/wk/mainwk';
-import Wilayah from './pages/wk/wilayah';
+import Wilayah from './pages/wk/wilayahkerja'; // Updated import
 import UmkmPage from './pages/UmkmPage';
 import KontakPage from './pages/KontakPage';
 import Profile from './pages/landingpage/profile';
@@ -46,6 +46,10 @@ import ManageStatistikLanding from './pages/admin/ManageStatistikLanding';
 
 // Admin - Divisi Keuangan
 import ManageKeuangan from './pages/admin/ManageKeuangan';
+
+// Admin - Wilayah Kerja (TEKKOM & TJSL)
+import ManageWkTekkom from './pages/admin/ManageWkTekkom';
+import ManageWkTjsl from './pages/admin/ManageWkTjsl';
 
 // ==== DEFINISI RUTE ====
 const router = createBrowserRouter([
@@ -113,6 +117,10 @@ const router = createBrowserRouter([
       
       // Divisi Keuangan
       { path: 'manage-keuangan', element: <ManageKeuangan /> },
+      
+      // Wilayah Kerja (TEKKOM & TJSL)
+      { path: 'manage-wk-tekkom', element: <ManageWkTekkom /> },
+      { path: 'manage-wk-tjsl', element: <ManageWkTjsl /> },
     ],
   },
 ]);
@@ -122,7 +130,7 @@ createRoot(document.getElementById('root')).render(
   <StrictMode>
     <AuthProvider>
       <RouterProvider router={router} />
-      <Toaster />
+      <Toaster position="top-right" />
     </AuthProvider>
   </StrictMode>
 );
