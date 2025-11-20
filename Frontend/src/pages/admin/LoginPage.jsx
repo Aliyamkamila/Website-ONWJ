@@ -18,7 +18,6 @@ const LoginPage = () => {
     const [errors, setErrors] = useState({});
     const [loading, setLoading] = useState(false);
 
-    // Redirect if already authenticated
     React.useEffect(() => {
         if (isAuthenticated) {
             navigate('/tukang-minyak-dan-gas/dashboard');
@@ -32,7 +31,6 @@ const LoginPage = () => {
             [name]: type === 'checkbox' ? checked : value,
         }));
         
-        // Clear error when user types
         if (errors[name]) {
             setErrors(prev => ({ ...prev, [name]: '' }));
         }
@@ -83,113 +81,131 @@ const LoginPage = () => {
     };
 
     return (
-        <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-            <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-xl shadow-2xl">
-                <div className="flex justify-center">
-                    <img src={logo} alt="Logo" className="w-32 h-auto" />
-                </div>
-                <div className="text-center">
-                    <h2 className="text-3xl font-bold text-gray-900">
-                        Admin Panel Login
-                    </h2>
-                    <p className="text-gray-600 mt-2">MHJ ONWJ</p>
-                </div>
+        <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 p-4">
+
+            <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden animate-fade-in will-change-opacity">
                 
-                <form className="space-y-6" onSubmit={handleSubmit}>
-                    <div>
-                        <label 
-                            htmlFor="email" 
-                            className="block text-sm font-medium text-gray-700 mb-1"
-                        >
-                            Email
-                        </label>
-                        <input
-                            id="email"
-                            name="email"
-                            type="email"
-                            autoComplete="email"
-                            required
-                            value={formData.email}
-                            onChange={handleChange}
-                            disabled={loading}
-                            className={`w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
-                                errors.email ? 'border-red-500' : 'border-gray-300'
-                            } ${loading ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'}`}
-                            placeholder="admin@example.com"
-                        />
-                        {errors.email && (
-                            <p className="mt-1 text-sm text-red-600">{errors.email}</p>
-                        )}
+                {/* Header */}
+                <div className="px-8 pt-10 pb-6 bg-gradient-to-r from-blue-600 to-indigo-600 animate-slide-down">
+                    <div className="flex flex-col items-center space-y-4">
+                        <div className="bg-white p-4 rounded-2xl shadow-lg transform transition-smart-ease-out hover:scale-105 will-change-transform">
+                            <img 
+                                src={logo} 
+                                alt="Logo MHJ ONWJ" 
+                                className="w-20 h-20 object-contain" 
+                            />
+                        </div>
+                        
+                        <div className="text-center">
+                            <h2 className="text-display-sm text-white">
+                                Admin Panel
+                            </h2>
+                            <p className="text-blue-100 mt-1 text-sm font-medium">
+                                PT Migas Hulu Jabar ONWJ
+                            </p>
+                        </div>
                     </div>
+                </div>
 
-                    <div>
-                        <label 
-                            htmlFor="password" 
-                            className="block text-sm font-medium text-gray-700 mb-1"
-                        >
-                            Password
-                        </label>
-                        <input
-                            id="password"
-                            name="password"
-                            type="password"
-                            autoComplete="current-password"
-                            required
-                            value={formData.password}
-                            onChange={handleChange}
-                            disabled={loading}
-                            className={`w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
-                                errors.password ? 'border-red-500' : 'border-gray-300'
-                            } ${loading ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'}`}
-                            placeholder="••••••••"
-                        />
-                        {errors.password && (
-                            <p className="mt-1 text-sm text-red-600">{errors.password}</p>
-                        )}
-                    </div>
-
-                    <div className="flex items-center">
-                        <input
-                            id="remember"
-                            name="remember"
-                            type="checkbox"
-                            checked={formData.remember}
-                            onChange={handleChange}
-                            disabled={loading}
-                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                        />
-                        <label htmlFor="remember" className="ml-2 block text-sm text-gray-900">
-                            Ingat saya
-                        </label>
-                    </div>
-
-                    <div>
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className={`w-full py-3 px-4 font-semibold text-white rounded-lg shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                                loading
-                                    ? 'bg-gray-400 cursor-not-allowed'
-                                    : 'bg-blue-600 hover:bg-blue-700'
-                            }`}
-                        >
-                            {loading ? (
-                                <span className="flex items-center justify-center">
-                                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                    </svg>
-                                    Logging in...
-                                </span>
-                            ) : (
-                                'Login'
+                {/* Form */}
+                <div className="px-8 py-8 animate-slide-up">
+                    <form className="space-y-5" onSubmit={handleSubmit}>
+                        
+                        {/* Email */}
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                Email Address
+                            </label>
+                            <input
+                                name="email"
+                                type="email"
+                                required
+                                value={formData.email}
+                                onChange={handleChange}
+                                disabled={loading}
+                                className={`w-full px-4 py-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 ${
+                                    errors.email 
+                                        ? 'border-red-500 bg-red-50' 
+                                        : 'border-gray-300'
+                                }`}
+                                placeholder="admin@example.com"
+                            />
+                            {errors.email && (
+                                <p className="mt-2 text-sm text-red-600 flex items-center gap-1 animate-fade-in">
+                                    {errors.email}
+                                </p>
                             )}
-                        </button>
-                    </div>
-                </form>
+                        </div>
 
-                <div className="text-center text-sm text-gray-500">
-                    <p>Protected admin area</p>
+                        {/* Password */}
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                Password
+                            </label>
+                            <input
+                                name="password"
+                                type="password"
+                                required
+                                value={formData.password}
+                                onChange={handleChange}
+                                disabled={loading}
+                                className={`w-full px-4 py-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 ${
+                                    errors.password 
+                                        ? 'border-red-500 bg-red-50' 
+                                        : 'border-gray-300'
+                                }`}
+                                placeholder="••••••••"
+                            />
+                            {errors.password && (
+                                <p className="mt-2 text-sm text-red-600 flex items-center gap-1 animate-fade-in">
+                                    {errors.password}
+                                </p>
+                            )}
+                        </div>
+
+                        {/* Remember */}
+                        <div className="flex items-center justify-center py-2">
+                            <label className="flex items-center cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    name="remember"
+                                    checked={formData.remember}
+                                    onChange={handleChange}
+                                    disabled={loading}
+                                    className="h-4 w-4 text-blue-600"
+                                />
+                                <span className="ml-2 text-sm font-medium text-gray-700 select-none">
+                                    Ingat saya selama 7 hari
+                                </span>
+                            </label>
+                        </div>
+
+                        {/* SUBMIT BUTTON — CENTERED */}
+                        <div className="pt-2 flex justify-center">
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className={`px-10 py-3.5 font-bold text-white rounded-lg shadow-lg text-center transition-smart-ease-out transform mx-auto block ${
+                                    loading
+                                        ? 'bg-gray-400 cursor-not-allowed'
+                                        : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0'
+                                }`}
+                            >
+                                {loading ? 'Logging in...' : 'Login to Dashboard'}
+                            </button>
+                        </div>
+
+                    </form>
+                </div>
+
+                {/* Footer */}
+                <div className="px-8 py-6 bg-gray-50 border-t border-gray-200">
+                    <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
+                        <span className="font-medium">Protected Admin Area</span>
+                    </div>
+                    <p className="text-xs text-center text-gray-500 mt-2">
+                        © 2025 PT Migas Hulu Jabar ONWJ
+                    </p>
                 </div>
             </div>
         </div>
