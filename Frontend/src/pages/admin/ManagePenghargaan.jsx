@@ -1,12 +1,19 @@
 import React, { useState } from 'react';
-import { FaEdit, FaTrash, FaPlus, FaTimes, FaTrophy, FaCalendar, FaAward } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaPlus, FaTimes, FaTrophy, FaSearch, FaFilter, FaCheck, FaArrowLeft, FaImage, FaCalendar } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 
 const ManagePenghargaan = () => {
+  const navigate = useNavigate();
   const [penghargaan, setPenghargaan] = useState([]);
+  const [filteredPenghargaan, setFilteredPenghargaan] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
+  
+  // ✅ Search & Filter States (NEW)
   const [searchTerm, setSearchTerm] = useState('');
   const [filterYear, setFilterYear] = useState('');
+  const [filterCategory, setFilterCategory] = useState('');
+  
   const [formData, setFormData] = useState({
     title: '',
     category: '',
@@ -29,6 +36,39 @@ const ManagePenghargaan = () => {
     'Lainnya',
   ];
 
+  // ✅ Filter Logic (NEW)
+  React.useEffect(() => {
+    let result = [...penghargaan];
+
+    // Search
+    if (searchTerm) {
+      result = result.filter(item =>
+        item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.pemberi.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Filter by year
+    if (filterYear) {
+      result = result.filter(item => item.year.toString() === filterYear);
+    }
+
+    // Filter by category
+    if (filterCategory) {
+      result = result.filter(item => item.category === filterCategory);
+    }
+
+    setFilteredPenghargaan(result);
+  }, [searchTerm, filterYear, filterCategory, penghargaan]);
+
+  // ✅ Clear Filters (NEW)
+  const clearFilters = () => {
+    setSearchTerm('');
+    setFilterYear('');
+    setFilterCategory('');
+  };
+
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
@@ -40,12 +80,10 @@ const ManagePenghargaan = () => {
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Validate file size (max 2MB)
       if (file.size > 2 * 1024 * 1024) {
         alert('Ukuran file maksimal 2MB');
         return;
       }
-      // Validate file type
       if (!file.type.startsWith('image/')) {
         alert('File harus berupa gambar');
         return;
@@ -58,7 +96,6 @@ const ManagePenghargaan = () => {
     e.preventDefault();
     
     if (editingItem) {
-      // Update existing
       setPenghargaan(prev => prev.map(item => 
         item.id === editingItem.id 
           ? { ...formData, id: item.id, image: formData.image || item.image }
@@ -66,7 +103,6 @@ const ManagePenghargaan = () => {
       ));
       alert('✅ Penghargaan berhasil diupdate!');
     } else {
-      // Add new
       const newItem = {
         ...formData,
         id: Date.now(),
@@ -93,6 +129,7 @@ const ManagePenghargaan = () => {
       show_in_media_informasi: item.show_in_media_informasi,
     });
     setShowForm(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleDelete = (id) => {
@@ -124,20 +161,28 @@ const ManagePenghargaan = () => {
     }
   };
 
-  // Filter data
-  const filteredData = penghargaan.filter(item => {
-    const matchSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                       item.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                       item.pemberi.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchYear = filterYear ? item.year.toString() === filterYear : true;
-    return matchSearch && matchYear;
-  });
-
   // Get unique years for filter
   const years = [...new Set(penghargaan.map(item => item.year))].sort((a, b) => b - a);
 
+  // ✅ Stats Calculation (NEW)
+  const stats = {
+    total: penghargaan.length,
+    landing: penghargaan.filter(item => item.show_in_landing).length,
+    media: penghargaan.filter(item => item.show_in_media_informasi).length,
+    thisYear: penghargaan.filter(item => item.year === new Date().getFullYear()).length,
+  };
+
   return (
     <div>
+      {/* ✅ Back Button (NEW) */}
+      <button
+        onClick={() => navigate('/tukang-minyak-dan-gas/dashboard')}
+        className="flex items-center gap-2 text-gray-600 hover:text-gray-900 font-semibold mb-6 transition-colors"
+      >
+        <FaArrowLeft />
+        Kembali ke Dashboard
+      </button>
+
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <div>
@@ -147,7 +192,7 @@ const ManagePenghargaan = () => {
         {!showForm && (
           <button
             onClick={() => setShowForm(true)}
-            className="flex items-center gap-2 bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-blue-700 transition-colors"
+            className="flex items-center gap-2 bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-blue-700 transition-all transform hover:-translate-y-0.5"
           >
             <FaPlus />
             Tambah Penghargaan Baru
@@ -155,45 +200,75 @@ const ManagePenghargaan = () => {
         )}
       </div>
 
-      {/* Stats Cards */}
+      {/* ✅ Stats Cards (NEW - Professional) */}
       {!showForm && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="text-sm text-gray-600 mb-2">Total Penghargaan</div>
-            <div className="text-3xl font-bold text-blue-600">{penghargaan.length}</div>
-          </div>
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="text-sm text-gray-600 mb-2">Tampil di Landing</div>
-            <div className="text-3xl font-bold text-green-600">
-              {penghargaan.filter(item => item.show_in_landing).length}
+          <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 bg-white bg-opacity-20 rounded-lg">
+                <FaTrophy className="w-6 h-6" />
+              </div>
             </div>
+            <div className="text-3xl font-bold mb-1">{stats.total}</div>
+            <div className="text-sm text-blue-100">Total Penghargaan</div>
           </div>
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="text-sm text-gray-600 mb-2">Media Informasi</div>
-            <div className="text-3xl font-bold text-purple-600">
-              {penghargaan.filter(item => item.show_in_media_informasi).length}
+          
+          <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg p-6 text-white">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 bg-white bg-opacity-20 rounded-lg">
+                <FaCheck className="w-6 h-6" />
+              </div>
             </div>
+            <div className="text-3xl font-bold mb-1">{stats.landing}</div>
+            <div className="text-sm text-green-100">Tampil di Landing</div>
           </div>
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="text-sm text-gray-600 mb-2">Tahun Ini</div>
-            <div className="text-3xl font-bold text-orange-600">
-              {penghargaan.filter(item => item.year === new Date().getFullYear()).length}
+
+          <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 text-white">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 bg-white bg-opacity-20 rounded-lg">
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+                </svg>
+              </div>
             </div>
+            <div className="text-3xl font-bold mb-1">{stats.media}</div>
+            <div className="text-sm text-purple-100">Media Informasi</div>
+          </div>
+
+          <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg p-6 text-white">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 bg-white bg-opacity-20 rounded-lg">
+                <FaCalendar className="w-6 h-6" />
+              </div>
+            </div>
+            <div className="text-3xl font-bold mb-1">{stats.thisYear}</div>
+            <div className="text-sm text-orange-100">Tahun Ini</div>
           </div>
         </div>
       )}
 
-      {/* Search & Filter */}
+      {/* ✅ Search & Filter Section (NEW) */}
       {!showForm && (
-        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input
-              type="text"
-              placeholder="🔍 Cari penghargaan, kategori, atau pemberi..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-            />
+        <div className="bg-white rounded-xl shadow-md p-6 mb-8">
+          <div className="flex items-center gap-2 mb-4">
+            <FaFilter className="text-gray-500" />
+            <h3 className="text-lg font-semibold text-gray-900">Pencarian & Filter</h3>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Search */}
+            <div className="relative">
+              <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Cari penghargaan, kategori, pemberi..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              />
+            </div>
+
+            {/* Filter Year */}
             <select
               value={filterYear}
               onChange={(e) => setFilterYear(e.target.value)}
@@ -204,30 +279,66 @@ const ManagePenghargaan = () => {
                 <option key={year} value={year}>{year}</option>
               ))}
             </select>
+
+            {/* Filter Category */}
+            <select
+              value={filterCategory}
+              onChange={(e) => setFilterCategory(e.target.value)}
+              className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+            >
+              <option value="">Semua Kategori</option>
+              {categories.map(cat => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
+            </select>
           </div>
+
+          {/* Clear Filter & Result Counter */}
+          {(searchTerm || filterYear || filterCategory) && (
+            <div className="mt-4 flex justify-between items-center">
+              <p className="text-sm text-gray-600">
+                Menampilkan <span className="font-semibold text-blue-600">{filteredPenghargaan.length}</span> dari {penghargaan.length} penghargaan
+              </p>
+              <button
+                onClick={clearFilters}
+                className="text-sm text-red-600 hover:text-red-700 font-semibold flex items-center gap-2"
+              >
+                <FaTimes />
+                Hapus Filter
+              </button>
+            </div>
+          )}
         </div>
       )}
 
       {/* Form Input */}
       {showForm && (
-        <div className="bg-white rounded-lg shadow-md p-8 mb-8 animate-fade-in">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">
-              {editingItem ? 'Edit Penghargaan' : 'Tambah Penghargaan Baru'}
-            </h2>
+        <div className="bg-white rounded-xl shadow-lg p-8 mb-8 animate-fade-in">
+          <div className="flex justify-between items-center mb-8 pb-6 border-b border-gray-200">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">
+                {editingItem ? 'Edit Penghargaan' : 'Tambah Penghargaan Baru'}
+              </h2>
+              <p className="text-gray-600 text-sm mt-1">
+                Lengkapi formulir penghargaan perusahaan
+              </p>
+            </div>
             <button
               onClick={handleCancel}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-lg"
             >
               <FaTimes className="w-6 h-6" />
             </button>
           </div>
 
           <form onSubmit={handleSubmit}>
-            {/* Basic Information */}
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold text-gray-700 mb-4 pb-2 border-b border-gray-200">
-                🏆 Informasi Penghargaan
+            {/* Section 1: Basic Information */}
+            <div className="mb-8">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <div className="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
+                  <FaTrophy className="w-4 h-4 text-yellow-600" />
+                </div>
+                Informasi Penghargaan
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="md:col-span-2">
@@ -280,7 +391,10 @@ const ManagePenghargaan = () => {
 
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Tahun <span className="text-red-500">*</span>
+                    <div className="flex items-center gap-2">
+                      <FaCalendar className="w-4 h-4 text-gray-500" />
+                      Tahun <span className="text-red-500">*</span>
+                    </div>
                   </label>
                   <input
                     type="number"
@@ -325,10 +439,13 @@ const ManagePenghargaan = () => {
               </div>
             </div>
 
-            {/* Image Upload */}
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold text-gray-700 mb-4 pb-2 border-b border-gray-200">
-                📸 Gambar/Foto Penghargaan
+            {/* Section 2: Image Upload */}
+            <div className="mb-8">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                  <FaImage className="w-4 h-4 text-purple-600" />
+                </div>
+                Gambar / Foto Penghargaan
               </h3>
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -338,59 +455,66 @@ const ManagePenghargaan = () => {
                   type="file"
                   accept="image/*"
                   onChange={handleImageChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-gray-50 hover:bg-white"
                 />
                 <p className="text-sm text-gray-500 mt-2">
                   Format: JPG, PNG, WebP. Maksimal 2MB. Rasio 16:9 atau 4:3 recommended.
                 </p>
                 {formData.image && (
-                  <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                    <p className="text-sm text-blue-800">
-                      ✓ File terpilih: {formData.image.name || 'Gambar sudah ada'}
+                  <div className="mt-4 p-4 bg-green-50 rounded-lg border-2 border-green-200 flex items-center gap-3">
+                    <FaCheck className="text-green-600 text-xl" />
+                    <p className="text-sm font-semibold text-green-800">
+                      File terpilih: {formData.image.name || 'Gambar sudah ada'}
                     </p>
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Display Options */}
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold text-gray-700 mb-4 pb-2 border-b border-gray-200">
-                👁️ Opsi Tampilan
+            {/* Section 3: Display Options */}
+            <div className="mb-8">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                  <svg className="w-4 h-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                </div>
+                Opsi Tampilan
               </h3>
-              <div className="space-y-4">
-                <label className="flex items-center gap-3 cursor-pointer p-4 bg-green-50 rounded-lg border-2 border-green-200 hover:bg-green-100 transition-all">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <label className="flex items-start gap-3 cursor-pointer p-4 bg-white rounded-lg border-2 border-green-200 hover:bg-green-50 transition-all">
                   <input
                     type="checkbox"
                     name="show_in_landing"
                     checked={formData.show_in_landing}
                     onChange={handleInputChange}
-                    className="w-5 h-5 text-green-600 border-gray-300 rounded focus:ring-2 focus:ring-green-500"
+                    className="w-5 h-5 text-green-600 border-gray-300 rounded focus:ring-2 focus:ring-green-500 mt-0.5"
                   />
                   <div>
                     <span className="text-sm font-semibold text-gray-900 block">
                       Tampilkan di Landing Page
                     </span>
                     <span className="text-xs text-gray-600">
-                      Penghargaan akan muncul di section "Penghargaan Kami" pada halaman utama
+                      Muncul di section "Penghargaan Kami"
                     </span>
                   </div>
                 </label>
 
-                <label className="flex items-center gap-3 cursor-pointer p-4 bg-purple-50 rounded-lg border-2 border-purple-200 hover:bg-purple-100 transition-all">
+                <label className="flex items-start gap-3 cursor-pointer p-4 bg-white rounded-lg border-2 border-purple-200 hover:bg-purple-50 transition-all">
                   <input
                     type="checkbox"
                     name="show_in_media_informasi"
                     checked={formData.show_in_media_informasi}
                     onChange={handleInputChange}
-                    className="w-5 h-5 text-purple-600 border-gray-300 rounded focus:ring-2 focus:ring-purple-500"
+                    className="w-5 h-5 text-purple-600 border-gray-300 rounded focus:ring-2 focus:ring-purple-500 mt-0.5"
                   />
                   <div>
                     <span className="text-sm font-semibold text-gray-900 block">
                       Tampilkan di Media Informasi
                     </span>
                     <span className="text-xs text-gray-600">
-                      Penghargaan akan muncul di halaman Media Informasi → Penghargaan
+                      Muncul di Media Informasi → Penghargaan
                     </span>
                   </div>
                 </label>
@@ -398,17 +522,17 @@ const ManagePenghargaan = () => {
             </div>
 
             {/* Action Buttons */}
-            <div className="mt-8 flex flex-col sm:flex-row justify-end gap-3">
+            <div className="mt-8 pt-6 border-t border-gray-200 flex flex-col sm:flex-row justify-end gap-3">
               <button
                 type="button"
                 onClick={handleCancel}
-                className="px-6 py-3 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition-colors"
+                className="px-6 py-3 bg-white border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-all"
               >
                 Batal
               </button>
               <button
                 type="submit"
-                className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-md"
+                className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg transform hover:-translate-y-0.5"
               >
                 {editingItem ? 'Update Penghargaan' : 'Simpan Penghargaan'}
               </button>
@@ -417,56 +541,63 @@ const ManagePenghargaan = () => {
         </div>
       )}
 
-      {/* Table List */}
+      {/* ✅ Table List - Using filteredPenghargaan (NEW) */}
       {!showForm && (
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+              <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Penghargaan
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Kategori
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Pemberi
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Tahun
                   </th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Tampilan
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Aksi
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredData.length === 0 ? (
+                {filteredPenghargaan.length === 0 ? (
                   <tr>
-                    <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
-                      {penghargaan.length === 0 ? (
-                        <div className="flex flex-col items-center gap-3">
-                          <FaTrophy className="w-12 h-12 text-gray-300" />
-                          <p>Belum ada data penghargaan</p>
-                          <button
-                            onClick={() => setShowForm(true)}
-                            className="text-blue-600 font-semibold hover:text-blue-700"
-                          >
-                            Tambah Penghargaan Pertama
-                          </button>
-                        </div>
-                      ) : (
-                        'Tidak ada data yang sesuai dengan pencarian'
+                    <td colSpan="6" className="px-6 py-16 text-center">
+                      <div className="w-20 h-20 bg-gray-200 rounded-full mx-auto mb-4 flex items-center justify-center">
+                        <FaTrophy className="w-10 h-10 text-gray-400" />
+                      </div>
+                      <p className="text-gray-500 text-lg font-medium mb-2">
+                        {searchTerm || filterYear || filterCategory
+                          ? 'Tidak ada penghargaan yang sesuai dengan filter'
+                          : 'Belum ada data penghargaan'}
+                      </p>
+                      <p className="text-gray-400 text-sm mb-4">
+                        {searchTerm || filterYear || filterCategory
+                          ? 'Coba ubah kriteria pencarian atau filter'
+                          : 'Mulai tambahkan penghargaan pertama'}
+                      </p>
+                      {!(searchTerm || filterYear || filterCategory) && (
+                        <button
+                          onClick={() => setShowForm(true)}
+                          className="text-blue-600 hover:text-blue-700 font-semibold"
+                        >
+                          Tambah Penghargaan Pertama
+                        </button>
                       )}
                     </td>
                   </tr>
                 ) : (
-                  filteredData.map((item) => (
-                    <tr key={item.id} className="hover:bg-gray-50 transition-colors">
+                  filteredPenghargaan.map((item) => (
+                    <tr key={item.id} className="hover:bg-blue-50 transition-colors">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <FaTrophy className="w-5 h-5 text-yellow-500 flex-shrink-0" />
@@ -490,12 +621,12 @@ const ManagePenghargaan = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-center">
                         <div className="flex items-center justify-center gap-2">
                           {item.show_in_landing && (
-                            <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded font-semibold" title="Landing Page">
+                            <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-md font-semibold" title="Landing Page">
                               LP
                             </span>
                           )}
                           {item.show_in_media_informasi && (
-                            <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded font-semibold" title="Media Informasi">
+                            <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-md font-semibold" title="Media Informasi">
                               MI
                             </span>
                           )}
@@ -505,14 +636,14 @@ const ManagePenghargaan = () => {
                         <div className="flex gap-3">
                           <button
                             onClick={() => handleEdit(item)}
-                            className="text-blue-600 hover:text-blue-900 transition-colors"
+                            className="text-blue-600 hover:text-blue-900 transition-colors p-2 hover:bg-blue-50 rounded-lg"
                             title="Edit"
                           >
                             <FaEdit className="w-5 h-5" />
                           </button>
                           <button
                             onClick={() => handleDelete(item.id)}
-                            className="text-red-600 hover:text-red-900 transition-colors"
+                            className="text-red-600 hover:text-red-900 transition-colors p-2 hover:bg-red-50 rounded-lg"
                             title="Hapus"
                           >
                             <FaTrash className="w-5 h-5" />

@@ -1,13 +1,19 @@
 import React, { useState } from 'react';
-import { FaEdit, FaTrash, FaPlus, FaTimes, FaFilePdf, FaDownload, FaEye, FaUpload } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaPlus, FaTimes, FaFilePdf, FaUpload, FaSearch, FaFilter, FaCheck, FaArrowLeft, FaImage, FaCalendar, FaDownload } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 
 const ManageLaporan = () => {
+  const navigate = useNavigate();
   const [laporanList, setLaporanList] = useState([]);
+  const [filteredLaporan, setFilteredLaporan] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
+  
+  // ✅ Search & Filter States (NEW)
   const [searchTerm, setSearchTerm] = useState('');
   const [filterYear, setFilterYear] = useState('');
   const [filterType, setFilterType] = useState('');
+  
   const [formData, setFormData] = useState({
     title: '',
     type: '',
@@ -30,6 +36,38 @@ const ManageLaporan = () => {
     'Lainnya',
   ];
 
+  // ✅ Filter Logic (NEW)
+  React.useEffect(() => {
+    let result = [...laporanList];
+
+    // Search
+    if (searchTerm) {
+      result = result.filter(item =>
+        item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.type.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Filter by year
+    if (filterYear) {
+      result = result.filter(item => item.year.toString() === filterYear);
+    }
+
+    // Filter by type
+    if (filterType) {
+      result = result.filter(item => item.type === filterType);
+    }
+
+    setFilteredLaporan(result);
+  }, [searchTerm, filterYear, filterType, laporanList]);
+
+  // ✅ Clear Filters (NEW)
+  const clearFilters = () => {
+    setSearchTerm('');
+    setFilterYear('');
+    setFilterType('');
+  };
+
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
@@ -41,15 +79,13 @@ const ManageLaporan = () => {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Validate file type (PDF only)
       if (file.type !== 'application/pdf') {
         alert('❌ File harus berupa PDF!');
         e.target.value = '';
         return;
       }
       
-      // Validate file size (max 50MB)
-      const maxSize = 50 * 1024 * 1024; // 50MB
+      const maxSize = 50 * 1024 * 1024;
       if (file.size > maxSize) {
         alert('❌ Ukuran file maksimal 50MB!');
         e.target.value = '';
@@ -67,14 +103,12 @@ const ManageLaporan = () => {
   const handleCoverImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Validate file type
       if (!file.type.startsWith('image/')) {
         alert('❌ File harus berupa gambar (JPG, PNG, WebP)!');
         e.target.value = '';
         return;
       }
       
-      // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
         alert('❌ Ukuran gambar maksimal 5MB!');
         e.target.value = '';
@@ -96,14 +130,12 @@ const ManageLaporan = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    // Validate PDF file
     if (!editingItem && !formData.file) {
       alert('❌ File PDF wajib diupload!');
       return;
     }
     
     if (editingItem) {
-      // Update existing
       setLaporanList(prev => prev.map(item => 
         item.id === editingItem.id 
           ? {
@@ -117,7 +149,6 @@ const ManageLaporan = () => {
       ));
       alert('✅ Laporan berhasil diupdate!');
     } else {
-      // Add new
       const newItem = {
         ...formData,
         id: Date.now(),
@@ -145,6 +176,7 @@ const ManageLaporan = () => {
       is_active: item.is_active,
     });
     setShowForm(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleDelete = (id) => {
@@ -176,20 +208,27 @@ const ManageLaporan = () => {
     }
   };
 
-  // Filter data
-  const filteredData = laporanList.filter(item => {
-    const matchSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                       item.type.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchYear = filterYear ? item.year.toString() === filterYear : true;
-    const matchType = filterType ? item.type === filterType : true;
-    return matchSearch && matchYear && matchType;
-  });
-
-  // Get unique years for filter
   const years = [...new Set(laporanList.map(item => item.year))].sort((a, b) => b - a);
+
+  // ✅ Stats Calculation (NEW)
+  const stats = {
+    total: laporanList.length,
+    active: laporanList.filter(item => item.is_active).length,
+    downloads: laporanList.reduce((acc, item) => acc + (item.downloads || 0), 0),
+    thisYear: laporanList.filter(item => item.year === new Date().getFullYear()).length,
+  };
 
   return (
     <div>
+      {/* ✅ Back Button (NEW) */}
+      <button
+        onClick={() => navigate('/tukang-minyak-dan-gas/dashboard')}
+        className="flex items-center gap-2 text-gray-600 hover:text-gray-900 font-semibold mb-6 transition-colors"
+      >
+        <FaArrowLeft />
+        Kembali ke Dashboard
+      </button>
+
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <div>
@@ -199,7 +238,7 @@ const ManageLaporan = () => {
         {!showForm && (
           <button
             onClick={() => setShowForm(true)}
-            className="flex items-center gap-2 bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-blue-700 transition-colors"
+            className="flex items-center gap-2 bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-blue-700 transition-all transform hover:-translate-y-0.5"
           >
             <FaPlus />
             Tambah Laporan Baru
@@ -207,45 +246,73 @@ const ManageLaporan = () => {
         )}
       </div>
 
-      {/* Stats Cards */}
+      {/* ✅ Stats Cards (NEW - Professional) */}
       {!showForm && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="text-sm text-gray-600 mb-2">Total Laporan</div>
-            <div className="text-3xl font-bold text-blue-600">{laporanList.length}</div>
-          </div>
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="text-sm text-gray-600 mb-2">Laporan Aktif</div>
-            <div className="text-3xl font-bold text-green-600">
-              {laporanList.filter(item => item.is_active).length}
+          <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 bg-white bg-opacity-20 rounded-lg">
+                <FaFilePdf className="w-6 h-6" />
+              </div>
             </div>
+            <div className="text-3xl font-bold mb-1">{stats.total}</div>
+            <div className="text-sm text-blue-100">Total Laporan</div>
           </div>
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="text-sm text-gray-600 mb-2">Total Download</div>
-            <div className="text-3xl font-bold text-purple-600">
-              {laporanList.reduce((acc, item) => acc + (item.downloads || 0), 0)}
+          
+          <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg p-6 text-white">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 bg-white bg-opacity-20 rounded-lg">
+                <FaCheck className="w-6 h-6" />
+              </div>
             </div>
+            <div className="text-3xl font-bold mb-1">{stats.active}</div>
+            <div className="text-sm text-green-100">Laporan Aktif</div>
           </div>
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="text-sm text-gray-600 mb-2">Tahun Ini</div>
-            <div className="text-3xl font-bold text-orange-600">
-              {laporanList.filter(item => item.year === new Date().getFullYear()).length}
+
+          <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 text-white">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 bg-white bg-opacity-20 rounded-lg">
+                <FaDownload className="w-6 h-6" />
+              </div>
             </div>
+            <div className="text-3xl font-bold mb-1">{stats.downloads}</div>
+            <div className="text-sm text-purple-100">Total Download</div>
+          </div>
+
+          <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg p-6 text-white">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 bg-white bg-opacity-20 rounded-lg">
+                <FaCalendar className="w-6 h-6" />
+              </div>
+            </div>
+            <div className="text-3xl font-bold mb-1">{stats.thisYear}</div>
+            <div className="text-sm text-orange-100">Tahun Ini</div>
           </div>
         </div>
       )}
 
-      {/* Search & Filter */}
+      {/* ✅ Search & Filter Section (NEW) */}
       {!showForm && (
-        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+        <div className="bg-white rounded-xl shadow-md p-6 mb-8">
+          <div className="flex items-center gap-2 mb-4">
+            <FaFilter className="text-gray-500" />
+            <h3 className="text-lg font-semibold text-gray-900">Pencarian & Filter</h3>
+          </div>
+          
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <input
-              type="text"
-              placeholder="🔍 Cari judul laporan atau jenis..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-            />
+            {/* Search */}
+            <div className="relative">
+              <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Cari judul laporan atau jenis..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              />
+            </div>
+
+            {/* Filter Year */}
             <select
               value={filterYear}
               onChange={(e) => setFilterYear(e.target.value)}
@@ -256,6 +323,8 @@ const ManageLaporan = () => {
                 <option key={year} value={year}>{year}</option>
               ))}
             </select>
+
+            {/* Filter Type */}
             <select
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
@@ -267,29 +336,53 @@ const ManageLaporan = () => {
               ))}
             </select>
           </div>
+
+          {/* Clear Filter & Result Counter */}
+          {(searchTerm || filterYear || filterType) && (
+            <div className="mt-4 flex justify-between items-center">
+              <p className="text-sm text-gray-600">
+                Menampilkan <span className="font-semibold text-blue-600">{filteredLaporan.length}</span> dari {laporanList.length} laporan
+              </p>
+              <button
+                onClick={clearFilters}
+                className="text-sm text-red-600 hover:text-red-700 font-semibold flex items-center gap-2"
+              >
+                <FaTimes />
+                Hapus Filter
+              </button>
+            </div>
+          )}
         </div>
       )}
 
       {/* Form Input */}
       {showForm && (
-        <div className="bg-white rounded-lg shadow-md p-8 mb-8 animate-fade-in">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">
-              {editingItem ? 'Edit Laporan' : 'Tambah Laporan Baru'}
-            </h2>
+        <div className="bg-white rounded-xl shadow-lg p-8 mb-8 animate-fade-in">
+          <div className="flex justify-between items-center mb-8 pb-6 border-b border-gray-200">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">
+                {editingItem ? 'Edit Laporan' : 'Tambah Laporan Baru'}
+              </h2>
+              <p className="text-gray-600 text-sm mt-1">
+                Lengkapi formulir laporan tahunan perusahaan
+              </p>
+            </div>
             <button
               onClick={handleCancel}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-lg"
             >
               <FaTimes className="w-6 h-6" />
             </button>
           </div>
 
           <form onSubmit={handleSubmit}>
-            {/* Basic Information */}
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold text-gray-700 mb-4 pb-2 border-b border-gray-200">
-                📋 Informasi Laporan
+            {/* Section 1: Basic Information */}
+            <div className="mb-8">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <FaFilePdf className="w-4 h-4 text-blue-600" />
+                </div>
+                Informasi Laporan
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="md:col-span-2">
@@ -327,7 +420,10 @@ const ManageLaporan = () => {
 
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Tahun <span className="text-red-500">*</span>
+                    <div className="flex items-center gap-2">
+                      <FaCalendar className="w-4 h-4 text-gray-500" />
+                      Tahun <span className="text-red-500">*</span>
+                    </div>
                   </label>
                   <input
                     type="number"
@@ -372,27 +468,25 @@ const ManageLaporan = () => {
               </div>
             </div>
 
-            {/* File Upload */}
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold text-gray-700 mb-4 pb-2 border-b border-gray-200">
-                📄 Upload File PDF
+            {/* Section 2: File Upload */}
+            <div className="mb-8">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
+                  <FaUpload className="w-4 h-4 text-red-600" />
+                </div>
+                Upload File PDF
               </h3>
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   File PDF Laporan <span className="text-red-500">*</span>
                 </label>
-                <div className="relative">
-                  <input
-                    type="file"
-                    accept="application/pdf"
-                    onChange={handleFileChange}
-                    required={!editingItem}
-                    className="w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all cursor-pointer hover:border-blue-400"
-                  />
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                    <FaUpload className="w-5 h-5 text-gray-400" />
-                  </div>
-                </div>
+                <input
+                  type="file"
+                  accept="application/pdf"
+                  onChange={handleFileChange}
+                  required={!editingItem}
+                  className="w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all cursor-pointer hover:border-blue-400 bg-gray-50"
+                />
                 <p className="text-sm text-gray-500 mt-2">
                   Format: PDF. Maksimal 50MB. Pastikan file dapat dibaca dengan baik.
                 </p>
@@ -407,16 +501,19 @@ const ManageLaporan = () => {
                         Ukuran: {formatFileSize(formData.file_size || formData.file.size)}
                       </p>
                     </div>
-                    <span className="text-green-600 font-bold text-xl">✓</span>
+                    <FaCheck className="text-green-600 text-2xl" />
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Cover Image Upload */}
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold text-gray-700 mb-4 pb-2 border-b border-gray-200">
-                🖼️ Cover/Thumbnail (Opsional)
+            {/* Section 3: Cover Image */}
+            <div className="mb-8">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                  <FaImage className="w-4 h-4 text-purple-600" />
+                </div>
+                Cover / Thumbnail (Opsional)
               </h3>
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -432,9 +529,10 @@ const ManageLaporan = () => {
                   Format: JPG, PNG, WebP. Maksimal 5MB. Rasio 16:9 atau A4 portrait recommended.
                 </p>
                 {formData.cover_image && (
-                  <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                    <p className="text-sm text-blue-800">
-                      ✓ Cover terpilih: {formData.cover_image.name || 'Cover sudah ada'}
+                  <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200 flex items-center gap-2">
+                    <FaCheck className="text-blue-600" />
+                    <p className="text-sm font-semibold text-blue-800">
+                      Cover terpilih: {formData.cover_image.name || 'Cover sudah ada'}
                     </p>
                   </div>
                 )}
@@ -442,17 +540,17 @@ const ManageLaporan = () => {
             </div>
 
             {/* Status */}
-            <div className="mb-6">
-              <label className="flex items-center gap-3 cursor-pointer p-4 bg-green-50 rounded-lg border-2 border-green-200 hover:bg-green-100 transition-all">
+            <div className="bg-gradient-to-br from-green-50 to-blue-50 p-6 rounded-xl border-2 border-green-200">
+              <label className="flex items-start gap-4 cursor-pointer">
                 <input
                   type="checkbox"
                   name="is_active"
                   checked={formData.is_active}
                   onChange={handleInputChange}
-                  className="w-5 h-5 text-green-600 border-gray-300 rounded focus:ring-2 focus:ring-green-500"
+                  className="w-6 h-6 text-green-600 border-gray-300 rounded focus:ring-2 focus:ring-green-500 mt-1"
                 />
                 <div>
-                  <span className="text-sm font-semibold text-gray-900 block">
+                  <span className="text-sm font-bold text-gray-900 block mb-1">
                     Aktifkan Laporan
                   </span>
                   <span className="text-xs text-gray-600">
@@ -463,17 +561,17 @@ const ManageLaporan = () => {
             </div>
 
             {/* Action Buttons */}
-            <div className="mt-8 flex flex-col sm:flex-row justify-end gap-3">
+            <div className="mt-8 pt-6 border-t border-gray-200 flex flex-col sm:flex-row justify-end gap-3">
               <button
                 type="button"
                 onClick={handleCancel}
-                className="px-6 py-3 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition-colors"
+                className="px-6 py-3 bg-white border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-all"
               >
                 Batal
               </button>
               <button
                 type="submit"
-                className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-md"
+                className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg transform hover:-translate-y-0.5"
               >
                 {editingItem ? 'Update Laporan' : 'Simpan Laporan'}
               </button>
@@ -482,56 +580,63 @@ const ManageLaporan = () => {
         </div>
       )}
 
-      {/* Table List */}
+      {/* ✅ Table List - Using filteredLaporan (NEW) */}
       {!showForm && (
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+              <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Laporan
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Jenis
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Tahun
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Ukuran File
                   </th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Aksi
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredData.length === 0 ? (
+                {filteredLaporan.length === 0 ? (
                   <tr>
-                    <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
-                      {laporanList.length === 0 ? (
-                        <div className="flex flex-col items-center gap-3">
-                          <FaFilePdf className="w-12 h-12 text-gray-300" />
-                          <p>Belum ada laporan tahunan</p>
-                          <button
-                            onClick={() => setShowForm(true)}
-                            className="text-blue-600 font-semibold hover:text-blue-700"
-                          >
-                            Upload Laporan Pertama
-                          </button>
-                        </div>
-                      ) : (
-                        'Tidak ada data yang sesuai dengan pencarian'
+                    <td colSpan="6" className="px-6 py-16 text-center">
+                      <div className="w-20 h-20 bg-gray-200 rounded-full mx-auto mb-4 flex items-center justify-center">
+                        <FaFilePdf className="w-10 h-10 text-gray-400" />
+                      </div>
+                      <p className="text-gray-500 text-lg font-medium mb-2">
+                        {searchTerm || filterYear || filterType
+                          ? 'Tidak ada laporan yang sesuai dengan filter'
+                          : 'Belum ada laporan tahunan'}
+                      </p>
+                      <p className="text-gray-400 text-sm mb-4">
+                        {searchTerm || filterYear || filterType
+                          ? 'Coba ubah kriteria pencarian atau filter'
+                          : 'Mulai upload laporan pertama'}
+                      </p>
+                      {!(searchTerm || filterYear || filterType) && (
+                        <button
+                          onClick={() => setShowForm(true)}
+                          className="text-blue-600 hover:text-blue-700 font-semibold"
+                        >
+                          Upload Laporan Pertama
+                        </button>
                       )}
                     </td>
                   </tr>
                 ) : (
-                  filteredData.map((item) => (
-                    <tr key={item.id} className="hover:bg-gray-50 transition-colors">
+                  filteredLaporan.map((item) => (
+                    <tr key={item.id} className="hover:bg-blue-50 transition-colors">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <FaFilePdf className="w-6 h-6 text-red-600 flex-shrink-0" />
@@ -549,7 +654,7 @@ const ManageLaporan = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
                         {item.year}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 font-mono">
                         {formatFileSize(item.file_size)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
@@ -563,14 +668,14 @@ const ManageLaporan = () => {
                         <div className="flex gap-3">
                           <button
                             onClick={() => handleEdit(item)}
-                            className="text-blue-600 hover:text-blue-900 transition-colors"
+                            className="text-blue-600 hover:text-blue-900 transition-colors p-2 hover:bg-blue-50 rounded-lg"
                             title="Edit"
                           >
                             <FaEdit className="w-5 h-5" />
                           </button>
                           <button
                             onClick={() => handleDelete(item.id)}
-                            className="text-red-600 hover:text-red-900 transition-colors"
+                            className="text-red-600 hover:text-red-900 transition-colors p-2 hover:bg-red-50 rounded-lg"
                             title="Hapus"
                           >
                             <FaTrash className="w-5 h-5" />

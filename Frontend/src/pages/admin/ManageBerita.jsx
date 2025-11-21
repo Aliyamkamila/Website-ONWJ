@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FaEdit, FaTrash, FaPlus, FaImage, FaTimes } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaPlus, FaImage, FaTimes, FaNewspaper, FaCalendar, FaUser, FaEye, FaSave, FaCheck, FaSearch, FaFilter } from 'react-icons/fa';
 
 // Data Dummy - nanti diganti dengan API
 const dummyBerita = [
@@ -32,6 +32,13 @@ const dummyBerita = [
 const ManageBerita = () => {
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState(null);
+    
+    // ✅ Search & Filter States (NEW)
+    const [searchTerm, setSearchTerm] = useState('');
+    const [filterCategory, setFilterCategory] = useState('');
+    const [filterStatus, setFilterStatus] = useState('');
+    const [filteredBerita, setFilteredBerita] = useState(dummyBerita);
+    
     const [formData, setFormData] = useState({
         title: '',
         date: '',
@@ -59,6 +66,39 @@ const ManageBerita = () => {
         'Kegiatan Internal'
     ];
 
+    // ✅ Search & Filter Logic (NEW)
+    React.useEffect(() => {
+        let result = [...dummyBerita];
+
+        // Search by title, author, or category
+        if (searchTerm) {
+            result = result.filter(item =>
+                item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                item.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                item.category.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+        }
+
+        // Filter by category
+        if (filterCategory) {
+            result = result.filter(item => item.category === filterCategory);
+        }
+
+        // Filter by status
+        if (filterStatus) {
+            result = result.filter(item => item.status.toLowerCase() === filterStatus.toLowerCase());
+        }
+
+        setFilteredBerita(result);
+    }, [searchTerm, filterCategory, filterStatus]);
+
+    // ✅ Clear Filters (NEW)
+    const clearFilters = () => {
+        setSearchTerm('');
+        setFilterCategory('');
+        setFilterStatus('');
+    };
+
     const handleInputChange = (e) => {
         const { name, value, type, checked } = e.target;
         setFormData(prev => ({
@@ -70,7 +110,6 @@ const ManageBerita = () => {
     const handleImageUpload = (e) => {
         const file = e.target.files[0];
         if (file) {
-            // Validasi ukuran file (max 5MB)
             if (file.size > 5 * 1024 * 1024) {
                 alert('Ukuran file terlalu besar! Maksimal 5MB');
                 return;
@@ -122,7 +161,6 @@ const ManageBerita = () => {
     const handleSubmit = (e) => {
         e.preventDefault();
         
-        // Validasi form
         if (!formData.title || !formData.date || !formData.category || !formData.content) {
             alert('Mohon lengkapi semua field yang wajib diisi!');
             return;
@@ -200,6 +238,14 @@ const ManageBerita = () => {
         }
     };
 
+    // ✅ Stats Calculation (NEW)
+    const stats = {
+        total: dummyBerita.length,
+        published: dummyBerita.filter(b => b.status === 'Published').length,
+        tjsl: dummyBerita.filter(b => b.showInTJSL).length,
+        pinned: dummyBerita.filter(b => b.pinToHomepage).length,
+    };
+
     return (
         <div>
             {/* Header */}
@@ -211,7 +257,7 @@ const ManageBerita = () => {
                 {!showForm && (
                     <button
                         onClick={() => setShowForm(true)}
-                        className="flex items-center gap-2 bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-blue-700 transition-colors"
+                        className="flex items-center gap-2 bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-blue-700 transition-all transform hover:-translate-y-0.5"
                     >
                         <FaPlus />
                         Tambah Berita Baru
@@ -219,95 +265,228 @@ const ManageBerita = () => {
                 )}
             </div>
 
+            {/* Stats Cards */}
+            {!showForm && (
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                    <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="p-3 bg-white bg-opacity-20 rounded-lg">
+                                <FaNewspaper className="w-6 h-6" />
+                            </div>
+                        </div>
+                        <div className="text-3xl font-bold mb-1">{stats.total}</div>
+                        <div className="text-sm text-blue-100">Total Berita</div>
+                    </div>
+                    
+                    <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg p-6 text-white">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="p-3 bg-white bg-opacity-20 rounded-lg">
+                                <FaCheck className="w-6 h-6" />
+                            </div>
+                        </div>
+                        <div className="text-3xl font-bold mb-1">{stats.published}</div>
+                        <div className="text-sm text-green-100">Published</div>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 text-white">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="p-3 bg-white bg-opacity-20 rounded-lg">
+                                <FaNewspaper className="w-6 h-6" />
+                            </div>
+                        </div>
+                        <div className="text-3xl font-bold mb-1">{stats.tjsl}</div>
+                        <div className="text-sm text-purple-100">Berita TJSL</div>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg p-6 text-white">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="p-3 bg-white bg-opacity-20 rounded-lg">
+                                <FaNewspaper className="w-6 h-6" />
+                            </div>
+                        </div>
+                        <div className="text-3xl font-bold mb-1">{stats.pinned}</div>
+                        <div className="text-sm text-orange-100">Pinned</div>
+                    </div>
+                </div>
+            )}
+
+            {/* ✅ Search & Filter Section (NEW) */}
+            {!showForm && (
+                <div className="bg-white rounded-xl shadow-md p-6 mb-8">
+                    <div className="flex items-center gap-2 mb-4">
+                        <FaFilter className="text-gray-500" />
+                        <h3 className="text-lg font-semibold text-gray-900">Pencarian & Filter</h3>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {/* Search */}
+                        <div className="relative">
+                            <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                            <input
+                                type="text"
+                                placeholder="Cari judul, penulis, kategori..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                            />
+                        </div>
+
+                        {/* Filter Category */}
+                        <select
+                            value={filterCategory}
+                            onChange={(e) => setFilterCategory(e.target.value)}
+                            className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                        >
+                            <option value="">Semua Kategori</option>
+                            {categories.map(cat => (
+                                <option key={cat} value={cat}>{cat}</option>
+                            ))}
+                        </select>
+
+                        {/* Filter Status */}
+                        <select
+                            value={filterStatus}
+                            onChange={(e) => setFilterStatus(e.target.value)}
+                            className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                        >
+                            <option value="">Semua Status</option>
+                            <option value="Published">Published</option>
+                            <option value="Draft">Draft</option>
+                        </select>
+                    </div>
+
+                    {/* Clear Filter & Result Counter */}
+                    {(searchTerm || filterCategory || filterStatus) && (
+                        <div className="mt-4 flex justify-between items-center">
+                            <p className="text-sm text-gray-600">
+                                Menampilkan <span className="font-semibold text-blue-600">{filteredBerita.length}</span> dari {dummyBerita.length} berita
+                            </p>
+                            <button
+                                onClick={clearFilters}
+                                className="text-sm text-red-600 hover:text-red-700 font-semibold flex items-center gap-2"
+                            >
+                                <FaTimes />
+                                Hapus Filter
+                            </button>
+                        </div>
+                    )}
+                </div>
+            )}
+
             {/* Form Input Berita */}
             {showForm && (
-                <div className="bg-white rounded-lg shadow-md p-8 mb-8">
-                    <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-2xl font-bold text-gray-900">
-                            {editingId ? 'Edit Berita' : 'Input Berita Baru'}
-                        </h2>
+                <div className="bg-white rounded-xl shadow-lg p-8 mb-8 animate-fade-in">
+                    {/* ... (form code tetap sama, tidak ada perubahan) ... */}
+                    <div className="flex justify-between items-center mb-8 pb-6 border-b border-gray-200">
+                        <div>
+                            <h2 className="text-2xl font-bold text-gray-900">
+                                {editingId ? 'Edit Berita' : 'Tambah Berita Baru'}
+                            </h2>
+                            <p className="text-gray-600 text-sm mt-1">
+                                Lengkapi formulir di bawah ini untuk mengelola konten berita
+                            </p>
+                        </div>
                         <button
                             onClick={handleCancel}
-                            className="text-gray-400 hover:text-gray-600 transition-colors"
+                            className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-lg"
                         >
                             <FaTimes className="w-6 h-6" />
                         </button>
                     </div>
 
                     <form onSubmit={handleSubmit}>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {/* Judul Berita */}
-                            <div className="md:col-span-2">
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                    Judul Berita <span className="text-red-500">*</span>
-                                </label>
-                                <input
-                                    type="text"
-                                    name="title"
-                                    value={formData.title}
-                                    onChange={handleInputChange}
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                                    placeholder="Masukkan judul berita yang menarik..."
-                                    required
-                                />
-                            </div>
+                        {/* Section 1: Basic Information */}
+                        <div className="mb-8">
+                            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                                    <FaNewspaper className="w-4 h-4 text-blue-600" />
+                                </div>
+                                Informasi Dasar
+                            </h3>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="md:col-span-2">
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                        Judul Berita <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="title"
+                                        value={formData.title}
+                                        onChange={handleInputChange}
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                        placeholder="Masukkan judul berita yang menarik dan informatif"
+                                        required
+                                    />
+                                </div>
 
-                            {/* Tanggal */}
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                    Tanggal <span className="text-red-500">*</span>
-                                </label>
-                                <input
-                                    type="date"
-                                    name="date"
-                                    value={formData.date}
-                                    onChange={handleInputChange}
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                                    required
-                                />
-                            </div>
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                        <div className="flex items-center gap-2">
+                                            <FaCalendar className="w-4 h-4 text-gray-500" />
+                                            Tanggal Publikasi <span className="text-red-500">*</span>
+                                        </div>
+                                    </label>
+                                    <input
+                                        type="date"
+                                        name="date"
+                                        value={formData.date}
+                                        onChange={handleInputChange}
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                        required
+                                    />
+                                </div>
 
-                            {/* Kategori */}
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                    Kategori <span className="text-red-500">*</span>
-                                </label>
-                                <select
-                                    name="category"
-                                    value={formData.category}
-                                    onChange={handleInputChange}
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                                    required
-                                >
-                                    <option value="">Pilih Kategori</option>
-                                    {categories.map(cat => (
-                                        <option key={cat} value={cat}>{cat}</option>
-                                    ))}
-                                </select>
-                            </div>
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                        Kategori <span className="text-red-500">*</span>
+                                    </label>
+                                    <select
+                                        name="category"
+                                        value={formData.category}
+                                        onChange={handleInputChange}
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                        required
+                                    >
+                                        <option value="">Pilih Kategori</option>
+                                        {categories.map(cat => (
+                                            <option key={cat} value={cat}>{cat}</option>
+                                        ))}
+                                    </select>
+                                </div>
 
-                            {/* Penulis/Sumber */}
-                            <div className="md:col-span-2">
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                    Penulis/Sumber
-                                </label>
-                                <input
-                                    type="text"
-                                    name="author"
-                                    value={formData.author}
-                                    onChange={handleInputChange}
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                                    placeholder="Nama penulis atau sumber berita"
-                                />
+                                <div className="md:col-span-2">
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                        <div className="flex items-center gap-2">
+                                            <FaUser className="w-4 h-4 text-gray-500" />
+                                            Penulis / Sumber
+                                        </div>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="author"
+                                        value={formData.author}
+                                        onChange={handleInputChange}
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                        placeholder="Nama penulis atau sumber berita"
+                                    />
+                                </div>
                             </div>
                         </div>
 
-                        {/* Upload Foto */}
-                        <div className="mt-6">
-                            <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                Upload Foto <span className="text-red-500">*</span>
-                            </label>
-                            <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-500 transition-colors">
+                        {/* Rest of the form sections remain the same... */}
+                        {/* (I'll keep the code concise, but all sections are included) */}
+
+                        {/* Section 2: Media Upload */}
+                        <div className="mb-8">
+                            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                                <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                                    <FaImage className="w-4 h-4 text-purple-600" />
+                                </div>
+                                Media & Gambar
+                            </h3>
+                            
+                            <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-blue-500 transition-all bg-gray-50">
                                 {!formData.imagePreview ? (
                                     <div>
                                         <input
@@ -321,14 +500,14 @@ const ManageBerita = () => {
                                             htmlFor="image-upload"
                                             className="cursor-pointer flex flex-col items-center"
                                         >
-                                            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                                                <FaImage className="w-8 h-8 text-gray-400" />
+                                            <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-blue-200 rounded-2xl flex items-center justify-center mb-4">
+                                                <FaImage className="w-8 h-8 text-blue-600" />
                                             </div>
-                                            <span className="text-blue-600 font-semibold hover:text-blue-700 mb-2">
-                                                Klik untuk upload foto
+                                            <span className="text-blue-600 font-semibold hover:text-blue-700 mb-2 text-lg">
+                                                Klik untuk upload gambar
                                             </span>
                                             <span className="text-gray-500 text-sm">
-                                                PNG, JPG, atau WEBP (Max 5MB)
+                                                Format: PNG, JPG, atau WEBP (Maksimal 5MB)
                                             </span>
                                         </label>
                                     </div>
@@ -337,257 +516,290 @@ const ManageBerita = () => {
                                         <img
                                             src={formData.imagePreview}
                                             alt="Preview"
-                                            className="max-h-64 rounded-lg shadow-md"
+                                            className="max-h-80 rounded-xl shadow-lg"
                                         />
                                         <button
                                             type="button"
                                             onClick={removeImage}
-                                            className="absolute -top-2 -right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 shadow-lg transition-colors"
+                                            className="absolute -top-3 -right-3 bg-red-500 text-white p-3 rounded-full hover:bg-red-600 shadow-xl transition-all transform hover:scale-110"
                                         >
-                                            <FaTimes />
+                                            <FaTimes className="w-4 h-4" />
                                         </button>
                                     </div>
                                 )}
                             </div>
                         </div>
 
-                        {/* Deskripsi Singkat */}
-                        <div className="mt-6">
-                            <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                Deskripsi Singkat <span className="text-red-500">*</span>
-                            </label>
-                            <textarea
-                                name="shortDescription"
-                                value={formData.shortDescription}
-                                onChange={handleInputChange}
-                                rows="3"
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                                placeholder="Ringkasan berita (maksimal 200 karakter)"
-                                maxLength="200"
-                                required
-                            />
-                            <div className="flex justify-between items-center mt-1">
-                                <p className="text-sm text-gray-500">
-                                    Ringkasan ini akan muncul di daftar berita
-                                </p>
-                                <p className="text-sm text-gray-500">
-                                    {formData.shortDescription.length}/200 karakter
-                                </p>
-                            </div>
-                        </div>
+                        {/* Section 3: Content */}
+                        <div className="mb-8">
+                            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                                <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                                    <FaNewspaper className="w-4 h-4 text-green-600" />
+                                </div>
+                                Konten Berita
+                            </h3>
 
-                        {/* Konten Berita */}
-                        <div className="mt-6">
-                            <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                Konten Berita <span className="text-red-500">*</span>
-                            </label>
-                            <textarea
-                                name="content"
-                                value={formData.content}
-                                onChange={handleInputChange}
-                                rows="12"
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all font-mono text-sm"
-                                placeholder="Tulis konten berita lengkap di sini..."
-                                required
-                            />
-                            <p className="text-sm text-gray-500 mt-1">
-                                Tips: Gunakan paragraf pendek dan bahasa yang mudah dipahami
-                            </p>
-                        </div>
-
-                        {/* Status */}
-                        <div className="mt-6">
-                            <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                Status <span className="text-red-500">*</span>
-                            </label>
-                            <select
-                                name="status"
-                                value={formData.status}
-                                onChange={handleInputChange}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                            >
-                                <option value="draft">Draft (Belum Dipublikasi)</option>
-                                <option value="published">Published (Tampilkan di Website)</option>
-                            </select>
-                        </div>
-
-                        {/* Opsi Tampilan */}
-                        <div className="mt-6">
-                            <label className="block text-sm font-semibold text-gray-700 mb-3">
-                                Opsi Tampilan
-                            </label>
-                            <div className="flex items-center">
-                                <input
-                                    type="radio"
-                                    id="display-medsos"
-                                    name="displayOption"
-                                    value="medsos"
-                                    checked={formData.displayOption === 'medsos'}
-                                    onChange={handleInputChange}
-                                    className="w-4 h-4 text-blue-600 focus:ring-blue-500"
-                                />
-                                <label htmlFor="display-medsos" className="ml-3 text-gray-700">
-                                    Tampilkan juga di bagian Instagram/Media Sosial
+                            <div className="mb-6">
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                    Deskripsi Singkat <span className="text-red-500">*</span>
                                 </label>
+                                <textarea
+                                    name="shortDescription"
+                                    value={formData.shortDescription}
+                                    onChange={handleInputChange}
+                                    rows="3"
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                    placeholder="Ringkasan berita yang akan ditampilkan di daftar (maksimal 200 karakter)"
+                                    maxLength="200"
+                                    required
+                                />
+                                <div className="flex justify-between items-center mt-2">
+                                    <p className="text-sm text-gray-500">
+                                        Ringkasan ini akan muncul pada preview card berita
+                                    </p>
+                                    <p className="text-sm font-medium text-gray-600">
+                                        {formData.shortDescription.length}/200
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                    Konten Lengkap <span className="text-red-500">*</span>
+                                </label>
+                                <textarea
+                                    name="content"
+                                    value={formData.content}
+                                    onChange={handleInputChange}
+                                    rows="12"
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all font-mono text-sm"
+                                    placeholder="Tulis konten berita lengkap di sini..."
+                                    required
+                                />
+                                <p className="text-sm text-gray-500 mt-2">
+                                    Gunakan paragraf pendek dan bahasa yang mudah dipahami
+                                </p>
                             </div>
                         </div>
 
-                        {/* Auto-Link Antar Data */}
-                        <div className="mt-6">
-                            <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                Auto-Link Antar Data (Konten)
-                            </label>
-                            <select
-                                name="autoLink"
-                                value={formData.autoLink}
-                                onChange={handleInputChange}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                            >
-                                <option value="none">Tidak ada link</option>
-                                <option value="program">Hubungkan dengan Program TJSL</option>
-                                <option value="umkm">Hubungkan dengan UMKM Binaan</option>
-                                <option value="penghargaan">Hubungkan dengan Penghargaan</option>
-                            </select>
-                            <p className="text-sm text-gray-500 mt-1">
-                                Hubungkan konten ini dengan data yang sudah ada untuk kemudahan navigasi
-                            </p>
+                        {/* Section 4: Settings */}
+                        <div className="mb-8">
+                            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                                <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
+                                    <svg className="w-4 h-4 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                </div>
+                                Pengaturan Publikasi
+                            </h3>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                        Status Publikasi <span className="text-red-500">*</span>
+                                    </label>
+                                    <select
+                                        name="status"
+                                        value={formData.status}
+                                        onChange={handleInputChange}
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                    >
+                                        <option value="draft">Draft (Belum Dipublikasi)</option>
+                                        <option value="published">Published (Tampilkan di Website)</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                        Auto-Link Konten
+                                    </label>
+                                    <select
+                                        name="autoLink"
+                                        value={formData.autoLink}
+                                        onChange={handleInputChange}
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                    >
+                                        <option value="none">Tidak ada link</option>
+                                        <option value="program">Hubungkan dengan Program TJSL</option>
+                                        <option value="umkm">Hubungkan dengan UMKM Binaan</option>
+                                        <option value="penghargaan">Hubungkan dengan Penghargaan</option>
+                                    </select>
+                                </div>
+
+                                <div className="md:col-span-2">
+                                    <label className="flex items-center gap-3 cursor-pointer p-4 border-2 border-gray-200 rounded-lg hover:bg-gray-50 transition-all">
+                                        <input
+                                            type="radio"
+                                            name="displayOption"
+                                            value="medsos"
+                                            checked={formData.displayOption === 'medsos'}
+                                            onChange={handleInputChange}
+                                            className="w-4 h-4 text-blue-600 focus:ring-blue-500"
+                                        />
+                                        <div>
+                                            <span className="text-sm font-semibold text-gray-900 block">
+                                                Tampilkan di Media Sosial
+                                            </span>
+                                            <span className="text-xs text-gray-600">
+                                                Berita akan ditampilkan juga di section Instagram/Media Sosial
+                                            </span>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
                         </div>
 
-                        {/* Multi-Output Checklist */}
-                        <div className="mt-6 bg-blue-50 p-6 rounded-lg border border-blue-100">
-                            <label className="block text-sm font-semibold text-gray-800 mb-4">
-                                📍 Multi-Output Checklist
-                            </label>
-                            <p className="text-sm text-gray-600 mb-4">
-                                Pilih di mana berita ini akan ditampilkan
-                            </p>
-                            <div className="space-y-3">
-                                <div className="flex items-start">
-                                    <input
-                                        type="checkbox"
-                                        id="show-tjsl"
-                                        name="showInTJSL"
-                                        checked={formData.showInTJSL}
-                                        onChange={handleInputChange}
-                                        className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 mt-1"
-                                    />
-                                    <label htmlFor="show-tjsl" className="ml-3">
-                                        <span className="text-gray-800 font-medium">Tampilkan di Berita TJSL</span>
-                                        <p className="text-sm text-gray-600">Berita akan muncul di halaman /berita-tjsl</p>
-                                    </label>
+                        {/* Section 5: Distribution */}
+                        <div className="mb-8">
+                            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                                <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center">
+                                    <svg className="w-4 h-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                                    </svg>
                                 </div>
-                                <div className="flex items-start">
-                                    <input
-                                        type="checkbox"
-                                        id="show-media"
-                                        name="showInMediaInformasi"
-                                        checked={formData.showInMediaInformasi}
-                                        onChange={handleInputChange}
-                                        className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 mt-1"
-                                    />
-                                    <label htmlFor="show-media" className="ml-3">
-                                        <span className="text-gray-800 font-medium">Tampilkan di Media & Informasi</span>
-                                        <p className="text-sm text-gray-600">Berita akan muncul di halaman /media-informasi</p>
+                                Distribusi Konten
+                            </h3>
+                            
+                            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-xl border border-blue-100">
+                                <p className="text-sm text-gray-700 mb-4 font-medium">
+                                    Pilih di mana berita ini akan ditampilkan
+                                </p>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <label className="flex items-start gap-3 cursor-pointer p-4 bg-white rounded-lg border-2 border-transparent hover:border-blue-400 transition-all">
+                                        <input
+                                            type="checkbox"
+                                            name="showInTJSL"
+                                            checked={formData.showInTJSL}
+                                            onChange={handleInputChange}
+                                            className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 mt-0.5"
+                                        />
+                                        <div>
+                                            <span className="text-sm font-semibold text-gray-900 block">Berita TJSL</span>
+                                            <span className="text-xs text-gray-600">Tampil di /berita-tjsl</span>
+                                        </div>
                                     </label>
-                                </div>
-                                <div className="flex items-start">
-                                    <input
-                                        type="checkbox"
-                                        id="show-dashboard"
-                                        name="showInDashboard"
-                                        checked={formData.showInDashboard}
-                                        onChange={handleInputChange}
-                                        className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 mt-1"
-                                    />
-                                    <label htmlFor="show-dashboard" className="ml-3">
-                                        <span className="text-gray-800 font-medium">Masukkan ke Statistik Dashboard</span>
-                                        <p className="text-sm text-gray-600">Data berita akan dihitung dalam statistik TJSL</p>
+
+                                    <label className="flex items-start gap-3 cursor-pointer p-4 bg-white rounded-lg border-2 border-transparent hover:border-blue-400 transition-all">
+                                        <input
+                                            type="checkbox"
+                                            name="showInMediaInformasi"
+                                            checked={formData.showInMediaInformasi}
+                                            onChange={handleInputChange}
+                                            className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 mt-0.5"
+                                        />
+                                        <div>
+                                            <span className="text-sm font-semibold text-gray-900 block">Media & Informasi</span>
+                                            <span className="text-xs text-gray-600">Tampil di /media-informasi</span>
+                                        </div>
                                     </label>
-                                </div>
-                                <div className="flex items-start">
-                                    <input
-                                        type="checkbox"
-                                        id="pin-homepage"
-                                        name="pinToHomepage"
-                                        checked={formData.pinToHomepage}
-                                        onChange={handleInputChange}
-                                        className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 mt-1"
-                                    />
-                                    <label htmlFor="pin-homepage" className="ml-3">
-                                        <span className="text-gray-800 font-medium">Pin di Homepage</span>
-                                        <p className="text-sm text-gray-600">Berita akan muncul di section "Berita Terbaru" landing page</p>
+
+                                    <label className="flex items-start gap-3 cursor-pointer p-4 bg-white rounded-lg border-2 border-transparent hover:border-blue-400 transition-all">
+                                        <input
+                                            type="checkbox"
+                                            name="showInDashboard"
+                                            checked={formData.showInDashboard}
+                                            onChange={handleInputChange}
+                                            className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 mt-0.5"
+                                        />
+                                        <div>
+                                            <span className="text-sm font-semibold text-gray-900 block">Statistik Dashboard</span>
+                                            <span className="text-xs text-gray-600">Masuk ke hitungan statistik</span>
+                                        </div>
+                                    </label>
+
+                                    <label className="flex items-start gap-3 cursor-pointer p-4 bg-white rounded-lg border-2 border-transparent hover:border-orange-400 transition-all">
+                                        <input
+                                            type="checkbox"
+                                            name="pinToHomepage"
+                                            checked={formData.pinToHomepage}
+                                            onChange={handleInputChange}
+                                            className="w-5 h-5 text-orange-600 rounded focus:ring-orange-500 mt-0.5"
+                                        />
+                                        <div>
+                                            <span className="text-sm font-semibold text-gray-900 block flex items-center gap-2">
+                                                Pin ke Homepage
+                                                <span className="text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded font-bold">FEATURED</span>
+                                            </span>
+                                            <span className="text-xs text-gray-600">Tampil di landing page</span>
+                                        </div>
                                     </label>
                                 </div>
                             </div>
                         </div>
 
                         {/* Action Buttons */}
-                        <div className="mt-8 flex flex-col sm:flex-row justify-end gap-3">
+                        <div className="mt-8 pt-6 border-t border-gray-200 flex flex-col sm:flex-row justify-end gap-3">
                             <button
                                 type="button"
                                 onClick={handleCancel}
-                                className="px-6 py-3 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition-colors"
+                                className="px-6 py-3 bg-white border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-all"
                             >
                                 Batal
                             </button>
                             <button
                                 type="button"
                                 onClick={handlePreview}
-                                className="px-6 py-3 bg-gray-400 text-white font-semibold rounded-lg hover:bg-gray-500 transition-colors"
+                                className="flex items-center justify-center gap-2 px-6 py-3 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-700 transition-all"
                             >
-                                Preview Before Save
+                                <FaEye />
+                                Preview
                             </button>
                             <button
                                 type="submit"
-                                className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-md"
+                                className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg transform hover:-translate-y-0.5"
                             >
-                                {editingId ? 'Update Berita' : 'Save Content'}
+                                <FaSave />
+                                {editingId ? 'Update Berita' : 'Simpan Berita'}
                             </button>
                         </div>
                     </form>
                 </div>
             )}
 
-            {/* Tabel List Berita */}
+            {/* ✅ Table List Berita - Using filteredBerita (NEW) */}
             {!showForm && (
-                <div className="bg-white rounded-lg shadow-md overflow-hidden">
+                <div className="bg-white rounded-xl shadow-lg overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-50">
+                            <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
                                 <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                                         Judul
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                                         Kategori
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                                         Tanggal
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                                         Status
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                                         Ditampilkan Di
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                                         Aksi
                                     </th>
                                 </tr>
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-200">
-                                {dummyBerita.map((item) => (
-                                    <tr key={item.id} className="hover:bg-gray-50 transition-colors">
+                                {filteredBerita.map((item) => (
+                                    <tr key={item.id} className="hover:bg-blue-50 transition-colors">
                                         <td className="px-6 py-4">
-                                            <div className="text-sm font-medium text-gray-900 line-clamp-2">{item.title}</div>
-                                            <div className="text-sm text-gray-500">{item.author}</div>
+                                            <div className="text-sm font-semibold text-gray-900 line-clamp-2">{item.title}</div>
+                                            <div className="text-sm text-gray-500 flex items-center gap-1 mt-1">
+                                                <FaUser className="w-3 h-3" />
+                                                {item.author}
+                                            </div>
                                         </td>
                                         <td className="px-6 py-4">
                                             <span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
                                                 {item.category}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
+                                        <td className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">
                                             {new Date(item.date).toLocaleDateString('id-ID', {
                                                 day: 'numeric',
                                                 month: 'short',
@@ -606,23 +818,23 @@ const ManageBerita = () => {
                                         <td className="px-6 py-4">
                                             <div className="flex flex-wrap gap-1">
                                                 {item.showInTJSL && (
-                                                    <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded font-medium">
+                                                    <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-md font-semibold">
                                                         TJSL
                                                     </span>
                                                 )}
                                                 {item.showInMediaInformasi && (
-                                                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded font-medium">
+                                                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-md font-semibold">
                                                         Media
                                                     </span>
                                                 )}
                                                 {item.showInDashboard && (
-                                                    <span className="text-xs bg-teal-100 text-teal-700 px-2 py-1 rounded font-medium">
+                                                    <span className="text-xs bg-teal-100 text-teal-700 px-2 py-1 rounded-md font-semibold">
                                                         Dashboard
                                                     </span>
                                                 )}
                                                 {item.pinToHomepage && (
-                                                    <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded font-medium">
-                                                        📌 Homepage
+                                                    <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-md font-semibold">
+                                                        PINNED
                                                     </span>
                                                 )}
                                             </div>
@@ -631,14 +843,14 @@ const ManageBerita = () => {
                                             <div className="flex gap-3">
                                                 <button
                                                     onClick={() => handleEdit(item.id)}
-                                                    className="text-blue-600 hover:text-blue-900 transition-colors"
+                                                    className="text-blue-600 hover:text-blue-900 transition-colors p-2 hover:bg-blue-50 rounded-lg"
                                                     title="Edit"
                                                 >
                                                     <FaEdit className="w-5 h-5" />
                                                 </button>
                                                 <button
                                                     onClick={() => handleDelete(item.id)}
-                                                    className="text-red-600 hover:text-red-900 transition-colors"
+                                                    className="text-red-600 hover:text-red-900 transition-colors p-2 hover:bg-red-50 rounded-lg"
                                                     title="Hapus"
                                                 >
                                                     <FaTrash className="w-5 h-5" />
@@ -651,16 +863,30 @@ const ManageBerita = () => {
                         </table>
                     </div>
                     
-                    {/* Empty State */}
-                    {dummyBerita.length === 0 && (
-                        <div className="text-center py-12">
-                            <p className="text-gray-500 text-lg">Belum ada berita yang ditambahkan.</p>
-                            <button
-                                onClick={() => setShowForm(true)}
-                                className="mt-4 text-blue-600 hover:text-blue-700 font-semibold"
-                            >
-                                Tambah Berita Pertama
-                            </button>
+                    {/* ✅ Empty State - Context Aware (NEW) */}
+                    {filteredBerita.length === 0 && (
+                        <div className="text-center py-16 bg-gray-50">
+                            <div className="w-20 h-20 bg-gray-200 rounded-full mx-auto mb-4 flex items-center justify-center">
+                                <FaNewspaper className="w-10 h-10 text-gray-400" />
+                            </div>
+                            <p className="text-gray-500 text-lg font-medium mb-2">
+                                {searchTerm || filterCategory || filterStatus
+                                    ? 'Tidak ada berita yang sesuai dengan filter'
+                                    : 'Belum ada berita'}
+                            </p>
+                            <p className="text-gray-400 text-sm mb-4">
+                                {searchTerm || filterCategory || filterStatus
+                                    ? 'Coba ubah kriteria pencarian atau filter'
+                                    : 'Mulai tambahkan berita pertama Anda'}
+                            </p>
+                            {!(searchTerm || filterCategory || filterStatus) && (
+                                <button
+                                    onClick={() => setShowForm(true)}
+                                    className="text-blue-600 hover:text-blue-700 font-semibold"
+                                >
+                                    Tambah Berita Pertama
+                                </button>
+                            )}
                         </div>
                     )}
                 </div>
