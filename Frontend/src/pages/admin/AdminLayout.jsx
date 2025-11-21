@@ -25,7 +25,6 @@ const SidebarLink = ({ to, icon, label }) => {
     );
 };
 
-// Dropdown
 const SidebarDropdown = ({ title, icon, children }) => {
     const [isOpen, setIsOpen] = useState(false);
 
@@ -33,18 +32,15 @@ const SidebarDropdown = ({ title, icon, children }) => {
         <div>
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center justify-between w-full gap-3 px-4 py-3 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors"
+                className="flex items-center w-fit px-4 py-3 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors"
             >
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
                     {icon}
                     <span className="font-medium">{title}</span>
+                    <FaChevronDown
+                        className={`w-3 h-3 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                    />
                 </div>
-
-                <FaChevronDown
-                    className={`w-3 h-3 transition-transform ${
-                        isOpen ? 'rotate-180' : ''
-                    }`}
-                />
             </button>
 
             <div
