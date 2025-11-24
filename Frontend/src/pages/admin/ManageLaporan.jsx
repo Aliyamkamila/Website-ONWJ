@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { FaEdit, FaTrash, FaPlus, FaTimes, FaFilePdf, FaUpload, FaSearch, FaFilter, FaCheck, FaArrowLeft, FaImage, FaCalendar, FaDownload } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaPlus, FaTimes, FaFilePdf, FaUpload, FaSearch, FaFilter, FaCheck, FaArrowLeft, FaImage, FaCalendar, FaDownload, FaFileExcel } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+import * as XLSX from 'xlsx';
 
 const ManageLaporan = () => {
   const navigate = useNavigate();
@@ -60,6 +61,81 @@ const ManageLaporan = () => {
 
     setFilteredLaporan(result);
   }, [searchTerm, filterYear, filterType, laporanList]);
+
+  // ✅ EXPORT TO EXCEL - OPTIMIZED VERSION
+  const exportToExcel = () => {
+    try {
+      // Check if data is empty
+      if (filteredLaporan.length === 0) {
+        alert('⚠️ Tidak ada data untuk diexport!');
+        return;
+      }
+
+      // Prepare export data with proper formatting and null safety
+      const exportData = filteredLaporan.map((item, index) => ({
+        'No': index + 1,
+        'Judul Laporan': item.title || '-',
+        'Jenis Laporan': item.type || '-',
+        'Tahun': item.year || '-',
+        'Tanggal Publikasi': item.published_date ? new Date(item.published_date).toLocaleDateString('id-ID', {
+          day: '2-digit',
+          month: 'long',
+          year: 'numeric'
+        }) : '-',
+        'Deskripsi': item.description || '-',
+        'Ukuran File': formatFileSize(item.file_size || 0),
+        'Total Download': item.downloads || 0,
+        'Status Aktif': item.is_active ? 'Ya' : 'Tidak',
+        'Tanggal Dibuat': item.created_at ? new Date(item.created_at).toLocaleDateString('id-ID', {
+          day: '2-digit',
+          month: 'long',
+          year: 'numeric'
+        }) : '-',
+      }));
+
+      // Create workbook and worksheet
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(exportData);
+
+      // Set column widths for better readability
+      ws['!cols'] = [
+        { wch: 5 },   // No
+        { wch: 50 },  // Judul
+        { wch: 25 },  // Jenis
+        { wch: 10 },  // Tahun
+        { wch: 20 },  // Tanggal Publikasi
+        { wch: 60 },  // Deskripsi
+        { wch: 15 },  // Ukuran File
+        { wch: 15 },  // Total Download
+        { wch: 12 },  // Status
+        { wch: 20 }   // Tanggal Dibuat
+      ];
+
+      // Add worksheet to workbook
+      XLSX.utils.book_append_sheet(wb, ws, 'Laporan Tahunan');
+
+      // Generate filename with timestamp
+      const timestamp = new Date().toISOString().slice(0, 10);
+      const filename = `Laporan_Tahunan_MHJ_ONWJ_${timestamp}.xlsx`;
+
+      // Write and download file
+      XLSX.writeFile(wb, filename);
+
+      // Success notification with details
+      alert(`✅ Data berhasil diexport ke Excel!\n\nFile: ${filename}\nTotal data: ${filteredLaporan.length} laporan`);
+      
+      console.log('✅ Export Excel berhasil:', {
+        filename,
+        totalRows: filteredLaporan.length,
+        timestamp,
+        exportedData: exportData
+      });
+
+    } catch (error) {
+      console.error('❌ Error exporting to Excel:', error);
+      alert(`❌ Gagal export ke Excel!\n\nError: ${error.message}\n\nSilakan coba lagi atau hubungi administrator.`);
+    }
+  };
 
   // Clear Filters
   const clearFilters = () => {
@@ -296,12 +372,24 @@ const ManageLaporan = () => {
         </div>
       )}
 
-      {/* Search & Filter Section */}
+      {/* Search & Filter Section + Export Button */}
       {!showForm && (
         <div className="bg-white rounded-xl shadow-md p-6 mb-8">
-          <div className="flex items-center gap-2 mb-4">
-            <FaFilter className="text-gray-500" />
-            <h3 className="text-lg font-semibold text-gray-900">Pencarian & Filter</h3>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <FaFilter className="text-gray-500" />
+              <h3 className="text-lg font-semibold text-gray-900">Pencarian & Filter</h3>
+            </div>
+
+            {/* Export Excel Button */}
+            <button
+              onClick={exportToExcel}
+              className="flex items-center gap-2 px-5 py-2.5 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+              title="Export data laporan ke Excel"
+            >
+              <FaFileExcel className="w-5 h-5" />
+              Export ke Excel
+            </button>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { FaEdit, FaTrash, FaPlus, FaImage, FaTimes, FaStore, FaStar, FaSearch, FaFilter, FaLink, FaPhone, FaMapMarkerAlt, FaUser, FaCalendar, FaTrophy, FaArrowLeft } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaPlus, FaImage, FaTimes, FaStore, FaStar, FaSearch, FaFilter, FaLink, FaPhone, FaMapMarkerAlt, FaUser, FaCalendar, FaTrophy, FaArrowLeft, FaFileExcel } from 'react-icons/fa';
 import { umkmService } from '../../services/umkmService';
 import toast from 'react-hot-toast';
+import * as XLSX from 'xlsx';
 
 const ManageUmkm = () => {
     const [umkmList, setUmkmList] = useState([]);
@@ -99,6 +100,79 @@ const ManageUmkm = () => {
             toast.error('Gagal memuat data UMKM');
         } finally {
             setLoading(false);
+        }
+    };
+
+    // ✅ EXPORT TO EXCEL - OPTIMIZED VERSION
+    const exportToExcel = () => {
+        try {
+            // Check if data is empty
+            if (filteredList.length === 0) {
+                toast.error('⚠️ Tidak ada data untuk diexport!');
+                return;
+            }
+
+            // Prepare export data with proper formatting and null safety
+            const exportData = filteredList.map((item, index) => ({
+                'No': index + 1,
+                'Nama UMKM': item.name || '-',
+                'Kategori': item.category || '-',
+                'Pemilik': item.owner || '-',
+                'Lokasi': item.location || '-',
+                'Status': item.status || '-',
+                'Tahun Mulai': item.year_started || '-',
+                'Deskripsi': item.description || '-',
+                'Testimonial': item.testimonial || '-',
+                'Pencapaian': item.achievement || '-',
+                'Link Toko': item.shop_link || '-',
+                'No. WhatsApp': item.contact_number || '-',
+                'Featured': item.is_featured ? 'Ya' : 'Tidak',
+            }));
+
+            // Create workbook and worksheet
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.json_to_sheet(exportData);
+
+            // Set column widths for better readability
+            ws['!cols'] = [
+                { wch: 5 },   // No
+                { wch: 35 },  // Nama UMKM
+                { wch: 15 },  // Kategori
+                { wch: 25 },  // Pemilik
+                { wch: 30 },  // Lokasi
+                { wch: 15 },  // Status
+                { wch: 12 },  // Tahun Mulai
+                { wch: 50 },  // Deskripsi
+                { wch: 50 },  // Testimonial
+                { wch: 30 },  // Pencapaian
+                { wch: 35 },  // Link Toko
+                { wch: 18 },  // No. WhatsApp
+                { wch: 10 }   // Featured
+            ];
+
+            // Add worksheet to workbook
+            XLSX.utils.book_append_sheet(wb, ws, 'Data UMKM Binaan');
+
+            // Generate filename with timestamp
+            const timestamp = new Date().toISOString().slice(0, 10);
+            const filename = `Data_UMKM_Binaan_MHJ_ONWJ_${timestamp}.xlsx`;
+
+            // Write and download file
+            XLSX.writeFile(wb, filename);
+
+            // Success notification with details
+            toast.success(`✅ Data berhasil diexport ke Excel!\n\nFile: ${filename}\nTotal data: ${filteredList.length} UMKM`);
+            
+            console.log('✅ Export Excel berhasil:', {
+                filename,
+                totalRows: filteredList.length,
+                timestamp,
+                exportedData: exportData
+            });
+
+        } catch (error) {
+            console.error('❌ Error exporting to Excel:', error);
+            toast.error(`❌ Gagal export ke Excel!\n\nError: ${error.message}\n\nSilakan coba lagi atau hubungi administrator.`);
         }
     };
 
@@ -375,12 +449,24 @@ const ManageUmkm = () => {
                 </div>
             )}
 
-            {/* Search & Filter */}
+            {/* Search & Filter + Export Button */}
             {!showForm && (
                 <div className="bg-white rounded-xl shadow-md p-6 mb-8">
-                    <div className="flex items-center gap-2 mb-4">
-                        <FaFilter className="text-gray-500" />
-                        <h3 className="text-lg font-semibold text-gray-900">Pencarian & Filter</h3>
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-2">
+                            <FaFilter className="text-gray-500" />
+                            <h3 className="text-lg font-semibold text-gray-900">Pencarian & Filter</h3>
+                        </div>
+
+                        {/* Export Excel Button */}
+                        <button
+                            onClick={exportToExcel}
+                            className="flex items-center gap-2 px-5 py-2.5 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                            title="Export data UMKM ke Excel"
+                        >
+                            <FaFileExcel className="w-5 h-5" />
+                            Export ke Excel
+                        </button>
                     </div>
                     
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

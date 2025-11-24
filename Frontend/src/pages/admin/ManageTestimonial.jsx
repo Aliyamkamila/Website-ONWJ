@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { FaEdit, FaTrash, FaPlus, FaImage, FaTimes, FaQuoteLeft, FaSearch, FaFilter, FaUser, FaMapMarkerAlt, FaCheck, FaArrowLeft } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaPlus, FaImage, FaTimes, FaQuoteLeft, FaSearch, FaFilter, FaUser, FaMapMarkerAlt, FaCheck, FaArrowLeft, FaFileExcel } from 'react-icons/fa';
+import * as XLSX from 'xlsx';
 
 // Data Dummy - nanti diganti dengan API
 const dummyTestimonials = [
@@ -93,6 +94,71 @@ const ManageTestimonial = () => {
 
         setFilteredTestimonials(result);
     }, [searchTerm, filterProgram, filterStatus]);
+
+    // ✅ EXPORT TO EXCEL - OPTIMIZED VERSION
+    const exportToExcel = () => {
+        try {
+            // Check if data is empty
+            if (filteredTestimonials.length === 0) {
+                alert('⚠️ Tidak ada data untuk diexport!');
+                return;
+            }
+
+            // Prepare export data with proper formatting and null safety
+            const exportData = filteredTestimonials.map((item, index) => ({
+                'No': index + 1,
+                'Nama Lengkap': item.name || '-',
+                'Lokasi / Desa': item.location || '-',
+                'Program Terkait': item.program || '-',
+                'Isi Testimonial': item.testimonial || '-',
+                'Status': item.status || '-',
+                'Tanggal Input': item.createdAt ? new Date(item.createdAt).toLocaleDateString('id-ID', {
+                    day: '2-digit',
+                    month: 'long',
+                    year: 'numeric'
+                }) : '-',
+            }));
+
+            // Create workbook and worksheet
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.json_to_sheet(exportData);
+
+            // Set column widths for better readability
+            ws['!cols'] = [
+                { wch: 5 },   // No
+                { wch: 25 },  // Nama Lengkap
+                { wch: 30 },  // Lokasi
+                { wch: 25 },  // Program
+                { wch: 80 },  // Testimonial
+                { wch: 12 },  // Status
+                { wch: 20 }   // Tanggal
+            ];
+
+            // Add worksheet to workbook
+            XLSX.utils.book_append_sheet(wb, ws, 'Testimonial Masyarakat');
+
+            // Generate filename with timestamp
+            const timestamp = new Date().toISOString().slice(0, 10);
+            const filename = `Testimonial_Masyarakat_MHJ_ONWJ_${timestamp}.xlsx`;
+
+            // Write and download file
+            XLSX.writeFile(wb, filename);
+
+            // Success notification with details
+            alert(`✅ Data berhasil diexport ke Excel!\n\nFile: ${filename}\nTotal data: ${filteredTestimonials.length} testimonial`);
+            
+            console.log('✅ Export Excel berhasil:', {
+                filename,
+                totalRows: filteredTestimonials.length,
+                timestamp,
+                exportedData: exportData
+            });
+
+        } catch (error) {
+            console.error('❌ Error exporting to Excel:', error);
+            alert(`❌ Gagal export ke Excel!\n\nError: ${error.message}\n\nSilakan coba lagi atau hubungi administrator.`);
+        }
+    };
 
     // Clear Filters
     const clearFilters = () => {
@@ -309,12 +375,24 @@ const ManageTestimonial = () => {
                 </div>
             )}
 
-            {/* Search & Filter Section */}
+            {/* Search & Filter Section + Export Button */}
             {!showForm && (
                 <div className="bg-white rounded-xl shadow-md p-6 mb-8">
-                    <div className="flex items-center gap-2 mb-4">
-                        <FaFilter className="text-gray-500" />
-                        <h3 className="text-lg font-semibold text-gray-900">Pencarian & Filter</h3>
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-2">
+                            <FaFilter className="text-gray-500" />
+                            <h3 className="text-lg font-semibold text-gray-900">Pencarian & Filter</h3>
+                        </div>
+
+                        {/* Export Excel Button */}
+                        <button
+                            onClick={exportToExcel}
+                            className="flex items-center gap-2 px-5 py-2.5 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                            title="Export data testimonial ke Excel"
+                        >
+                            <FaFileExcel className="w-5 h-5" />
+                            Export ke Excel
+                        </button>
                     </div>
                     
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

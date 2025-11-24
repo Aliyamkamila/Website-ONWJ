@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
-import { FaEdit, FaTrash, FaPlus, FaImage, FaTimes, FaNewspaper, FaCalendar, FaUser, FaEye, FaSave, FaCheck, FaSearch, FaFilter, FaArrowLeft, FaFileExcel, FaFilePdf } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaPlus, FaImage, FaTimes, FaNewspaper, FaCalendar, FaUser, FaEye, FaSave, FaCheck, FaSearch, FaFilter, FaArrowLeft, FaFileExcel } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import * as XLSX from 'xlsx';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
 
 // Data Dummy - nanti diganti dengan API
 const dummyBerita = [
@@ -98,159 +96,76 @@ const ManageBerita = () => {
         setFilterStatus('');
     };
 
-    // ✅ EXPORT TO EXCEL
+    // ✅ EXPORT TO EXCEL - IMPROVED & OPTIMIZED VERSION
     const exportToExcel = () => {
         try {
+            // Check if data is empty
+            if (filteredBerita.length === 0) {
+                alert('⚠️ Tidak ada data untuk diexport!');
+                return;
+            }
+
+            // Prepare export data with proper formatting and null safety
             const exportData = filteredBerita.map((item, index) => ({
                 'No': index + 1,
-                'Judul': item.title,
-                'Kategori': item.category,
-                'Tanggal': new Date(item.date).toLocaleDateString('id-ID'),
-                'Penulis': item.author,
-                'Status': item.status,
-                'TJSL': item.showInTJSL ? 'Ya' : 'Tidak',
-                'Media Informasi': item.showInMediaInformasi ? 'Ya' : 'Tidak',
-                'Dashboard': item.showInDashboard ? 'Ya' : 'Tidak',
-                'Pinned': item.pinToHomepage ? 'Ya' : 'Tidak',
+                'Judul': item.title || '-',
+                'Kategori': item.category || '-',
+                'Tanggal': item.date ? new Date(item.date).toLocaleDateString('id-ID', {
+                    day: '2-digit',
+                    month: 'long',
+                    year: 'numeric'
+                }) : '-',
+                'Penulis': item.author || '-',
+                'Status': item.status || '-',
+                'Tampil di TJSL': item.showInTJSL ? 'Ya' : 'Tidak',
+                'Tampil di Media Informasi': item.showInMediaInformasi ? 'Ya' : 'Tidak',
+                'Tampil di Dashboard': item.showInDashboard ? 'Ya' : 'Tidak',
+                'Pinned ke Homepage': item.pinToHomepage ? 'Ya' : 'Tidak',
             }));
 
+            // Create workbook and worksheet
             const wb = XLSX.utils.book_new();
             const ws = XLSX.utils.json_to_sheet(exportData);
 
+            // Set column widths for better readability
             ws['!cols'] = [
-                { wch: 5 }, { wch: 50 }, { wch: 15 }, { wch: 15 }, { wch: 20 },
-                { wch: 12 }, { wch: 8 }, { wch: 18 }, { wch: 12 }, { wch: 10 }
+                { wch: 5 },   // No
+                { wch: 50 },  // Judul
+                { wch: 15 },  // Kategori
+                { wch: 20 },  // Tanggal
+                { wch: 20 },  // Penulis
+                { wch: 12 },  // Status
+                { wch: 18 },  // TJSL
+                { wch: 25 },  // Media Informasi
+                { wch: 20 },  // Dashboard
+                { wch: 22 }   // Pinned
             ];
 
+            // Add worksheet to workbook
             XLSX.utils.book_append_sheet(wb, ws, 'Data Berita');
 
+            // Generate filename with timestamp
             const timestamp = new Date().toISOString().slice(0, 10);
             const filename = `Data_Berita_MHJ_ONWJ_${timestamp}.xlsx`;
 
+            // Write and download file
             XLSX.writeFile(wb, filename);
-            alert('✅ Data berhasil diexport ke Excel!');
+
+            // Success notification with details
+            alert(`✅ Data berhasil diexport ke Excel!\n\nFile: ${filename}\nTotal data: ${filteredBerita.length} berita`);
+            
+            console.log('✅ Export Excel berhasil:', {
+                filename,
+                totalRows: filteredBerita.length,
+                timestamp,
+                exportedData: exportData
+            });
+
         } catch (error) {
-            console.error('Error exporting to Excel:', error);
-            alert('❌ Gagal export ke Excel!');
+            console.error('❌ Error exporting to Excel:', error);
+            alert(`❌ Gagal export ke Excel!\n\nError: ${error.message}\n\nSilakan coba lagi atau hubungi administrator.`);
         }
     };
-
-    // ✅ EXPORT TO PDF - FIXED VERSION
-const exportToPDF = () => {
-    try {
-        // Check if data is empty
-        if (filteredBerita.length === 0) {
-            alert('⚠️ Tidak ada data untuk diexport!');
-            return;
-        }
-
-        // Dynamic import jsPDF
-        const doc = new jsPDF({
-            orientation: 'landscape',
-            unit: 'mm',
-            format: 'a4'
-        });
-
-        // Header with error handling
-        try {
-            doc.setFontSize(18);
-            doc.setFont('helvetica', 'bold');
-            doc.text('DATA BERITA MHJ ONWJ', 14, 15);
-
-            doc.setFontSize(10);
-            doc.setFont('helvetica', 'normal');
-            doc.text(`Tanggal Export: ${new Date().toLocaleDateString('id-ID')}`, 14, 22);
-            doc.text(`Total Data: ${filteredBerita.length} berita`, 14, 27);
-        } catch (err) {
-            console.error('Error creating PDF header:', err);
-        }
-
-        // Prepare table data with null check
-        const tableData = filteredBerita.map((item, index) => {
-            const title = item.title || 'No Title';
-            const truncatedTitle = title.length > 60 ? title.substring(0, 60) + '...' : title;
-            
-            return [
-                index + 1,
-                truncatedTitle,
-                item.category || '-',
-                item.date ? new Date(item.date).toLocaleDateString('id-ID') : '-',
-                item.author || '-',
-                item.status || '-',
-                item.showInTJSL ? '✓' : '✗',
-                item.showInMediaInformasi ? '✓' : '✗',
-                item.showInDashboard ? '✓' : '✗',
-                item.pinToHomepage ? '✓' : '✗',
-            ];
-        });
-
-        // AutoTable with error handling
-        try {
-            doc.autoTable({
-                startY: 32,
-                head: [['No', 'Judul', 'Kategori', 'Tanggal', 'Penulis', 'Status', 'TJSL', 'Media', 'Dashboard', 'Pin']],
-                body: tableData,
-                theme: 'grid',
-                headStyles: {
-                    fillColor: [37, 99, 235],
-                    textColor: [255, 255, 255],
-                    fontStyle: 'bold',
-                    halign: 'center',
-                    fontSize: 9,
-                },
-                bodyStyles: {
-                    fontSize: 8,
-                    cellPadding: 2,
-                },
-                columnStyles: {
-                    0: { cellWidth: 10, halign: 'center' },
-                    1: { cellWidth: 80 },
-                    2: { cellWidth: 25, halign: 'center' },
-                    3: { cellWidth: 25, halign: 'center' },
-                    4: { cellWidth: 30 },
-                    5: { cellWidth: 20, halign: 'center' },
-                    6: { cellWidth: 12, halign: 'center' },
-                    7: { cellWidth: 12, halign: 'center' },
-                    8: { cellWidth: 18, halign: 'center' },
-                    9: { cellWidth: 12, halign: 'center' },
-                },
-                alternateRowStyles: {
-                    fillColor: [245, 247, 250],
-                },
-                margin: { top: 32, left: 14, right: 14 },
-                didDrawPage: function(data) {
-                    // Footer on each page
-                    const pageCount = doc.internal.getNumberOfPages();
-                    const pageNumber = doc.internal.getCurrentPageInfo().pageNumber;
-                    
-                    doc.setFontSize(8);
-                    doc.setTextColor(150);
-                    doc.text(
-                        `Halaman ${pageNumber} dari ${pageCount}`,
-                        doc.internal.pageSize.getWidth() / 2,
-                        doc.internal.pageSize.getHeight() - 10,
-                        { align: 'center' }
-                    );
-                }
-            });
-        } catch (err) {
-            console.error('Error creating PDF table:', err);
-            throw new Error('Gagal membuat tabel PDF: ' + err.message);
-        }
-
-        // Generate filename with timestamp
-        const timestamp = new Date().toISOString().slice(0, 10);
-        const filename = `Data_Berita_MHJ_ONWJ_${timestamp}.pdf`;
-
-        // Save PDF
-        doc.save(filename);
-
-        alert('✅ Data berhasil diexport ke PDF!');
-    } catch (error) {
-        console.error('Error exporting to PDF:', error);
-        alert(`❌ Gagal export ke PDF!\n\nError: ${error.message}\n\nCek console untuk detail.`);
-    }
-};
 
     const handleInputChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -478,7 +393,7 @@ const exportToPDF = () => {
                 </div>
             )}
 
-            {/* Search & Filter + Export Buttons */}
+            {/* Search & Filter + Export Button */}
             {!showForm && (
                 <div className="bg-white rounded-xl shadow-md p-6 mb-8">
                     <div className="flex items-center justify-between mb-4">
@@ -487,25 +402,15 @@ const exportToPDF = () => {
                             <h3 className="text-lg font-semibold text-gray-900">Pencarian & Filter</h3>
                         </div>
 
-                        {/* Export Buttons */}
-                        <div className="flex gap-3">
-                            <button
-                                onClick={exportToExcel}
-                                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-all shadow-md"
-                                title="Export ke Excel"
-                            >
-                                <FaFileExcel className="w-5 h-5" />
-                                Export Excel
-                            </button>
-                            <button
-                                onClick={exportToPDF}
-                                className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-all shadow-md"
-                                title="Export ke PDF"
-                            >
-                                <FaFilePdf className="w-5 h-5" />
-                                Export PDF
-                            </button>
-                        </div>
+                        {/* Export Excel Button */}
+                        <button
+                            onClick={exportToExcel}
+                            className="flex items-center gap-2 px-5 py-2.5 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                            title="Export data berita ke Excel"
+                        >
+                            <FaFileExcel className="w-5 h-5" />
+                            Export ke Excel
+                        </button>
                     </div>
                     
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { FaEdit, FaTrash, FaPlus, FaTimes, FaTrophy, FaSearch, FaFilter, FaCheck, FaArrowLeft, FaImage, FaCalendar } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaPlus, FaTimes, FaTrophy, FaSearch, FaFilter, FaCheck, FaArrowLeft, FaImage, FaCalendar, FaFileExcel } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+import * as XLSX from 'xlsx';
 
 const ManagePenghargaan = () => {
   const navigate = useNavigate();
@@ -61,6 +62,75 @@ const ManagePenghargaan = () => {
 
     setFilteredPenghargaan(result);
   }, [searchTerm, filterYear, filterCategory, penghargaan]);
+
+  // ✅ EXPORT TO EXCEL - OPTIMIZED VERSION
+  const exportToExcel = () => {
+    try {
+      // Check if data is empty
+      if (filteredPenghargaan.length === 0) {
+        alert('⚠️ Tidak ada data untuk diexport!');
+        return;
+      }
+
+      // Prepare export data with proper formatting and null safety
+      const exportData = filteredPenghargaan.map((item, index) => ({
+        'No': index + 1,
+        'Nama Penghargaan': item.title || '-',
+        'Kategori': item.category || '-',
+        'Pemberi Penghargaan': item.pemberi || '-',
+        'Tahun': item.year || '-',
+        'Tanggal Penerimaan': item.date ? new Date(item.date).toLocaleDateString('id-ID', {
+          day: '2-digit',
+          month: 'long',
+          year: 'numeric'
+        }) : '-',
+        'Deskripsi': item.description || '-',
+        'Tampil di Landing': item.show_in_landing ? 'Ya' : 'Tidak',
+        'Tampil di Media Informasi': item.show_in_media_informasi ? 'Ya' : 'Tidak',
+      }));
+
+      // Create workbook and worksheet
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(exportData);
+
+      // Set column widths for better readability
+      ws['!cols'] = [
+        { wch: 5 },   // No
+        { wch: 45 },  // Nama Penghargaan
+        { wch: 30 },  // Kategori
+        { wch: 35 },  // Pemberi
+        { wch: 10 },  // Tahun
+        { wch: 20 },  // Tanggal
+        { wch: 60 },  // Deskripsi
+        { wch: 20 },  // Landing
+        { wch: 25 }   // Media Informasi
+      ];
+
+      // Add worksheet to workbook
+      XLSX.utils.book_append_sheet(wb, ws, 'Penghargaan');
+
+      // Generate filename with timestamp
+      const timestamp = new Date().toISOString().slice(0, 10);
+      const filename = `Penghargaan_MHJ_ONWJ_${timestamp}.xlsx`;
+
+      // Write and download file
+      XLSX.writeFile(wb, filename);
+
+      // Success notification with details
+      alert(`✅ Data berhasil diexport ke Excel!\n\nFile: ${filename}\nTotal data: ${filteredPenghargaan.length} penghargaan`);
+      
+      console.log('✅ Export Excel berhasil:', {
+        filename,
+        totalRows: filteredPenghargaan.length,
+        timestamp,
+        exportedData: exportData
+      });
+
+    } catch (error) {
+      console.error('❌ Error exporting to Excel:', error);
+      alert(`❌ Gagal export ke Excel!\n\nError: ${error.message}\n\nSilakan coba lagi atau hubungi administrator.`);
+    }
+  };
 
   // Clear Filters
   const clearFilters = () => {
@@ -252,12 +322,24 @@ const ManagePenghargaan = () => {
         </div>
       )}
 
-      {/* Search & Filter Section */}
+      {/* Search & Filter Section + Export Button */}
       {!showForm && (
         <div className="bg-white rounded-xl shadow-md p-6 mb-8">
-          <div className="flex items-center gap-2 mb-4">
-            <FaFilter className="text-gray-500" />
-            <h3 className="text-lg font-semibold text-gray-900">Pencarian & Filter</h3>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <FaFilter className="text-gray-500" />
+              <h3 className="text-lg font-semibold text-gray-900">Pencarian & Filter</h3>
+            </div>
+
+            {/* Export Excel Button */}
+            <button
+              onClick={exportToExcel}
+              className="flex items-center gap-2 px-5 py-2.5 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+              title="Export data penghargaan ke Excel"
+            >
+              <FaFileExcel className="w-5 h-5" />
+              Export ke Excel
+            </button>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -667,4 +749,4 @@ const ManagePenghargaan = () => {
   );
 };
 
-export default ManagePenghargaan;
+export default ManagePenghargaan; 

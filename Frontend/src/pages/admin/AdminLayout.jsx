@@ -5,7 +5,7 @@ import { useToast } from '../../hooks/useToast';
 import logo from '../../assets/logo.webp';
 import { 
     FaTachometerAlt, FaSignOutAlt, FaChevronDown, 
-    FaUsers, FaHardHat, FaWallet, FaBuilding
+    FaUsers, FaHardHat, FaWallet, FaBuilding, FaFileExcel
 } from 'react-icons/fa';
 
 // Link normal
@@ -45,7 +45,7 @@ const SidebarDropdown = ({ title, icon, children }) => {
 
             <div
                 className={`overflow-hidden transition-all ${
-                    isOpen ? 'max-h-96 mt-2' : 'max-h-0'
+                    isOpen ? 'max-h-[500px] mt-2' : 'max-h-0'
                 }`}
             >
                 <div className="pl-8 space-y-2">
@@ -99,7 +99,7 @@ const AdminLayout = () => {
                         <img src={logo} alt="Logo" className="h-10 w-10" />
                         <div>
                             <h2 className="font-bold text-gray-900">Admin Panel</h2>
-                            <p className="text-xs text-gray-500">MHJ ONWJ</p>
+                            <p className="text-xs text-gray-500">Migas Hulu Jabar ONWJ</p>
                         </div>
                     </Link>
                 </div>
@@ -124,7 +124,7 @@ const AdminLayout = () => {
                 )}
 
                 {/* NAVIGATION */}
-                <nav className="flex-1 p-4 space-y-2">
+                <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
 
                     <SidebarLink 
                         to="/tukang-minyak-dan-gas/dashboard" 
@@ -152,6 +152,21 @@ const AdminLayout = () => {
 
                         <NavLink to="/tukang-minyak-dan-gas/manage-wk-tjsl" className={subLinkClasses}>
                             Kelola WK TJSL
+                        </NavLink>
+
+                        {/* ✅ TAMBAHAN BARU - Unified Import/Export */}
+                        <NavLink 
+                            to="/tukang-minyak-dan-gas/unified-import-export" 
+                            className={({ isActive }) =>
+                                `flex items-center gap-2 px-4 py-2 rounded-lg text-sm transition-colors ${
+                                    isActive
+                                        ? 'bg-green-100 text-green-700 font-semibold'
+                                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                                }`
+                            }
+                        >
+                            <FaFileExcel className="text-green-600" />
+                            <span>Import/Export Unified</span>
                         </NavLink>
                     </SidebarDropdown>
 
