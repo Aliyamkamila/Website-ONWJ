@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaEdit, FaTrash, FaPlus, FaTimes, FaMapMarkerAlt, FaCheck, FaOilCan, FaSearch, FaFilter, FaIndustry } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaPlus, FaTimes, FaMapMarkerAlt, FaCheck, FaOilCan, FaSearch, FaFilter, FaIndustry, FaArrowLeft } from 'react-icons/fa';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
@@ -12,7 +12,7 @@ const ManageWkTekkom = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingArea, setEditingArea] = useState(null);
   
-  // ✅ Search & Filter States (NEW)
+  // Search & Filter States
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [filterActive, setFilterActive] = useState('');
@@ -41,7 +41,7 @@ const ManageWkTekkom = () => {
     fetchAreas();
   }, []);
 
-  // ✅ Filter Logic (NEW)
+  // Filter Logic
   useEffect(() => {
     let result = [...areas];
 
@@ -69,7 +69,7 @@ const ManageWkTekkom = () => {
     setFilteredAreas(result);
   }, [searchTerm, filterStatus, filterActive, areas]);
 
-  // ✅ Clear Filters (NEW)
+  // Clear Filters
   const clearFilters = () => {
     setSearchTerm('');
     setFilterStatus('');
@@ -225,7 +225,7 @@ const ManageWkTekkom = () => {
     }
   };
 
-  // ✅ Stats Calculation (NEW)
+  // Stats Calculation
   const stats = {
     total: areas.length,
     operasional: areas.filter(a => a.status === 'Operasional').length,
@@ -235,6 +235,20 @@ const ManageWkTekkom = () => {
 
   return (
     <div>
+      {/* Tombol Kembali - Hanya Muncul di Page Input */}
+      {showForm && (
+        <button
+          onClick={() => {
+            setShowForm(false);
+            resetForm();
+          }}
+          className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg font-semibold transition-all mb-6"
+        >
+          <FaArrowLeft />
+          Kembali
+        </button>
+      )}
+
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <div>
@@ -252,7 +266,7 @@ const ManageWkTekkom = () => {
         )}
       </div>
 
-      {/* ✅ Stats Cards (NEW - Professional) */}
+      {/* Stats Cards */}
       {!showForm && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white">
@@ -297,7 +311,7 @@ const ManageWkTekkom = () => {
         </div>
       )}
 
-      {/* ✅ Search & Filter Section (NEW) */}
+      {/* Search & Filter Section */}
       {!showForm && (
         <div className="bg-white rounded-xl shadow-md p-6 mb-8">
           <div className="flex items-center gap-2 mb-4">
@@ -715,7 +729,7 @@ const ManageWkTekkom = () => {
         </div>
       )}
 
-      {/* ✅ Table List - Using filteredAreas (NEW) */}
+      {/* Table List */}
       {!showForm && (
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
           <div className="overflow-x-auto">

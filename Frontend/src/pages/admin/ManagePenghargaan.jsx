@@ -9,7 +9,7 @@ const ManagePenghargaan = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   
-  // ✅ Search & Filter States (NEW)
+  // Search & Filter States
   const [searchTerm, setSearchTerm] = useState('');
   const [filterYear, setFilterYear] = useState('');
   const [filterCategory, setFilterCategory] = useState('');
@@ -36,7 +36,7 @@ const ManagePenghargaan = () => {
     'Lainnya',
   ];
 
-  // ✅ Filter Logic (NEW)
+  // Filter Logic
   React.useEffect(() => {
     let result = [...penghargaan];
 
@@ -62,7 +62,7 @@ const ManagePenghargaan = () => {
     setFilteredPenghargaan(result);
   }, [searchTerm, filterYear, filterCategory, penghargaan]);
 
-  // ✅ Clear Filters (NEW)
+  // Clear Filters
   const clearFilters = () => {
     setSearchTerm('');
     setFilterYear('');
@@ -164,7 +164,7 @@ const ManagePenghargaan = () => {
   // Get unique years for filter
   const years = [...new Set(penghargaan.map(item => item.year))].sort((a, b) => b - a);
 
-  // ✅ Stats Calculation (NEW)
+  // Stats Calculation
   const stats = {
     total: penghargaan.length,
     landing: penghargaan.filter(item => item.show_in_landing).length,
@@ -174,14 +174,19 @@ const ManagePenghargaan = () => {
 
   return (
     <div>
-      {/* ✅ Back Button (NEW) */}
-      <button
-        onClick={() => navigate('/tukang-minyak-dan-gas/dashboard')}
-        className="flex items-center gap-2 text-gray-600 hover:text-gray-900 font-semibold mb-6 transition-colors"
-      >
-        <FaArrowLeft />
-        Kembali ke Dashboard
-      </button>
+      {/* Tombol Kembali - Hanya Muncul di Page Input */}
+      {showForm && (
+        <button
+          onClick={() => {
+            setShowForm(false);
+            resetForm();
+          }}
+          className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg font-semibold transition-all mb-6"
+        >
+          <FaArrowLeft />
+          Kembali
+        </button>
+      )}
 
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
@@ -200,7 +205,7 @@ const ManagePenghargaan = () => {
         )}
       </div>
 
-      {/* ✅ Stats Cards (NEW - Professional) */}
+      {/* Stats Cards */}
       {!showForm && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white">
@@ -247,7 +252,7 @@ const ManagePenghargaan = () => {
         </div>
       )}
 
-      {/* ✅ Search & Filter Section (NEW) */}
+      {/* Search & Filter Section */}
       {!showForm && (
         <div className="bg-white rounded-xl shadow-md p-6 mb-8">
           <div className="flex items-center gap-2 mb-4">
@@ -541,7 +546,7 @@ const ManagePenghargaan = () => {
         </div>
       )}
 
-      {/* ✅ Table List - Using filteredPenghargaan (NEW) */}
+      {/* Table List */}
       {!showForm && (
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
           <div className="overflow-x-auto">

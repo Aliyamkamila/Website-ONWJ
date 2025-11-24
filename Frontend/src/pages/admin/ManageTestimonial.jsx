@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FaEdit, FaTrash, FaPlus, FaImage, FaTimes, FaQuoteLeft, FaSearch, FaFilter, FaUser, FaMapMarkerAlt, FaCheck } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaPlus, FaImage, FaTimes, FaQuoteLeft, FaSearch, FaFilter, FaUser, FaMapMarkerAlt, FaCheck, FaArrowLeft } from 'react-icons/fa';
 
 // Data Dummy - nanti diganti dengan API
 const dummyTestimonials = [
@@ -39,7 +39,7 @@ const ManageTestimonial = () => {
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState(null);
     
-    // ✅ Search & Filter States (NEW)
+    // Search & Filter States
     const [searchTerm, setSearchTerm] = useState('');
     const [filterProgram, setFilterProgram] = useState('');
     const [filterStatus, setFilterStatus] = useState('');
@@ -68,7 +68,7 @@ const ManageTestimonial = () => {
 
     const statusOptions = ['Published', 'Draft'];
 
-    // ✅ Search & Filter Logic (NEW)
+    // Search & Filter Logic
     React.useEffect(() => {
         let result = [...dummyTestimonials];
 
@@ -94,7 +94,7 @@ const ManageTestimonial = () => {
         setFilteredTestimonials(result);
     }, [searchTerm, filterProgram, filterStatus]);
 
-    // ✅ Clear Filters (NEW)
+    // Clear Filters
     const clearFilters = () => {
         setSearchTerm('');
         setFilterProgram('');
@@ -197,6 +197,7 @@ const ManageTestimonial = () => {
             });
             setEditingId(id);
             setShowForm(true);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     };
 
@@ -214,7 +215,7 @@ const ManageTestimonial = () => {
         }
     };
 
-    // ✅ Stats Calculation (NEW)
+    // Stats Calculation
     const stats = {
         total: dummyTestimonials.length,
         published: dummyTestimonials.filter(t => t.status === 'Published').length,
@@ -228,6 +229,20 @@ const ManageTestimonial = () => {
 
     return (
         <div>
+            {/* Tombol Kembali - Hanya Muncul di Page Input */}
+            {showForm && (
+                <button
+                    onClick={() => {
+                        setShowForm(false);
+                        resetForm();
+                    }}
+                    className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg font-semibold transition-all mb-6"
+                >
+                    <FaArrowLeft />
+                    Kembali
+                </button>
+            )}
+
             {/* Header */}
             <div className="flex justify-between items-center mb-8">
                 <div>
@@ -245,7 +260,7 @@ const ManageTestimonial = () => {
                 )}
             </div>
 
-            {/* ✅ Stats Cards (NEW) */}
+            {/* Stats Cards */}
             {!showForm && (
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                     <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white">
@@ -294,7 +309,7 @@ const ManageTestimonial = () => {
                 </div>
             )}
 
-            {/* ✅ Search & Filter Section (NEW) */}
+            {/* Search & Filter Section */}
             {!showForm && (
                 <div className="bg-white rounded-xl shadow-md p-6 mb-8">
                     <div className="flex items-center gap-2 mb-4">
@@ -602,7 +617,7 @@ const ManageTestimonial = () => {
                 </div>
             )}
 
-            {/* ✅ Table List Testimonial - Using filteredTestimonials (NEW) */}
+            {/* Table List Testimonial */}
             {!showForm && (
                 <div className="bg-white rounded-xl shadow-lg overflow-hidden">
                     <div className="overflow-x-auto">
@@ -702,7 +717,7 @@ const ManageTestimonial = () => {
                         </table>
                     </div>
                     
-                    {/* ✅ Empty State - Context Aware (NEW) */}
+                    {/* Empty State */}
                     {filteredTestimonials.length === 0 && (
                         <div className="text-center py-16 bg-gray-50">
                             <div className="w-20 h-20 bg-gray-200 rounded-full mx-auto mb-4 flex items-center justify-center">

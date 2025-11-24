@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { FaEdit, FaTrash, FaPlus, FaImage, FaTimes, FaNewspaper, FaCalendar, FaUser, FaEye, FaSave, FaCheck, FaSearch, FaFilter } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaPlus, FaImage, FaTimes, FaNewspaper, FaCalendar, FaUser, FaEye, FaSave, FaCheck, FaSearch, FaFilter, FaArrowLeft } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 
 // Data Dummy - nanti diganti dengan API
 const dummyBerita = [
@@ -30,10 +31,10 @@ const dummyBerita = [
 ];
 
 const ManageBerita = () => {
+    const navigate = useNavigate();
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState(null);
     
-    // ✅ Search & Filter States (NEW)
     const [searchTerm, setSearchTerm] = useState('');
     const [filterCategory, setFilterCategory] = useState('');
     const [filterStatus, setFilterStatus] = useState('');
@@ -66,11 +67,9 @@ const ManageBerita = () => {
         'Kegiatan Internal'
     ];
 
-    // ✅ Search & Filter Logic (NEW)
     React.useEffect(() => {
         let result = [...dummyBerita];
 
-        // Search by title, author, or category
         if (searchTerm) {
             result = result.filter(item =>
                 item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -79,12 +78,10 @@ const ManageBerita = () => {
             );
         }
 
-        // Filter by category
         if (filterCategory) {
             result = result.filter(item => item.category === filterCategory);
         }
 
-        // Filter by status
         if (filterStatus) {
             result = result.filter(item => item.status.toLowerCase() === filterStatus.toLowerCase());
         }
@@ -92,7 +89,6 @@ const ManageBerita = () => {
         setFilteredBerita(result);
     }, [searchTerm, filterCategory, filterStatus]);
 
-    // ✅ Clear Filters (NEW)
     const clearFilters = () => {
         setSearchTerm('');
         setFilterCategory('');
@@ -221,6 +217,7 @@ const ManageBerita = () => {
             });
             setEditingId(id);
             setShowForm(true);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     };
 
@@ -238,7 +235,6 @@ const ManageBerita = () => {
         }
     };
 
-    // ✅ Stats Calculation (NEW)
     const stats = {
         total: dummyBerita.length,
         published: dummyBerita.filter(b => b.status === 'Published').length,
@@ -248,12 +244,27 @@ const ManageBerita = () => {
 
     return (
         <div>
+            {/* Tombol Kembali - Hanya Muncul di Page Input */}
+            {showForm && (
+                <button
+                    onClick={() => {
+                        setShowForm(false);
+                        resetForm();
+                    }}
+                    className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg font-semibold transition-all mb-6"
+                >
+                    <FaArrowLeft />
+                    Kembali
+                </button>
+            )}
+
             {/* Header */}
             <div className="flex justify-between items-center mb-8">
                 <div>
                     <h1 className="text-3xl font-bold text-gray-900">Kelola Berita</h1>
                     <p className="text-gray-600 mt-1">Manajemen berita dan artikel perusahaan</p>
                 </div>
+                
                 {!showForm && (
                     <button
                         onClick={() => setShowForm(true)}
@@ -310,7 +321,7 @@ const ManageBerita = () => {
                 </div>
             )}
 
-            {/* ✅ Search & Filter Section (NEW) */}
+            {/* Search & Filter Section */}
             {!showForm && (
                 <div className="bg-white rounded-xl shadow-md p-6 mb-8">
                     <div className="flex items-center gap-2 mb-4">
@@ -319,7 +330,6 @@ const ManageBerita = () => {
                     </div>
                     
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {/* Search */}
                         <div className="relative">
                             <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                             <input
@@ -331,7 +341,6 @@ const ManageBerita = () => {
                             />
                         </div>
 
-                        {/* Filter Category */}
                         <select
                             value={filterCategory}
                             onChange={(e) => setFilterCategory(e.target.value)}
@@ -343,7 +352,6 @@ const ManageBerita = () => {
                             ))}
                         </select>
 
-                        {/* Filter Status */}
                         <select
                             value={filterStatus}
                             onChange={(e) => setFilterStatus(e.target.value)}
@@ -355,7 +363,6 @@ const ManageBerita = () => {
                         </select>
                     </div>
 
-                    {/* Clear Filter & Result Counter */}
                     {(searchTerm || filterCategory || filterStatus) && (
                         <div className="mt-4 flex justify-between items-center">
                             <p className="text-sm text-gray-600">
@@ -376,7 +383,6 @@ const ManageBerita = () => {
             {/* Form Input Berita */}
             {showForm && (
                 <div className="bg-white rounded-xl shadow-lg p-8 mb-8 animate-fade-in">
-                    {/* ... (form code tetap sama, tidak ada perubahan) ... */}
                     <div className="flex justify-between items-center mb-8 pb-6 border-b border-gray-200">
                         <div>
                             <h2 className="text-2xl font-bold text-gray-900">
@@ -473,9 +479,6 @@ const ManageBerita = () => {
                                 </div>
                             </div>
                         </div>
-
-                        {/* Rest of the form sections remain the same... */}
-                        {/* (I'll keep the code concise, but all sections are included) */}
 
                         {/* Section 2: Media Upload */}
                         <div className="mb-8">
@@ -757,7 +760,7 @@ const ManageBerita = () => {
                 </div>
             )}
 
-            {/* ✅ Table List Berita - Using filteredBerita (NEW) */}
+            {/* Table List Berita */}
             {!showForm && (
                 <div className="bg-white rounded-xl shadow-lg overflow-hidden">
                     <div className="overflow-x-auto">
@@ -863,7 +866,6 @@ const ManageBerita = () => {
                         </table>
                     </div>
                     
-                    {/* ✅ Empty State - Context Aware (NEW) */}
                     {filteredBerita.length === 0 && (
                         <div className="text-center py-16 bg-gray-50">
                             <div className="w-20 h-20 bg-gray-200 rounded-full mx-auto mb-4 flex items-center justify-center">
