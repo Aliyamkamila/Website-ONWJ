@@ -1,14 +1,30 @@
-import React from 'react';
+import { Routes, Route } from 'react-router-dom';
 import WHero from './whero';
+import SubNavWK from './SubNavWK';
 import DeskripsiWK from './deskripsiwk';
 import WilayahKerja from './wilayahkerja';
+import HargaMinyak from './HargaMinyak';
+import DataProduksi from './DataProduksi';
 
+// Main Page Component
+const WilayahKerjaMain = () => (
+  <>
+    <DeskripsiWK />
+    <WilayahKerja />
+  </>
+);
+
+// Main Router Component
 const Mainwk = () => {
   return (
     <div className="min-h-screen bg-white">
       <WHero />
-      <DeskripsiWK />
-      <WilayahKerja />
+      <SubNavWK />
+      <Routes>
+        <Route index element={<WilayahKerjaMain />} />
+        <Route path="harga-minyak" element={<HargaMinyak />} />
+        <Route path="produksi" element={<DataProduksi />} />
+      </Routes>
     </div>
   );
 };

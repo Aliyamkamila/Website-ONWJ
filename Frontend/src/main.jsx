@@ -21,11 +21,12 @@ import PenghargaanPage from './pages/media/PenghargaanPage';
 import LaporanTahunanPage from './pages/media/LaporanTahunanPage';
 import Mainbisnis from './pages/bisnis/mainbisnis';
 import Mmanajemen from './pages/manajemen/mmanajemen';
-import Mainwk from './pages/wk/mainwk';
-import Wilayah from './pages/wk/wilayahkerja';
 import UmkmPage from './pages/UmkmPage';
 import KontakPage from './pages/KontakPage';
 import Profile from './pages/landingpage/profile';
+
+// ==== WILAYAH KERJA ====
+import Mainwk from './pages/wk/mainwk';
 
 // ==== HALAMAN ADMIN ====
 import LoginPage from './pages/admin/LoginPage';
@@ -38,7 +39,7 @@ import ManageProgram from './pages/admin/ManageProgram';
 import ManageUmkm from './pages/admin/ManageUmkm';
 import ManageTestimonial from './pages/admin/ManageTestimonial';
 import ManageAngkaStatistikTJSL from './pages/admin/ManageAngkaStatistikTJSL';
-import UnifiedImportExport from './pages/admin/UnifiedImportExport'; // ✅ TAMBAHAN BARU
+import UnifiedImportExport from './pages/admin/UnifiedImportExport';
 
 // Admin - Sekretaris Perusahaan
 import ManagePenghargaan from './pages/admin/ManagePenghargaan';
@@ -77,12 +78,22 @@ const router = createBrowserRouter([
       { path: 'laporan-tahunan', element: <LaporanTahunanPage /> },
       { path: 'bisnis', element: <Mainbisnis /> },
       { path: 'manajemen', element: <Mmanajemen /> },
-      { path: 'wilayah-kerja', element: <Mainwk /> },
-      { path: 'wilayah', element: <Wilayah /> },
       { path: 'umkm-binaan', element: <UmkmPage /> },
       { path: 'kontak', element: <KontakPage /> },
       { path: 'profile', element: <Profile /> },
     ],
+  },
+
+  // ✅ WILAYAH KERJA - STANDALONE ROUTE (tidak nested dalam Layout)
+  {
+    path: '/wilayah-kerja/*',
+    element: (
+      <>
+        <Header />
+        <ScrollRestoration />
+        <Mainwk />
+      </>
+    ),
   },
 
   {
@@ -100,7 +111,6 @@ const router = createBrowserRouter([
       </ProtectedRoute>
     ),
     children: [
-      // Dashboard
       { index: true, element: <DashboardPage /> },
       { path: 'dashboard', element: <DashboardPage /> },
       
@@ -110,7 +120,7 @@ const router = createBrowserRouter([
       { path: 'manage-umkm', element: <ManageUmkm /> },
       { path: 'manage-testimonial', element: <ManageTestimonial /> },
       { path: 'manage-angka-statistik-tjsl', element: <ManageAngkaStatistikTJSL /> },
-      { path: 'unified-import-export', element: <UnifiedImportExport /> }, // ✅ ROUTE BARU
+      { path: 'unified-import-export', element: <UnifiedImportExport /> },
       
       // Sekretaris Perusahaan
       { path: 'manage-penghargaan', element: <ManagePenghargaan /> },
