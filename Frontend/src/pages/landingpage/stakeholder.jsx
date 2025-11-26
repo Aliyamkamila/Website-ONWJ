@@ -1,5 +1,4 @@
 import React from 'react';
-import LogoLoop from './logoloop';
 import PemegangSaham1 from '../../assets/PemegangSaham/MUJ.webp';
 import PemegangSaham2 from '../../assets/PemegangSaham/Jakpro.png';
 import PemegangSaham3 from '../../assets/PemegangSaham/Petrogas.png';
@@ -9,19 +8,51 @@ import PemegangSaham6 from '../../assets/PemegangSaham/bbwm.png';
 
 const Stakeholder = () => {
   const stakeholderLogos = [
-    { src: PemegangSaham1, alt: 'ONWJ', href: '#', title: 'ONWJ' },
-    { src: PemegangSaham2, alt: 'ONWJ', href: '#', title: 'ONWJ' },
-    { src: PemegangSaham3, alt: 'ONWJ', href: '#', title: 'ONWJ' },
-    { src: PemegangSaham4, alt: 'ONWJ', href: '#', title: 'ONWJ' },
-    { src: PemegangSaham5, alt: 'ONWJ', href: '#', title: 'ONWJ' },
-    { src: PemegangSaham6, alt: 'ONWJ', href: '#', title: 'ONWJ' },
+    { 
+      src: PemegangSaham1, 
+      alt: 'MUJ', 
+      href: 'https://www.muj.co.id', // Ganti dengan URL yang sesuai
+      title: 'MUJ' 
+    },
+    { 
+      src: PemegangSaham2, 
+      alt: 'Jakpro', 
+      href: 'https://www.jakpro.co.id', // Ganti dengan URL yang sesuai
+      title: 'Jakpro' 
+    },
+    { 
+      src: PemegangSaham3, 
+      alt: 'Petrogas', 
+      href: 'https://www.petrogas.co.id', // Ganti dengan URL yang sesuai
+      title: 'Petrogas' 
+    },
+    { 
+      src: PemegangSaham4, 
+      alt: 'PT Bumi', 
+      href: 'https://www.ptbumi.co.id', // Ganti dengan URL yang sesuai
+      title: 'PT Bumi' 
+    },
+    { 
+      src: PemegangSaham5, 
+      alt: 'Subang', 
+      href: 'https://www.subang.co.id', // Ganti dengan URL yang sesuai
+      title: 'Subang' 
+    },
+    { 
+      src: PemegangSaham6, 
+      alt: 'BBWM', 
+      href: 'https://www.bbwm.co.id', // Ganti dengan URL yang sesuai
+      title: 'BBWM' 
+    },
   ];
 
   return (
-    <section className="bg-white py-12 md:py-16"> {/* Adjusted padding */}
+    <section className="bg-white py-12 md:py-16">
       <div className="section-container">
         <div className="text-center mb-12">
-          <p className="text-primary-600 font-semibold text-sm uppercase tracking-wider mb-3">Mitra Kami</p>
+          <p className="text-primary-600 font-semibold text-sm uppercase tracking-wider mb-3">
+            Mitra Kami
+          </p>
           <h2 className="text-display-sm text-gray-900 mb-4">
             Pemegang Saham
           </h2>
@@ -30,19 +61,23 @@ const Stakeholder = () => {
           </p>
         </div>
 
-        <div className="h-[100px] w-full overflow-hidden">
-          <LogoLoop
-            logos={stakeholderLogos}
-            speed={25}
-            direction="left"
-            logoHeight={70}
-            gap={40}
-            pauseOnHover
-            scaleOnHover
-            fadeOut
-            fadeOutColor="#ffffff"
-            ariaLabel="Our stakeholders"
-          />
+        <div className="flex flex-wrap justify-center items-center gap-8 md:gap-12 px-4">
+          {stakeholderLogos.map((logo, index) => (
+            <a
+              key={index}
+              href={logo.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              title={logo.title}
+              className="flex items-center justify-center transition-all duration-300 hover:scale-110 hover:opacity-80 hover:grayscale-0"
+            >
+              <img
+                src={logo.src}
+                alt={logo.alt}
+                className="h-10 md:h-15 w-auto object-contain"
+              />
+            </a>
+          ))}
         </div>
       </div>
     </section>

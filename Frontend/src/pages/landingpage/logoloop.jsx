@@ -18,7 +18,6 @@ const LogoLoop = ({
 
   useEffect(() => {
     if (trackRef.current) {
-      // Hitung berapa banyak set logo yang dibutuhkan untuk mengisi container
       const container = trackRef.current.parentElement;
       const logoSetWidth = trackRef.current.firstChild.offsetWidth;
       const containerWidth = container.offsetWidth;
@@ -38,6 +37,15 @@ const LogoLoop = ({
     background: `linear-gradient(to right, ${fadeOutColor} 0%, transparent 10%, transparent 90%, ${fadeOutColor} 100%)`,
   };
 
+  const handleLogoClick = (logo, e) => {
+    e.preventDefault();
+    if (logo.onClick) {
+      logo.onClick();
+    } else if (logo.href) {
+      window.open(logo.href, '_blank', 'noopener,noreferrer');
+    }
+  };
+
   return (
     <div className="logo-loop-container">
       {fadeOut && (
@@ -51,20 +59,25 @@ const LogoLoop = ({
         {Array.from({ length: duplicateCount }).map((_, setIndex) => (
           <div key={setIndex} className="logo-content">
             {logos.map((logo, index) => (
-              <a
+              <div
                 key={`${setIndex}-${index}`}
-                href={logo.href}
-                target="_blank"
-                rel="noopener noreferrer"
+                onClick={(e) => handleLogoClick(logo, e)}
                 className={`logo-item ${scaleOnHover ? 'hover:scale-110' : ''}`}
                 title={logo.title}
+                role="button"
+                tabIndex={0}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    handleLogoClick(logo, e);
+                  }
+                }}
               >
                 <img
                   src={logo.src}
                   alt={logo.alt}
                   className="max-w-full max-h-full object-contain"
                 />
-              </a>
+              </div>
             ))}
           </div>
         ))}
