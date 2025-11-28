@@ -1,52 +1,72 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
-import { adminApi } from '../../api/adminApi';
 import { format } from 'date-fns';
+import { id } from 'date-fns/locale';
 import { 
-    FaUsers, 
-    FaUserShield, 
-    FaClock, 
-    FaCalendar, 
-    FaNewspaper, 
-    FaHandHoldingHeart, 
-    FaStore, 
-    FaTrophy,
-    FaMapMarkerAlt,
-    FaQuoteLeft,
-    FaFilePdf
+    FaClock, FaCalendar, FaNewspaper, FaStore, FaQuoteLeft, 
+    FaTrophy, FaFilePdf, FaMapMarkerAlt, FaChartBar, FaUsers,
+    FaEye, FaArrowRight, FaUserCircle
 } from 'react-icons/fa';
 
 const DashboardPage = () => {
     const { user } = useAuth();
     const [stats, setStats] = useState({
-        totalAdmins: 0,
-        activeAdmins: 0,
-        inactiveAdmins: 0,
+        totalBerita: 0,
+        beritaPublished: 0,
+        beritaDraft: 0,
+        totalUMKM: 0,
+        umkmFeatured: 0,
+        totalTestimonial: 0,
+        testimonialPublished: 0,
+        totalPenghargaan: 0,
+        totalLaporan: 0,
+        totalWkTjsl: 0,
+        totalWkTekkom: 0,
     });
     const [loading, setLoading] = useState(true);
     const [currentTime, setCurrentTime] = useState(new Date());
 
     useEffect(() => {
-        fetchStats();
-        
-        // Update waktu setiap detik
-        const timer = setInterval(() => {
-            setCurrentTime(new Date());
-        }, 1000);
-
+        fetchAllStats();
+        const timer = setInterval(() => setCurrentTime(new Date()), 1000);
         return () => clearInterval(timer);
     }, []);
 
-    const fetchStats = async () => {
+    const fetchAllStats = async () => {
         try {
-            const response = await adminApi.getAdmins({ per_page: 999 });
-            const admins = response.data.data || [];
-            
+            setLoading(true);
+            const API_URL = import.meta.env.VITE_API_URL;
+
+            const [beritaRes, umkmRes, testimonialRes, laporanRes, penghargaanRes, wkTjslRes] = await Promise.all([
+                fetch(`${API_URL}/v1/admin/berita? per_page=999`). then(r => r.json()). catch(() => ({ data: [] })),
+                fetch(`${API_URL}/v1/admin/umkm?per_page=999`).then(r => r.json()).catch(() => ({ data: [] })),
+                fetch(`${API_URL}/v1/admin/testimonial? per_page=999`).then(r => r.json()).catch(() => ({ data: [] })),
+                fetch(`${API_URL}/v1/admin/laporan?per_page=999`).then(r => r.json()).catch(() => ({ data: [] })),
+                fetch(`${API_URL}/v1/admin/penghargaan?per_page=999`).then(r => r.json()).catch(() => ({ data: [] })),
+                fetch(`${API_URL}/v1/admin/wk-tjsl?per_page=999`). then(r => r.json()). catch(() => ({ data: [] })),
+            ]);
+
+            const berita = beritaRes.data || [];
+            const umkm = umkmRes.data || [];
+            const testimonial = testimonialRes.data || [];
+            const laporan = laporanRes.data || [];
+            const penghargaan = penghargaanRes.data || [];
+            const wkTjsl = wkTjslRes.data || [];
+
             setStats({
-                totalAdmins: admins.length,
-                activeAdmins: admins.filter(a => a.status === 'active').length,
-                inactiveAdmins: admins.filter(a => a.status === 'inactive').length,
+                totalBerita: berita.length,
+                beritaPublished: berita.filter(b => b. status === 'Published').length,
+                beritaDraft: berita.filter(b => b.status === 'Draft').length,
+                totalUMKM: umkm.length,
+                umkmFeatured: umkm.filter(u => u.is_featured). length,
+                totalTestimonial: testimonial.length,
+                testimonialPublished: testimonial.filter(t => t.status === 'Published').length,
+                totalPenghargaan: penghargaan.length,
+                totalLaporan: laporan.length,
+                totalWkTjsl: wkTjsl.length,
+                totalWkTekkom: 0,
             });
+
         } catch (error) {
             console.error('Failed to fetch stats:', error);
         } finally {
@@ -55,194 +75,256 @@ const DashboardPage = () => {
     };
 
     const getGreeting = () => {
-        const hour = new Date().getHours();
+        const hour = new Date(). getHours();
         if (hour < 12) return 'Selamat Pagi';
         if (hour < 15) return 'Selamat Siang';
         if (hour < 18) return 'Selamat Sore';
         return 'Selamat Malam';
     };
 
-    const statCards = [
+    const dataModules = [
         {
-            title: 'Total Admins',
-            value: stats.totalAdmins,
-            icon: FaUsers,
-            color: 'from-blue-500 to-blue-600',
-        },
-        {
-            title: 'Active Admins',
-            value: stats.activeAdmins,
-            icon: FaUserShield,
-            color: 'from-green-500 to-green-600',
-        },
-        {
-            title: 'Inactive Admins',
-            value: stats.inactiveAdmins,
-            icon: FaClock,
-            color: 'from-yellow-500 to-yellow-600',
-        },
-    ];
-
-    const quickLinks = [
-        {
-            title: 'Kelola Berita',
-            description: 'Manajemen berita dan artikel',
+            title: 'Berita',
+            total: stats.totalBerita,
             icon: FaNewspaper,
             url: '/tukang-minyak-dan-gas/manage-berita',
-            color: 'blue'
+            details: `${stats.beritaPublished} Published • ${stats.beritaDraft} Draft`
         },
         {
-            title: 'Kelola Program TJSL',
-            description: 'Program tanggung jawab sosial',
-            icon: FaHandHoldingHeart,
-            url: '/tukang-minyak-dan-gas/manage-program',
-            color: 'green'
-        },
-        {
-            title: 'Kelola UMKM',
-            description: 'UMKM mitra binaan',
+            title: 'UMKM Binaan',
+            total: stats. totalUMKM,
             icon: FaStore,
             url: '/tukang-minyak-dan-gas/manage-umkm',
-            color: 'purple'
+            details: `${stats.umkmFeatured} Featured`
         },
         {
-            title: 'Kelola Penghargaan',
-            description: 'Daftar penghargaan perusahaan',
-            icon: FaTrophy,
-            url: '/tukang-minyak-dan-gas/manage-penghargaan',
-            color: 'yellow'
-        },
-        {
-            title: 'Kelola Testimonial',
-            description: 'Suara dari masyarakat',
+            title: 'Testimonial',
+            total: stats.totalTestimonial,
             icon: FaQuoteLeft,
             url: '/tukang-minyak-dan-gas/manage-testimonial',
-            color: 'pink'
+            details: `${stats.testimonialPublished} Published`
         },
         {
-            title: 'Kelola Laporan',
-            description: 'Laporan tahunan perusahaan',
+            title: 'Penghargaan',
+            total: stats.totalPenghargaan,
+            icon: FaTrophy,
+            url: '/tukang-minyak-dan-gas/manage-penghargaan',
+            details: 'Awards & Achievements'
+        },
+        {
+            title: 'Laporan Tahunan',
+            total: stats. totalLaporan,
             icon: FaFilePdf,
             url: '/tukang-minyak-dan-gas/manage-laporan',
-            color: 'red'
+            details: 'Annual Reports'
         },
         {
-            title: 'Kelola WK TJSL',
-            description: 'Wilayah kerja TJSL',
+            title: 'Wilayah Kerja TJSL',
+            total: stats.totalWkTjsl,
             icon: FaMapMarkerAlt,
             url: '/tukang-minyak-dan-gas/manage-wk-tjsl',
-            color: 'indigo'
-        },
-        {
-            title: 'Kelola WK TEKKOM',
-            description: 'Wilayah kerja TEKKOM',
-            icon: FaMapMarkerAlt,
-            url: '/tukang-minyak-dan-gas/manage-wk-tekkom',
-            color: 'orange'
+            details: 'Program TJSL Mapping'
         },
     ];
 
     return (
         <div className="space-y-8">
-            {/* Header dengan Live Clock */}
-            <div className="flex justify-between items-start gap-6">
-                <div className="bg-white rounded-xl shadow-md p-6 flex-1">
-                    <h1 className="text-3xl font-bold text-gray-900">
-                        {getGreeting()}, {user?.name || 'Admin'}!
-                    </h1>
-                    <p className="text-gray-600 mt-2">
-                        MHJ ONWJ Admin Panel - Kelola semua konten website Anda
-                    </p>
-                    {user?.last_login_at && (
-                        <div className="flex items-center mt-4 text-sm text-gray-500 bg-gray-50 rounded-lg px-4 py-2 w-fit">
-                            <FaCalendar className="mr-2" />
-                            Last login: {format(new Date(user.last_login_at), 'dd MMMM yyyy, HH:mm')}
+            {/* Header with Account Info & Clock */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Account Info - Sekarang di kiri atas */}
+                <div className="lg:col-span-2 bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg shadow-md p-6 text-white">
+                    <div className="flex items-center gap-4 mb-4">
+                        <div className="w-20 h-20 bg-white bg-opacity-20 backdrop-blur rounded-full flex items-center justify-center text-3xl font-bold border-2 border-white border-opacity-30">
+                            {user?.name?.charAt(0). toUpperCase()}
                         </div>
-                    )}
-                </div>
-
-                {/* Live Clock Card */}
-                <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white min-w-[280px]">
-                    <div className="flex items-center gap-2 mb-3">
-                        <FaClock className="w-5 h-5" />
-                        <p className="text-sm font-semibold text-blue-100">Current Time</p>
-                    </div>
-                    <p className="text-4xl font-bold mb-2">
-                        {format(currentTime, 'HH:mm:ss')}
-                    </p>
-                    <p className="text-sm text-blue-100">
-                        {format(currentTime, 'EEEE, dd MMMM yyyy')}
-                    </p>
-                </div>
-            </div>
-
-            {/* Stats Cards (Style sama kayak halaman lain) */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {statCards.map((stat, index) => (
-                    <div
-                        key={index}
-                        className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow"
-                    >
-                        <div className="flex items-center justify-between mb-4">
-                            <div className={`bg-gradient-to-br ${stat.color} p-3 rounded-lg`}>
-                                <stat.icon className="w-6 h-6 text-white" />
+                        <div className="flex-1">
+                            <h1 className="text-2xl font-bold mb-1">
+                                {getGreeting()}, {user?.name || 'Admin'}! 
+                            </h1>
+                            <p className="text-blue-100">
+                                {user?.email}
+                            </p>
+                            <div className="flex items-center gap-2 mt-2">
+                                <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+                                <span className="text-sm text-blue-100">Active</span>
                             </div>
                         </div>
-                        <p className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-1">
-                            {stat.title}
-                        </p>
-                        <p className="text-3xl font-bold text-gray-900">
-                            {loading ? (
-                                <span className="inline-block w-12 h-8 bg-gray-200 rounded animate-pulse"></span>
-                            ) : (
-                                stat.value
-                            )}
-                        </p>
                     </div>
-                ))}
-            </div>
-
-            {/* Informasi Akun */}
-            <div className="bg-white rounded-xl shadow-md p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">Informasi Akun</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="border-l-4 border-blue-500 pl-4">
-                        <p className="text-sm text-gray-600">Email Anda</p>
-                        <p className="text-lg font-medium text-gray-900">{user?.email}</p>
-                    </div>
-                    <div className="border-l-4 border-green-500 pl-4">
-                        <p className="text-sm text-gray-600">Status Akun</p>
-                        <div className="flex items-center gap-2 mt-1">
-                            <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                            <p className="text-lg font-medium text-green-600">Active</p>
-                        </div>
-                    </div>
-                    {user?.phone && (
-                        <div className="border-l-4 border-purple-500 pl-4">
-                            <p className="text-sm text-gray-600">Telepon</p>
-                            <p className="text-lg font-medium text-gray-900">{user.phone}</p>
+                    
+                    {user?.last_login_at && (
+                        <div className="pt-4 border-t border-white border-opacity-20">
+                            <div className="flex items-center gap-2 text-sm text-blue-100">
+                                <FaCalendar className="w-4 h-4" />
+                                <span>Last login: {format(new Date(user.last_login_at), 'dd MMMM yyyy, HH:mm', { locale: id })}</span>
+                            </div>
                         </div>
                     )}
                 </div>
+
+                {/* Live Clock - Di kanan atas */}
+                <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6 flex flex-col justify-center items-center">
+                    <div className="flex items-center gap-2 text-gray-600 mb-2">
+                        <FaClock className="w-4 h-4 text-blue-600" />
+                        <span className="text-sm font-semibold text-gray-700">WAKTU SAAT INI</span>
+                    </div>
+                    <div className="text-4xl font-bold text-blue-600 mb-1">
+                        {format(currentTime, 'HH:mm:ss')}
+                    </div>
+                    <div className="text-sm text-gray-600 text-center">
+                        {format(currentTime, 'EEEE, dd MMMM yyyy', { locale: id })}
+                    </div>
+                </div>
             </div>
 
-            {/* Quick Links (Style sama kayak halaman lain) */}
-            <div className="bg-white rounded-xl shadow-md p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-6">Menu Cepat</h2>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {quickLinks.map((link, index) => (
+            {/* Overview Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="p-3 bg-blue-50 rounded-lg">
+                            <FaChartBar className="w-6 h-6 text-blue-600" />
+                        </div>
+                    </div>
+                    <div className="text-3xl font-bold text-gray-900 mb-1">
+                        {loading ? '.. .' : stats.totalBerita + stats.totalUMKM + stats.totalTestimonial}
+                    </div>
+                    <div className="text-sm text-gray-600 font-medium">Total Konten</div>
+                </div>
+
+                <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="p-3 bg-blue-50 rounded-lg">
+                            <FaNewspaper className="w-6 h-6 text-blue-600" />
+                        </div>
+                    </div>
+                    <div className="text-3xl font-bold text-gray-900 mb-1">
+                        {loading ? '...' : stats.beritaPublished}
+                    </div>
+                    <div className="text-sm text-gray-600 font-medium">Berita Published</div>
+                </div>
+
+                <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="p-3 bg-blue-50 rounded-lg">
+                            <FaStore className="w-6 h-6 text-blue-600" />
+                        </div>
+                    </div>
+                    <div className="text-3xl font-bold text-gray-900 mb-1">
+                        {loading ? '...' : stats.umkmFeatured}
+                    </div>
+                    <div className="text-sm text-gray-600 font-medium">UMKM Featured</div>
+                </div>
+
+                <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="p-3 bg-blue-50 rounded-lg">
+                            <FaQuoteLeft className="w-6 h-6 text-blue-600" />
+                        </div>
+                    </div>
+                    <div className="text-3xl font-bold text-gray-900 mb-1">
+                        {loading ? '.. .' : stats.testimonialPublished}
+                    </div>
+                    <div className="text-sm text-gray-600 font-medium">Testimonial Published</div>
+                </div>
+            </div>
+
+            {/* Data Modules Grid */}
+            <div>
+                <h2 className="text-lg font-bold text-gray-900 mb-4">Kelola Data</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {dataModules.map((module, index) => (
                         <a
                             key={index}
-                            href={link.url}
-                            className="group p-5 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all text-center"
+                            href={module.url}
+                            className="group bg-white border border-gray-200 rounded-lg shadow-sm p-6 hover:shadow-md hover:border-blue-300 transition-all"
                         >
-                            <div className={`inline-flex items-center justify-center w-12 h-12 rounded-lg bg-${link.color}-100 text-${link.color}-600 mb-3 group-hover:scale-110 transition-transform`}>
-                                <link.icon className="w-6 h-6" />
+                            <div className="flex items-start justify-between mb-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-3 bg-blue-50 rounded-lg group-hover:bg-blue-100 transition-colors">
+                                        <module.icon className="w-6 h-6 text-blue-600" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-bold text-gray-900 mb-1">{module.title}</h3>
+                                        <p className="text-xs text-gray-500">{module.details}</p>
+                                    </div>
+                                </div>
                             </div>
-                            <p className="font-semibold text-gray-900 mb-1">{link.title}</p>
-                            <p className="text-xs text-gray-600">{link.description}</p>
+                            
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <div className="text-3xl font-bold text-gray-900">
+                                        {loading ? '...' : module.total}
+                                    </div>
+                                    <div className="text-sm text-gray-600 mt-1">Total Data</div>
+                                </div>
+                                <FaArrowRight className="w-5 h-5 text-gray-400 group-hover:text-blue-600 group-hover:translate-x-1 transition-all" />
+                            </div>
                         </a>
                     ))}
+                </div>
+            </div>
+
+            {/* Content Breakdown */}
+            <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+                <h2 className="text-lg font-bold text-gray-900 mb-6">Status Konten</h2>
+                
+                <div className="space-y-4">
+                    {/* Berita */}
+                    <div>
+                        <div className="flex items-center justify-between mb-2">
+                            <span className="text-sm font-medium text-gray-700">Berita</span>
+                            <span className="text-sm font-bold text-gray-900">
+                                {stats.beritaPublished}/{stats.totalBerita}
+                            </span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div 
+                                className="bg-blue-600 h-2 rounded-full transition-all duration-1000"
+                                style={{ width: `${stats.totalBerita > 0 ? (stats.beritaPublished / stats.totalBerita * 100) : 0}%` }}
+                            ></div>
+                        </div>
+                        <div className="flex justify-between text-xs text-gray-500 mt-1">
+                            <span>{stats.beritaPublished} Published</span>
+                            <span>{stats.beritaDraft} Draft</span>
+                        </div>
+                    </div>
+
+                    {/* UMKM */}
+                    <div>
+                        <div className="flex items-center justify-between mb-2">
+                            <span className="text-sm font-medium text-gray-700">UMKM Featured</span>
+                            <span className="text-sm font-bold text-gray-900">
+                                {stats.umkmFeatured}/{stats.totalUMKM}
+                            </span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div 
+                                className="bg-blue-600 h-2 rounded-full transition-all duration-1000"
+                                style={{ width: `${stats.totalUMKM > 0 ? (stats.umkmFeatured / stats.totalUMKM * 100) : 0}%` }}
+                            ></div>
+                        </div>
+                        <div className="text-xs text-gray-500 mt-1">
+                            {stats.umkmFeatured} dari {stats.totalUMKM} UMKM ditampilkan sebagai featured
+                        </div>
+                    </div>
+
+                    {/* Testimonial */}
+                    <div>
+                        <div className="flex items-center justify-between mb-2">
+                            <span className="text-sm font-medium text-gray-700">Testimonial</span>
+                            <span className="text-sm font-bold text-gray-900">
+                                {stats.testimonialPublished}/{stats.totalTestimonial}
+                            </span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div 
+                                className="bg-blue-600 h-2 rounded-full transition-all duration-1000"
+                                style={{ width: `${stats.totalTestimonial > 0 ? (stats.testimonialPublished / stats.totalTestimonial * 100) : 0}%` }}
+                            ></div>
+                        </div>
+                        <div className="text-xs text-gray-500 mt-1">
+                            {stats.testimonialPublished} testimonial telah dipublish
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
