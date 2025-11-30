@@ -1,70 +1,129 @@
 import React from 'react';
+import companyImage from '../../assets/contoh2.png';
 
-const QuickFactCard = ({ icon, title, value, bgColor }) => (
-  <div className={`${bgColor} p-6 rounded-xl hover:scale-105 transition-transform duration-300`}>
-    <div className="flex items-start gap-4">
-      <div className="p-3 bg-white/90 rounded-lg">
-        {icon}
-      </div>
-      <div>
-        <h4 className="font-medium text-gray-700">{title}</h4>
-        <p className="text-2xl font-bold text-gray-900">{value}</p>
-      </div>
-    </div>
-  </div>
-);
-
+/**
+ * PProfile Component - REDESIGN TOTAL
+ * 
+ * Konsep: "Company Snapshot" 
+ * - Hero-style dengan gambar besar
+ * - Stats overlay untuk visual impact
+ * - Storytelling approach
+ */
 const PProfile = () => {
-  const quickFacts = [
-    {
-      icon: <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>,
-      title: "Tahun Berdiri",
-      value: "2016",
-      bgColor: "bg-blue-50"
-    },
-    {
-      icon: <svg className="w-6 h-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-            </svg>,
-      title: "Jumlah Karyawan",
-      value: "1000+",
-      bgColor: "bg-green-50"
-    },
-    {
-      icon: <svg className="w-6 h-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-            </svg>,
-      title: "Wilayah Operasi",
-      value: "6 Provinsi",
-      bgColor: "bg-purple-50"
-    },
-    {
-      icon: <svg className="w-6 h-6 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>,
-      title: "Kapasitas Produksi",
-      value: "500MW",
-      bgColor: "bg-orange-50"
-    }
+  const highlights = [
+    { value: "2016", label: "Didirikan", suffix: "" },
+    { value: "1.000", label: "Karyawan", suffix: "+" },
+    { value: "6", label: "Provinsi", suffix: "" },
+    { value: "500", label: "Kapasitas", suffix: "MW" },
   ];
 
   return (
-    <div className="container mx-auto px-8 lg:px-16 py-16">
-      <div className="max-w-4xl mx-auto text-center mb-16">
-        <h2 className="text-3xl font-bold text-gray-900 mb-6">Profil Perusahaan</h2>
-        <p className="text-gray-600 leading-relaxed">
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut elit tellus, luctus nec ullamcorper mattis, pulvinar dapibus leo. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-        </p>
-      </div>
+    <section className="relative" aria-labelledby="profile-title">
+      {/* Main Content Area */}
+      <div className="section-container py-grid-12 lg:py-grid-16">
+        
+        {/* Two Column Layout - Text + Image */}
+        <div className="grid lg:grid-cols-12 gap-grid-8 lg:gap-grid-12 items-center">
+          
+          {/* Left: Text Content */}
+          <div className="lg:col-span-5 order-2 lg:order-1">
+            <span className="text-label-md text-primary-600 uppercase tracking-wider">
+              Siapa Kami
+            </span>
+            
+            <h2 
+              id="profile-title" 
+              className="text-display-lg lg:text-display-xl font-bold text-secondary-900 mt-grid-3 mb-grid-6"
+            >
+              Membangun Masa Depan Energi Indonesia
+            </h2>
+            
+            <p className="text-body-lg text-secondary-600 leading-relaxed mb-grid-6">
+              Sebagai pengelola Partisipasi Indonesia 10% Daerah, kami berkomitmen 
+              mengoptimalkan nilai tambah bagi masyarakat dan mendukung pembangunan 
+              berkelanjutan di wilayah operasi.
+            </p>
+            
+            <p className="text-body-md text-secondary-500 leading-relaxed mb-grid-8">
+              Berdiri sejak 2016, kami telah berkembang menjadi salah satu 
+              perusahaan terdepan dalam pengelolaan aset energi dengan jangkauan 
+              operasional di 6 provinsi strategis di Indonesia.
+            </p>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {quickFacts.map((fact, index) => (
-          <QuickFactCard key={index} {...fact} />
-        ))}
+            {/* CTA */}
+            <a 
+              href="#sejarah" 
+              className="inline-flex items-center gap-grid-2 
+                         text-primary-600 hover:text-primary-700
+                         font-semibold text-body-md
+                         group transition-colors duration-base"
+            >
+              Lihat Perjalanan Kami
+              <svg 
+                className="w-5 h-5 transform group-hover:translate-x-1 transition-transform duration-base" 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24" 
+                strokeWidth={2}
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              </svg>
+            </a>
+          </div>
+
+          {/* Right: Image with Stats Overlay */}
+          <div className="lg:col-span-7 order-1 lg:order-2 relative">
+            {/* Main Image */}
+            <div className="relative rounded-2xl overflow-hidden shadow-xl">
+              <img 
+                src={companyImage}
+                alt="Operasional perusahaan"
+                className="w-full aspect-[4/3] object-cover"
+                loading="lazy"
+              />
+              
+              {/* Gradient Overlay */}
+              <div 
+                className="absolute inset-0 bg-gradient-to-t from-secondary-900/80 via-transparent to-transparent"
+                aria-hidden="true"
+              />
+              
+              {/* Stats Bar - Overlay di bawah gambar */}
+              <div className="absolute bottom-0 left-0 right-0 p-grid-6">
+                <div className="grid grid-cols-4 gap-grid-4">
+                  {highlights.map((item, index) => (
+                    <div 
+                      key={index} 
+                      className="text-center"
+                    >
+                      <p className="text-display-md lg:text-display-lg font-bold text-white">
+                        {item.value}
+                        <span className="text-primary-400">{item.suffix}</span>
+                      </p>
+                      <p className="text-body-xs text-secondary-300 mt-grid-1">
+                        {item.label}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Decorative Badge */}
+            <div 
+              className="absolute -top-4 -right-4 lg:-top-6 lg:-right-6
+                         w-24 h-24 lg:w-32 lg:h-32
+                         bg-primary-600 rounded-full
+                         flex flex-col items-center justify-center
+                         text-white shadow-lg"
+            >
+              <span className="text-display-sm lg:text-display-md font-bold">8+</span>
+              <span className="text-body-xs text-primary-100">Tahun</span>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
+    </section>
   );
 };
 

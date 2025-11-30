@@ -1,6 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 
+// ============================================
+// ASSETS
+// ============================================
 import bisnisBackground from '../../assets/contoh1.png';
 import monitoringBackground from '../../assets/contoh2.png';
 import lokasiBackground from '../../assets/contoh3.png';
@@ -11,57 +14,88 @@ import monitoringCard from '../../assets/contoh3.png';
 import lokasiCard from '../../assets/contoh2.png';
 import tjslCard from '../../assets/contoh1.png';
 
-const slidesData = [
+// ============================================
+// CLEAN COLOR SYSTEM
+// ============================================
+const COLOR_SYSTEM = {
+  overlay: {
+    dark: 'from-slate-950/80 via-slate-900/85 to-slate-950/90',
+  },
+  accent: {
+    primary: 'from-primary-600 to-primary-500',
+  },
+  glow: 'rgba(43, 115, 180, 0.3)',
+  text: {
+    primary: 'rgba(255, 255, 255, 0.98)',
+    secondary: 'rgba(255, 255, 255, 0.85)',
+  }
+};
+
+// ============================================
+// CONSTANTS
+// ============================================
+const SLIDES_DATA = [
   {
+    id: 'eksplorasi',
     backgroundImage: bisnisBackground,
     cardImage: bisnisCard,
-    title: "Eksplorasi & Produksi",
-    description:
-      "Dari hulu ke hilir — menggali potensi energi dan menghadirkan nilai berkelanjutan untuk daerah.",
-    link: "/eksplorasi-produksi",
-    themeColor: "from-primary-600/80 to-primary-700/90",
+    title: 'Eksplorasi & Produksi',
+    description: 'Dari hulu ke hilir — menggali potensi energi dan menghadirkan nilai berkelanjutan untuk daerah.',
+    link: '/eksplorasi-produksi',
   },
   {
+    id: 'tjsl',
     backgroundImage: monitoringBackground,
     cardImage: monitoringCard,
-    title: "Program TJSL",
-    description:
-      "Komitmen kami terhadap tanggung jawab sosial dan lingkungan demi masyarakat yang lebih mandiri.",
-    link: "/tjsl",
-    themeColor: "from-secondary-500/80 to-secondary-600/90",
+    title: 'Program TJSL',
+    description: 'Komitmen kami terhadap tanggung jawab sosial dan lingkungan demi masyarakat yang lebih mandiri.',
+    link: '/tjsl',
   },
   {
+    id: 'wilayah',
     backgroundImage: lokasiBackground,
     cardImage: lokasiCard,
-    title: "Wilayah Kerja",
-    description:
-      "Area operasi kami di berbagai titik strategis yang mendukung ketahanan energi nasional.",
-    link: "/wilayah-kerja",
-    themeColor: "from-primary-500/80 to-primary-600/90",
+    title: 'Wilayah Kerja',
+    description: 'Area operasi kami di berbagai titik strategis yang mendukung ketahanan energi nasional.',
+    link: '/wilayah-kerja',
   },
   {
+    id: 'umkm',
     backgroundImage: tjslBackground,
     cardImage: tjslCard,
-    title: "UMKM Binaan",
-    description:
-      "Profil dan perjalanan para pelaku usaha yang tumbuh bersama program pemberdayaan kami.",
-    link: "/umkm-binaan",
-    themeColor: "from-secondary-400/80 to-secondary-500/90",
+    title: 'UMKM Binaan',
+    description: 'Profil dan perjalanan para pelaku usaha yang tumbuh bersama program pemberdayaan kami.',
+    link: '/umkm-binaan',
   },
 ];
 
-const Bisnis = () => {
+const ANIMATION_CONFIG = {
+  AUTO_PLAY_DELAY: 7000,
+  RESUME_AUTO_PLAY_DELAY: 12000,
+  BACKGROUND_DURATION: 1200,
+  CARD_DURATION: 1200,
+  CONTENT_DURATION: 800,
+  STAGGER_DELAY: 150,
+};
+
+// ============================================
+// CUSTOM HOOKS
+// ============================================
+const useCarousel = (slidesCount) => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [direction, setDirection] = useState('next');
   const [isAutoPlay, setIsAutoPlay] = useState(true);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const timeoutRef = useRef(null);
 
-  const resetTimeout = () => {
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
-  };
+  const resetTimeout = useCallback(() => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+  }, []);
 
-  const goToSlide = (index) => {
+  const goToSlide = useCallback((index) => {
     if (isTransitioning || index === activeIndex) return;
     
     setIsTransitioning(true);
@@ -69,239 +103,437 @@ const Bisnis = () => {
     setActiveIndex(index);
     setIsAutoPlay(false);
     
-    setTimeout(() => setIsTransitioning(false), 800);
-  };
+    setTimeout(() => {
+      setIsTransitioning(false);
+    }, ANIMATION_CONFIG.CARD_DURATION);
+  }, [activeIndex, isTransitioning]);
 
-  const nextSlide = () => {
+  const nextSlide = useCallback(() => {
     if (isTransitioning) return;
     
     setIsTransitioning(true);
     setDirection('next');
-    setActiveIndex((prevIndex) =>
-      prevIndex === slidesData.length - 1 ? 0 : prevIndex + 1
-    );
+    setActiveIndex((prev) => (prev === slidesCount - 1 ?  0 : prev + 1));
     
-    setTimeout(() => setIsTransitioning(false), 800);
-  };
+    setTimeout(() => {
+      setIsTransitioning(false);
+    }, ANIMATION_CONFIG.CARD_DURATION);
+  }, [isTransitioning, slidesCount]);
 
-  const prevSlide = () => {
+  const prevSlide = useCallback(() => {
     if (isTransitioning) return;
     
     setIsTransitioning(true);
     setDirection('prev');
-    setActiveIndex((prevIndex) =>
-      prevIndex === 0 ? slidesData.length - 1 : prevIndex - 1
-    );
+    setActiveIndex((prev) => (prev === 0 ? slidesCount - 1 : prev - 1));
     
-    setTimeout(() => setIsTransitioning(false), 800);
-  };
+    setTimeout(() => {
+      setIsTransitioning(false);
+    }, ANIMATION_CONFIG.CARD_DURATION);
+  }, [isTransitioning, slidesCount]);
+
+  const pauseAutoPlay = useCallback(() => {
+    setIsAutoPlay(false);
+  }, []);
 
   useEffect(() => {
-    if (!isAutoPlay) {
-      const timer = setTimeout(() => setIsAutoPlay(true), 10000);
+    if (! isAutoPlay) {
+      const timer = setTimeout(() => {
+        setIsAutoPlay(true);
+      }, ANIMATION_CONFIG.RESUME_AUTO_PLAY_DELAY);
       return () => clearTimeout(timer);
     }
 
     resetTimeout();
-    timeoutRef.current = setTimeout(nextSlide, 6000);
+    timeoutRef.current = setTimeout(nextSlide, ANIMATION_CONFIG.AUTO_PLAY_DELAY);
+    
     return () => resetTimeout();
-  }, [activeIndex, isAutoPlay]);
+  }, [activeIndex, isAutoPlay, nextSlide, resetTimeout]);
 
-  const prevIndex = activeIndex === 0 ? slidesData.length - 1 : activeIndex - 1;
-  const nextIndex = (activeIndex + 1) % slidesData.length;
+  return {
+    activeIndex,
+    direction,
+    isTransitioning,
+    goToSlide,
+    nextSlide,
+    prevSlide,
+    pauseAutoPlay,
+  };
+};
+
+// ============================================
+// HELPER FUNCTIONS
+// ============================================
+const getCardPosition = (cardIndex, activeIndex, totalCards, direction) => {
+  const diff = cardIndex - activeIndex;
+  
+  // Normalize position (handle circular array)
+  let normalizedDiff = diff;
+  
+  if (diff > totalCards / 2) {
+    normalizedDiff = diff - totalCards;
+  } else if (diff < -totalCards / 2) {
+    normalizedDiff = diff + totalCards;
+  }
+  
+  return normalizedDiff;
+};
+
+const getCardStyle = (position, direction) => {
+  const isMovingNext = direction === 'next';
+  
+  // Center card (active)
+  if (position === 0) {
+    return {
+      transform: 'translateX(0%) translateZ(0px) scale(1) rotateY(0deg)',
+      opacity: 1,
+      zIndex: 30,
+      filter: 'brightness(1.05) contrast(1.05) blur(0px)',
+      pointerEvents: 'auto',
+    };
+  }
+  
+  // Right side card (next)
+  if (position === 1) {
+    return {
+      transform: 'translateX(90%) translateZ(-200px) scale(0.8) rotateY(-15deg)',
+      opacity: 0.5,
+      zIndex: 20,
+      filter: 'brightness(0.6) contrast(0.95) blur(0px)',
+      pointerEvents: 'none',
+    };
+  }
+  
+  // Left side card (prev)
+  if (position === -1) {
+    return {
+      transform: 'translateX(-90%) translateZ(-200px) scale(0.8) rotateY(15deg)',
+      opacity: 0.5,
+      zIndex: 20,
+      filter: 'brightness(0.6) contrast(0.95) blur(0px)',
+      pointerEvents: 'none',
+    };
+  }
+  
+  // Far right (entering from right or exiting to right)
+  if (position === 2 || position > 2) {
+    return {
+      transform: 'translateX(180%) translateZ(-400px) scale(0.5) rotateY(-30deg)',
+      opacity: 0,
+      zIndex: 10,
+      filter: 'brightness(0.3) contrast(0.9) blur(2px)',
+      pointerEvents: 'none',
+    };
+  }
+  
+  // Far left (entering from left or exiting to left)
+  if (position === -2 || position < -2) {
+    return {
+      transform: 'translateX(-180%) translateZ(-400px) scale(0.5) rotateY(30deg)',
+      opacity: 0,
+      zIndex: 10,
+      filter: 'brightness(0.3) contrast(0.9) blur(2px)',
+      pointerEvents: 'none',
+    };
+  }
+  
+  return {
+    transform: 'translateX(0%) translateZ(-500px) scale(0.3)',
+    opacity: 0,
+    zIndex: 1,
+    filter: 'brightness(0.2) blur(4px)',
+    pointerEvents: 'none',
+  };
+};
+
+// ============================================
+// SUB-COMPONENTS
+// ============================================
+const ChevronIcon = ({ direction }) => (
+  <svg 
+    className="w-6 h-6" 
+    fill="none" 
+    stroke="currentColor" 
+    viewBox="0 0 24 24"
+    strokeWidth={2.5}
+  >
+    <path 
+      strokeLinecap="round" 
+      strokeLinejoin="round" 
+      d={direction === 'left' ? 'M15 19l-7-7 7-7' : 'M9 5l7 7-7 7'}
+    />
+  </svg>
+);
+
+const ArrowIcon = () => (
+  <svg 
+    className="w-5 h-5 transition-transform duration-base group-hover:translate-x-1" 
+    fill="none" 
+    stroke="currentColor" 
+    viewBox="0 0 24 24"
+    strokeWidth={2.5}
+  >
+    <path 
+      strokeLinecap="round" 
+      strokeLinejoin="round" 
+      d="M13 7l5 5m0 0l-5 5m5-5H6" 
+    />
+  </svg>
+);
+
+const BackgroundSlide = ({ slide, isActive }) => (
+  <div
+    className={`absolute inset-0 transition-all duration-[1200ms] ease-smooth ${
+      isActive 
+        ? 'opacity-100 scale-100' 
+        : 'opacity-0 scale-105'
+    }`}
+    style={{
+      backgroundImage: `url(${slide.backgroundImage})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+    }}
+  >
+    <div className={`absolute inset-0 bg-gradient-to-br ${COLOR_SYSTEM.overlay.dark}`} />
+    <div className="absolute inset-0 bg-gradient-radial from-transparent via-transparent to-black/30" />
+  </div>
+);
+
+const SlideContent = ({ slide, isActive }) => (
+  <div className="text-white space-y-grid-6">
+    <div 
+      className={`transition-all duration-[800ms] ease-smooth ${
+        isActive 
+          ? 'opacity-100 translate-y-0 delay-[200ms]' 
+          : 'opacity-0 translate-y-12'
+      }`}
+    >
+      <h2 
+        className="font-heading font-bold text-display-lg sm:text-display-xl lg:text-display-2xl mb-grid-3"
+        style={{ 
+          color: COLOR_SYSTEM.text.primary,
+          textShadow: '0 4px 20px rgba(0,0,0,0.6), 0 2px 10px rgba(0,0,0,0.4)',
+        }}
+      >
+        {slide.title}
+      </h2>
+      
+      <div 
+        className={`h-1 rounded-full bg-gradient-to-r ${COLOR_SYSTEM.accent.primary} transition-all duration-[600ms] ${
+          isActive ?  'w-20 delay-[600ms]' : 'w-0'
+        }`}
+        style={{
+          boxShadow: `0 0 15px ${COLOR_SYSTEM.glow}`,
+        }}
+      />
+    </div>
+
+    <p 
+      className={`text-body-lg sm:text-body-xl max-w-xl leading-relaxed text-pretty transition-all duration-[800ms] ease-smooth ${
+        isActive 
+          ? 'opacity-100 translate-y-0 delay-[400ms]' 
+          : 'opacity-0 translate-y-12'
+      }`}
+      style={{ 
+        color: COLOR_SYSTEM.text.secondary,
+        textShadow: '0 2px 10px rgba(0,0,0,0.5)',
+      }}
+    >
+      {slide.description}
+    </p>
+
+    <div
+      className={`transition-all duration-[800ms] ease-smooth ${
+        isActive 
+          ? 'opacity-100 translate-y-0 delay-[600ms]' 
+          : 'opacity-0 translate-y-12'
+      }`}
+    >
+      <Link 
+        to={slide.link} 
+        className="inline-flex items-center gap-grid-3 px-grid-8 py-grid-4 rounded-xl font-heading font-semibold text-body-lg bg-white text-secondary-900 hover:bg-white/95 shadow-xl hover:shadow-2xl hover:shadow-primary-500/20 transition-all duration-base hover:scale-105 group"
+      >
+        <span>Explore Now</span>
+        <ArrowIcon />
+      </Link>
+    </div>
+  </div>
+);
+
+const CarouselCard = ({ slide, cardIndex, activeIndex, direction }) => {
+  const position = getCardPosition(cardIndex, activeIndex, SLIDES_DATA.length, direction);
+  const style = getCardStyle(position, direction);
 
   return (
-    <section className="relative min-h-[70vh] w-full flex items-center justify-center overflow-hidden bg-gray-50">
-      {/* Background dengan transisi smooth */}
+    <div
+      className="absolute w-3/4 max-w-sm h-full rounded-2xl overflow-hidden shadow-2xl preserve-3d will-change-transform transition-all duration-[1200ms] ease-[cubic-bezier(0.34,1.56,0.64,1)]"
+      style={{
+        ...style,
+        boxShadow: position === 0
+          ? `0 25px 60px -15px rgba(0, 0, 0, 0.6), 0 0 30px ${COLOR_SYSTEM.glow}` 
+          : '0 15px 40px -10px rgba(0, 0, 0, 0.4)',
+      }}
+    >
+      <img 
+        src={slide.cardImage} 
+        alt={slide.title}
+        className="w-full h-full object-cover"
+        loading="lazy"
+      />
+      
+      <div 
+        className={`absolute inset-0 bg-gradient-to-t transition-all duration-[1200ms] ${
+          position === 0
+            ? 'from-slate-950/70 via-slate-900/20 to-transparent'
+            : 'from-slate-950/90 via-slate-900/60 to-slate-900/40'
+        }`}
+      />
+      
+      {position === 0 && (
+        <div 
+          className="absolute inset-0 rounded-2xl pointer-events-none transition-opacity duration-[1200ms]"
+          style={{
+            boxShadow: `inset 0 0 40px ${COLOR_SYSTEM.glow}`,
+            opacity: 0.2,
+          }}
+        />
+      )}
+    </div>
+  );
+};
+
+const NavigationButton = ({ direction, onClick, disabled }) => (
+  <button
+    onClick={onClick}
+    disabled={disabled}
+    className="group disabled:opacity-20 disabled:cursor-not-allowed transition-all duration-base hover:scale-110"
+    aria-label={`${direction === 'left' ? 'Previous' : 'Next'} slide`}
+  >
+    <div 
+      className="p-grid-3 rounded-full bg-white/10 backdrop-blur-md border border-white/20 group-hover:bg-white/20 group-hover:border-white/30 transition-all duration-base text-white shadow-lg"
+      style={{
+        boxShadow: `0 4px 15px ${COLOR_SYSTEM.glow}`,
+      }}
+    >
+      <ChevronIcon direction={direction} />
+    </div>
+  </button>
+);
+
+const DotIndicator = ({ index, isActive, onClick, disabled }) => (
+  <button
+    onClick={onClick}
+    disabled={disabled}
+    className={`h-2.5 rounded-full transition-all duration-base ease-smooth disabled:cursor-not-allowed ${
+      isActive 
+        ?  'w-10 bg-white' 
+        : 'w-2.5 bg-white/40 hover:bg-white/60 hover:w-6'
+    }`}
+    style={{
+      boxShadow: isActive ? `0 0 15px ${COLOR_SYSTEM.glow}` : 'none',
+    }}
+    aria-label={`Go to slide ${index + 1}`}
+    aria-current={isActive ? 'true' : 'false'}
+  />
+);
+
+// ============================================
+// MAIN COMPONENT
+// ============================================
+const Bisnis = () => {
+  const {
+    activeIndex,
+    direction,
+    isTransitioning,
+    goToSlide,
+    nextSlide,
+    prevSlide,
+    pauseAutoPlay,
+  } = useCarousel(SLIDES_DATA.length);
+
+  const handlePrevClick = () => {
+    prevSlide();
+    pauseAutoPlay();
+  };
+
+  const handleNextClick = () => {
+    nextSlide();
+    pauseAutoPlay();
+  };
+
+  const handleDotClick = (index) => {
+    goToSlide(index);
+    pauseAutoPlay();
+  };
+
+  return (
+    <section 
+      className="relative min-h-[80vh] w-full flex items-center justify-center overflow-hidden bg-slate-950"
+      aria-label="Business areas carousel"
+    >
+      {/* Background Slides */}
       <div className="absolute inset-0 w-full h-full">
-        {slidesData.map((slide, index) => (
-          <div
-            key={index}
-            className={`absolute inset-0 transition-all duration-[1200ms] ease-out ${
-              index === activeIndex ? 'opacity-100 scale-100' : 'opacity-0 scale-105'
-            }`}
-            style={{
-              backgroundImage: `url(${slide.backgroundImage})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-            }}
-          >
-            <div className={`absolute inset-0 bg-gradient-to-b ${slide.themeColor} transition-opacity duration-[800ms] ease-out`} />
-          </div>
+        {SLIDES_DATA.map((slide, index) => (
+          <BackgroundSlide 
+            key={slide.id}
+            slide={slide}
+            isActive={index === activeIndex}
+          />
         ))}
       </div>
 
-      {/* Content */}
-      <div className="relative z-10 section-container w-full px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
-          {/* Kiri: Teks */}
-          <div className="text-white space-y-6">
-            <div 
-              key={`title-${activeIndex}`}
-              className="animate-slide-in-content"
-              style={{
-                animation: 'slideInContent 800ms cubic-bezier(0.16, 1, 0.3, 1) forwards',
-              }}
-            >
-              <h1 
-                className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight"
-                style={{ textShadow: '0 4px 12px rgba(0,0,0,0.4)' }}
-              >
-                {slidesData[activeIndex].title}
-              </h1>
-            </div>
+      {/* Main Content */}
+      <div className="relative z-10 section-container w-full py-grid-20 sm:py-grid-24 lg:py-grid-32">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-grid-16 lg:gap-grid-24 items-center">
+          
+          {/* Text Content */}
+          <SlideContent 
+            slide={SLIDES_DATA[activeIndex]}
+            isActive={true}
+          />
 
-            <p 
-              key={`desc-${activeIndex}`}
-              className="text-lg text-white/90 max-w-lg"
-              style={{
-                animation: 'slideInContent 800ms cubic-bezier(0.16, 1, 0.3, 1) forwards 100ms',
-              }}
-            >
-              {slidesData[activeIndex].description}
-            </p>
-
-            <div
-              key={`button-${activeIndex}`}
-              style={{
-                animation: 'slideInContent 800ms cubic-bezier(0.16, 1, 0.3, 1) forwards 200ms',
-              }}
-            >
-              <Link
-                to={slidesData[activeIndex].link}
-                className="group inline-flex items-center gap-3 px-8 py-3 bg-white text-primary-600 font-semibold rounded-lg hover:bg-primary-50 hover:shadow-xl transition-all duration-300 ease-out"
-              >
-                <span>Explore Now</span>
-                <svg 
-                  className="w-5 h-5 transform group-hover:translate-x-1 transition-transform duration-300 ease-out" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </Link>
-            </div>
-          </div>
-
-          {/* Kanan: Card Carousel dengan Smart Animate */}
-          <div className="relative h-[50vh] md:h-[60vh] flex items-center justify-center" style={{ perspective: '1500px' }}>
-            {/* Previous Card */}
-            <div
-              key={`prev-${prevIndex}`}
-              className="absolute w-3/4 max-w-xs h-full rounded-2xl overflow-hidden shadow-2xl"
-              style={{
-                transform: direction === 'next' 
-                  ? 'translateX(-120%) translateZ(-200px) scale(0.75) rotateY(15deg)' 
-                  : 'translateX(120%) translateZ(-200px) scale(0.75) rotateY(-15deg)',
-                opacity: 0.3,
-                transition: 'all 800ms cubic-bezier(0.16, 1, 0.3, 1)',
-                transformStyle: 'preserve-3d',
-              }}
-            >
-              <img
-                src={slidesData[prevIndex].cardImage}
-                alt={slidesData[prevIndex].title}
-                className="w-full h-full object-cover"
+          {/* 3D Card Carousel - ALL CARDS RENDERED */}
+          <div 
+            className="relative h-[55vh] sm:h-[60vh] lg:h-[65vh] flex items-center justify-center"
+            style={{ perspective: '1800px' }}
+          >
+            {SLIDES_DATA.map((slide, index) => (
+              <CarouselCard 
+                key={slide.id}
+                slide={slide}
+                cardIndex={index}
+                activeIndex={activeIndex}
+                direction={direction}
               />
-              <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/50 transition-opacity duration-800 ease-out" />
-            </div>
-
-            {/* Active Card */}
-            <div
-              key={`active-${activeIndex}`}
-              className="absolute w-3/4 max-w-xs h-full rounded-2xl overflow-hidden shadow-2xl group cursor-pointer"
-              style={{
-                transform: 'translateX(0) translateZ(0) scale(1) rotateY(0deg)',
-                opacity: 1,
-                zIndex: 10,
-                transition: 'all 800ms cubic-bezier(0.16, 1, 0.3, 1)',
-                transformStyle: 'preserve-3d',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateX(0) translateZ(20px) scale(1.05) rotateY(0deg)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateX(0) translateZ(0) scale(1) rotateY(0deg)';
-              }}
-            >
-              <img
-                src={slidesData[activeIndex].cardImage}
-                alt={slidesData[activeIndex].title}
-                className="w-full h-full object-cover transition-transform duration-800 ease-out"
-              />
-              <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/40 group-hover:to-black/30 transition-all duration-800 ease-out" />
-            </div>
-
-            {/* Next Card */}
-            <div
-              key={`next-${nextIndex}`}
-              className="absolute w-3/4 max-w-xs h-full rounded-2xl overflow-hidden shadow-2xl"
-              style={{
-                transform: direction === 'next' 
-                  ? 'translateX(120%) translateZ(-200px) scale(0.75) rotateY(-15deg)' 
-                  : 'translateX(-120%) translateZ(-200px) scale(0.75) rotateY(15deg)',
-                opacity: 0.3,
-                transition: 'all 800ms cubic-bezier(0.16, 1, 0.3, 1)',
-                transformStyle: 'preserve-3d',
-              }}
-            >
-              <img
-                src={slidesData[nextIndex].cardImage}
-                alt={slidesData[nextIndex].title}
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/50 transition-opacity duration-800 ease-out" />
-            </div>
+            ))}
           </div>
         </div>
 
         {/* Navigation Controls */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center space-x-6 z-20">
-          <button
-            onClick={() => {
-              prevSlide();
-              setIsAutoPlay(false);
-            }}
+        <div className="absolute bottom-grid-12 left-1/2 -translate-x-1/2 flex items-center gap-grid-8 z-30">
+          <NavigationButton 
+            direction="left"
+            onClick={handlePrevClick}
             disabled={isTransitioning}
-            className="text-white/75 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed p-2 hover:scale-110 transform transition-all duration-300 ease-out hover:bg-white/10 rounded-full"
-            aria-label="Previous slide"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
+          />
           
-          {/* Dots navigation */}
-          <div className="flex space-x-3">
-            {slidesData.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => goToSlide(index)}
+          <div className="flex gap-grid-3 px-grid-6 py-grid-3 rounded-full bg-slate-900/40 backdrop-blur-md border border-white/10 shadow-xl">
+            {SLIDES_DATA.map((slide, index) => (
+              <DotIndicator 
+                key={slide.id}
+                index={index}
+                isActive={activeIndex === index}
+                onClick={() => handleDotClick(index)}
                 disabled={isTransitioning}
-                className={`h-3 rounded-full transition-all duration-800 ease-out disabled:cursor-not-allowed ${
-                  activeIndex === index 
-                    ? 'bg-white w-8 shadow-lg' 
-                    : 'bg-white/50 w-3 hover:bg-white/75 hover:w-4'
-                }`}
-                aria-label={`Go to slide ${index + 1}`}
               />
             ))}
           </div>
 
-          <button
-            onClick={() => {
-              nextSlide();
-              setIsAutoPlay(false);
-            }}
+          <NavigationButton 
+            direction="right"
+            onClick={handleNextClick}
             disabled={isTransitioning}
-            className="text-white/75 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed p-2 hover:scale-110 transform transition-all duration-300 ease-out hover:bg-white/10 rounded-full"
-            aria-label="Next slide"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
+          />
         </div>
       </div>
     </section>

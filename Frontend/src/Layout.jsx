@@ -1,14 +1,15 @@
 import React from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
-import Header from './pages/landingpage/header.jsx';
-import Footer from './Footer';
 
 const Layout = () => {
   const location = useLocation();
-  const showHeader = location.pathname === '/';
+  const isAdminRoute = location.pathname.startsWith('/tukang-minyak-dan-gas');
 
   return (
-    <div className="relative w-screen min-h-screen overflow-x-hidden">
+    <div className={`
+      relative w-screen min-h-screen overflow-x-hidden
+      ${! isAdminRoute ?  'font-body' : ''}
+    `}>
       <main>
         <Outlet />
       </main>

@@ -11,29 +11,21 @@ const Header = () => {
   const [prevScrollPos, setPrevScrollPos] = useState(0);
   const location = useLocation();
 
-  // Optimized scroll handler with throttle
   const handleScroll = useCallback(() => {
     const currentScrollPos = window.scrollY;
     const heroSection = document.getElementById('hero-section');
     const heroHeight = heroSection ? heroSection.offsetHeight : 600;
     
-    // Check if scrolled past threshold
     setIsScrolled(currentScrollPos > 20);
-    
-    // Check if still in hero section
     setIsInHero(currentScrollPos < heroHeight - 100);
 
-    // Show/hide header based on scroll direction
     if (currentScrollPos < 10) {
-      // Always show at the very top
       setIsVisible(true);
     } else if (currentScrollPos < prevScrollPos) {
-      // Scrolling up
       setIsVisible(true);
     } else if (currentScrollPos > prevScrollPos && currentScrollPos > 100) {
-      // Scrolling down and past 100px
       setIsVisible(false);
-      setMediaDropdownOpen(false); // Close dropdown when hiding
+      setMediaDropdownOpen(false);
     }
 
     setPrevScrollPos(currentScrollPos);
@@ -42,102 +34,78 @@ const Header = () => {
   useEffect(() => {
     let rafId = null;
     let lastScrollTime = 0;
-    const throttleDelay = 50; // ms
+    const throttleDelay = 50;
 
     const scrollListener = () => {
       const now = Date.now();
-      if (now - lastScrollTime < throttleDelay) {
-        return;
-      }
+      if (now - lastScrollTime < throttleDelay) return;
       
       lastScrollTime = now;
-      if (rafId) {
-        cancelAnimationFrame(rafId);
-      }
-      
-      rafId = requestAnimationFrame(() => {
-        handleScroll();
-      });
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(handleScroll);
     };
 
-    // Initial check
     handleScroll();
-
     window.addEventListener('scroll', scrollListener, { passive: true });
+    
     return () => {
       window.removeEventListener('scroll', scrollListener);
-      if (rafId) {
-        cancelAnimationFrame(rafId);
-      }
+      if (rafId) cancelAnimationFrame(rafId);
     };
   }, [handleScroll]);
 
-  // Close mobile menu on route change
   useEffect(() => {
     setIsOpen(false);
     setMediaDropdownOpen(false);
   }, [location]);
 
-  // Prevent body scroll when mobile menu is open
   useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
+    document.body.style.overflow = isOpen ? 'hidden' : 'unset';
+    return () => { document.body.style.overflow = 'unset'; };
   }, [isOpen]);
 
   const closeMobileMenu = () => setIsOpen(false);
+  const isActivePath = (path) => location.pathname === path;
 
-  const isActivePath = (path) => {
-    return location.pathname === path;
-  };
-
-  // Dynamic text color based on hero position
-  const getTextColor = () => {
-    if (isInHero && !isScrolled) {
-      return 'text-white';
-    }
-    return 'text-gray-700';
-  };
-
-  const getHoverTextColor = () => {
-    if (isInHero && !isScrolled) {
-      return 'hover:text-white/80';
-    }
-    return 'hover:text-primary-600';
-  };
-
-  // Dynamic background style
+  // Dynamic styles based on hero position
+  const getTextColor = () => isInHero && !isScrolled ? 'text-white' : 'text-secondary-700';
+  const getHoverTextColor = () => isInHero && !isScrolled ? 'hover:text-white/80' : 'hover:text-primary-600';
+  
   const getHeaderStyle = () => {
     if (isInHero && !isScrolled) {
-      // In hero: blur background
-      return 'bg-white/10 backdrop-blur-md border-white/20';
-    } else {
-      // Outside hero: solid white background
-      return 'bg-white/95 backdrop-blur-sm border-gray-200 shadow-sm';
+      return 'bg-white/10 backdrop-blur-lg border-white/20';
     }
+    return 'bg-white/95 backdrop-blur-md border-secondary-200 shadow-md';
   };
+
+  // Navigation items
+  const navItems = [
+    { path: '/', label: 'Beranda' },
+    { path: '/tentang', label: 'Tentang Kami' },
+    { path: '/bisnis', label: 'Bisnis Kami' },
+  ];
+
+  const mediaItems = [
+    { path: '/media-informasi', label: 'Media & Berita' },
+    { path: '/penghargaan', label: 'Penghargaan' },
+    { path: '/laporan-tahunan', label: 'Laporan Tahunan' },
+  ];
 
   const NavLink = ({ to, children, onClick }) => (
     <Link
       to={to}
       onClick={onClick}
       className={`
-        relative font-medium text-sm tracking-wide
-        transition-all duration-300 ease-out
+        relative font-heading font-semibold text-body-md tracking-wide
+        transition-smooth will-change-transform
         ${isActivePath(to) 
-          ? (isInHero && !isScrolled ? 'text-white' : 'text-primary-600')
+          ? (isInHero && !isScrolled ?  'text-white' : 'text-primary-600')
           : `${getTextColor()} ${getHoverTextColor()}`
         }
         after:content-[''] after:absolute after:bottom-0 after:left-0 
-        after:w-0 after:h-0.5 
-        after:transition-all after:duration-300 after:ease-out
+        after:w-0 after:h-0.5 after:transition-smooth
         hover:after:w-full
-        ${isActivePath(to) ? 'after:w-full' : ''}
+        ${isActivePath(to) ?  'after:w-full' : ''}
         ${isInHero && !isScrolled ? 'after:bg-white' : 'after:bg-primary-600'}
       `}
     >
@@ -147,27 +115,28 @@ const Header = () => {
 
   return (
     <>
+      {/* Header */}
       <header
         className={`
-          fixed top-0 left-0 right-0 z-50 
-          border-b
-          transition-all duration-500 ease-out
+          fixed top-0 left-0 right-0 z-50 border-b
+          transition-smooth-slow will-change-transform
           ${getHeaderStyle()}
           ${isVisible ? 'translate-y-0' : '-translate-y-full'}
         `}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-20">
+        <div className="section-container">
+          <div className="flex justify-between items-center" style={{ height: '5rem' }}>
+            
             {/* Logo */}
             <div className="flex-shrink-0 z-50">
               <Link 
                 to="/" 
                 onClick={closeMobileMenu}
-                className="block transition-transform duration-300 hover:scale-105"
+                className="block transition-smooth hover:scale-105 will-change-transform"
               >
                 <img 
-                  className={`h-10 w-auto transition-all duration-300 ${
-                    isInHero && !isScrolled ? 'brightness-0 invert' : ''
+                  className={`w-auto transition-smooth ${
+                    isInHero && ! isScrolled ? 'brightness-0 invert h-11' : 'h-10'
                   }`}
                   src={logo} 
                   alt="Migas Logo"
@@ -177,12 +146,14 @@ const Header = () => {
             </div>
 
             {/* Desktop Navigation */}
-            <nav className="hidden lg:flex items-center space-x-10">
-              <NavLink to="/">Beranda</NavLink>
-              <NavLink to="/tentang">Tentang Kami</NavLink>
-              <NavLink to="/bisnis">Bisnis Kami</NavLink>
+            <nav className="hidden lg:flex items-center gap-grid-10">
+              {navItems.map((item) => (
+                <NavLink key={item.path} to={item.path}>
+                  {item.label}
+                </NavLink>
+              ))}
 
-              {/* Dropdown Menu - Fixed hover issue */}
+              {/* Dropdown Menu */}
               <div
                 className="relative group"
                 onMouseEnter={() => setMediaDropdownOpen(true)}
@@ -190,88 +161,53 @@ const Header = () => {
               >
                 <button 
                   className={`
-                    flex items-center gap-2 font-medium text-sm tracking-wide
-                    transition-all duration-300 ease-out
-                    ${isActivePath('/media-informasi') || 
-                      isActivePath('/penghargaan') || 
-                      isActivePath('/laporan-tahunan')
+                    flex items-center gap-grid-2 font-heading font-semibold text-body-md tracking-wide
+                    transition-smooth
+                    ${mediaItems.some(item => isActivePath(item.path))
                       ? (isInHero && !isScrolled ? 'text-white' : 'text-primary-600')
                       : `${getTextColor()} ${getHoverTextColor()}`
                     }
                   `}
                   aria-expanded={isMediaDropdownOpen}
-                  aria-haspopup="true"
                 >
                   <span>Media & Informasi</span>
                   <svg 
-                    className={`
-                      w-4 h-4 transition-transform duration-300 ease-out
-                      ${isMediaDropdownOpen ? 'rotate-180' : 'rotate-0'}
-                    `}
+                    className={`w-4 h-4 transition-smooth ${isMediaDropdownOpen ? 'rotate-180' : ''}`}
                     fill="none" 
                     viewBox="0 0 24 24" 
                     stroke="currentColor"
-                    strokeWidth={2}
+                    strokeWidth={2.5}
                   >
                     <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
 
-                {/* Dropdown Content - Extended hover area */}
+                {/* Dropdown Content */}
                 <div
                   className={`
-                    absolute top-full left-1/2 -translate-x-1/2 pt-3
-                    transition-all duration-300 ease-out
-                    ${isMediaDropdownOpen 
-                      ? 'opacity-100 visible' 
-                      : 'opacity-0 invisible pointer-events-none'
-                    }
+                    absolute top-full left-1/2 -translate-x-1/2 pt-grid-3
+                    transition-smooth
+                    ${isMediaDropdownOpen ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'}
                   `}
                 >
-                  <div className="w-60 bg-white border border-gray-100 rounded-xl shadow-lg overflow-hidden">
-                    <div className="py-2">
-                      <Link 
-                        to="/media-informasi" 
-                        className={`
-                          block px-5 py-3 text-sm font-medium
-                          transition-all duration-200 ease-out
-                          border-l-4 border-transparent
-                          ${isActivePath('/media-informasi')
-                            ? 'text-primary-600 bg-primary-50 border-l-primary-600'
-                            : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50 hover:border-l-primary-600'
-                          }
-                        `}
-                      >
-                        Media & Berita
-                      </Link>
-                      <Link 
-                        to="/penghargaan" 
-                        className={`
-                          block px-5 py-3 text-sm font-medium
-                          transition-all duration-200 ease-out
-                          border-l-4 border-transparent
-                          ${isActivePath('/penghargaan')
-                            ? 'text-primary-600 bg-primary-50 border-l-primary-600'
-                            : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50 hover:border-l-primary-600'
-                          }
-                        `}
-                      >
-                        Penghargaan
-                      </Link>
-                      <Link 
-                        to="/laporan-tahunan" 
-                        className={`
-                          block px-5 py-3 text-sm font-medium
-                          transition-all duration-200 ease-out
-                          border-l-4 border-transparent
-                          ${isActivePath('/laporan-tahunan')
-                            ? 'text-primary-600 bg-primary-50 border-l-primary-600'
-                            : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50 hover:border-l-primary-600'
-                          }
-                        `}
-                      >
-                        Laporan Tahunan
-                      </Link>
+                  <div className="w-64 bg-white border border-secondary-100 rounded-xl shadow-lg overflow-hidden">
+                    <div className="py-grid-2">
+                      {mediaItems.map((item) => (
+                        <Link 
+                          key={item.path}
+                          to={item.path} 
+                          className={`
+                            block px-grid-5 py-grid-3 font-heading text-body-md font-semibold
+                            transition-fast border-l-4 border-transparent
+                            ${isActivePath(item.path)
+                              ? 'text-primary-600 bg-primary-50 border-l-primary-600'
+                              : 'text-secondary-700 hover:text-primary-600 hover:bg-secondary-50 hover:border-l-primary-600'
+                            }
+                          `}
+                        >
+                          {item.label}
+                        </Link>
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -281,28 +217,20 @@ const Header = () => {
             </nav>
 
             {/* Search & Mobile Menu Button */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-grid-4">
               {/* Search Button */}
               <button 
                 className={`
                   hidden lg:flex items-center justify-center
-                  w-10 h-10 rounded-full
-                  transition-all duration-300 ease-out
+                  w-10 h-10 rounded-full transition-smooth
                   ${isInHero && !isScrolled
                     ? 'text-white hover:bg-white/20'
-                    : 'text-gray-600 hover:text-primary-600 hover:bg-gray-100'
+                    : 'text-secondary-600 hover:text-primary-600 hover:bg-secondary-100'
                   }
                 `}
                 aria-label="Search"
               >
-                <svg 
-                  xmlns="http://www.w3.org/2000/svg" 
-                  className="h-5 w-5" 
-                  fill="none" 
-                  viewBox="0 0 24 24" 
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
               </button>
@@ -312,39 +240,19 @@ const Header = () => {
                 onClick={() => setIsOpen(!isOpen)} 
                 className={`
                   lg:hidden flex items-center justify-center
-                  w-10 h-10 rounded-lg
-                  transition-all duration-300 ease-out
-                  z-50
+                  w-10 h-10 rounded-lg transition-smooth z-50
                   ${isInHero && !isScrolled
                     ? 'text-white hover:bg-white/20'
-                    : 'text-gray-700 hover:text-primary-600 hover:bg-gray-100'
+                    : 'text-secondary-700 hover:text-primary-600 hover:bg-secondary-100'
                   }
                 `}
                 aria-expanded={isOpen}
                 aria-label="Toggle menu"
               >
                 <div className="w-6 h-5 relative flex flex-col justify-center items-center">
-                  <span 
-                    className={`
-                      w-6 h-0.5 bg-current rounded-full
-                      transition-all duration-300 ease-out absolute
-                      ${isOpen ? 'rotate-45 translate-y-0' : 'rotate-0 -translate-y-2'}
-                    `}
-                  />
-                  <span 
-                    className={`
-                      w-6 h-0.5 bg-current rounded-full
-                      transition-all duration-300 ease-out
-                      ${isOpen ? 'opacity-0 scale-0' : 'opacity-100 scale-100'}
-                    `}
-                  />
-                  <span 
-                    className={`
-                      w-6 h-0.5 bg-current rounded-full
-                      transition-all duration-300 ease-out absolute
-                      ${isOpen ? '-rotate-45 translate-y-0' : 'rotate-0 translate-y-2'}
-                    `}
-                  />
+                  <span className={`w-6 h-0.5 bg-current rounded-full transition-smooth absolute ${isOpen ? 'rotate-45 translate-y-0' : '-translate-y-2'}`} />
+                  <span className={`w-6 h-0.5 bg-current rounded-full transition-smooth ${isOpen ? 'opacity-0 scale-0' : 'opacity-100'}`} />
+                  <span className={`w-6 h-0.5 bg-current rounded-full transition-smooth absolute ${isOpen ? '-rotate-45 translate-y-0' : 'translate-y-2'}`} />
                 </div>
               </button>
             </div>
@@ -355,9 +263,9 @@ const Header = () => {
       {/* Mobile Navigation Overlay */}
       <div
         className={`
-          fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-40
-          lg:hidden transition-all duration-300 ease-out
-          ${isOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}
+          fixed inset-0 bg-secondary-900/60 backdrop-blur-sm z-40
+          lg:hidden transition-smooth
+          ${isOpen ?  'opacity-100 visible' : 'opacity-0 invisible'}
         `}
         onClick={closeMobileMenu}
       />
@@ -366,172 +274,78 @@ const Header = () => {
       <div
         className={`
           fixed top-0 right-0 bottom-0 w-80 max-w-[85vw]
-          bg-white shadow-2xl z-40
-          lg:hidden overflow-y-auto
-          transition-transform duration-500 ease-out
+          bg-white shadow-2xl z-40 lg:hidden overflow-y-auto custom-scrollbar
+          transition-smart
           ${isOpen ? 'translate-x-0' : 'translate-x-full'}
         `}
       >
-        <div className="pt-24 pb-8 px-6">
-          <nav className="space-y-1">
-            <Link 
-              to="/" 
-              onClick={closeMobileMenu} 
-              className={`
-                block px-4 py-3 rounded-xl font-medium text-base
-                transition-all duration-200 ease-out
-                ${isActivePath('/') 
-                  ? 'text-primary-600 bg-primary-50' 
-                  : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
-                }
-              `}
-            >
-              Beranda
-            </Link>
-            <Link 
-              to="/tentang" 
-              onClick={closeMobileMenu} 
-              className={`
-                block px-4 py-3 rounded-xl font-medium text-base
-                transition-all duration-200 ease-out
-                ${isActivePath('/tentang') 
-                  ? 'text-primary-600 bg-primary-50' 
-                  : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
-                }
-              `}
-            >
-              Tentang Kami
-            </Link>
-            <Link 
-              to="/bisnis" 
-              onClick={closeMobileMenu} 
-              className={`
-                block px-4 py-3 rounded-xl font-medium text-base
-                transition-all duration-200 ease-out
-                ${isActivePath('/bisnis') 
-                  ? 'text-primary-600 bg-primary-50' 
-                  : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
-                }
-              `}
-            >
-              Bisnis Kami
-            </Link>
+        <div className="pt-24 pb-grid-8 px-grid-6">
+          <nav className="space-y-grid-1">
+            {/* Main Nav Items */}
+            {[...navItems, { path: '/kontak', label: 'Kontak' }].map((item) => (
+              <Link 
+                key={item.path}
+                to={item.path} 
+                onClick={closeMobileMenu} 
+                className={`
+                  block px-grid-4 py-grid-3 rounded-xl font-heading font-semibold text-body-lg
+                  transition-smooth
+                  ${isActivePath(item.path) 
+                    ? 'text-primary-600 bg-primary-50' 
+                    : 'text-secondary-700 hover:text-primary-600 hover:bg-secondary-50'
+                  }
+                `}
+              >
+                {item.label}
+              </Link>
+            ))}
             
-            {/* Mobile Dropdown Section */}
-            <div className="pt-2">
+            {/* Mobile Dropdown */}
+            <div className="pt-grid-2">
               <button
                 onClick={() => setMediaDropdownOpen(!isMediaDropdownOpen)}
-                className="
-                  w-full flex items-center justify-between
-                  px-4 py-3 rounded-xl font-medium text-base text-left
-                  text-gray-700 hover:text-primary-600 hover:bg-gray-50
-                  transition-all duration-200 ease-out
-                "
+                className="w-full flex items-center justify-between px-grid-4 py-grid-3 rounded-xl font-heading font-semibold text-body-lg text-secondary-700 hover:text-primary-600 hover:bg-secondary-50 transition-smooth"
               >
                 <span>Media & Informasi</span>
                 <svg 
-                  className={`
-                    w-5 h-5 transition-transform duration-300 ease-out
-                    ${isMediaDropdownOpen ? 'rotate-180' : 'rotate-0'}
-                  `}
-                  fill="none" 
-                  viewBox="0 0 24 24" 
-                  stroke="currentColor"
-                  strokeWidth={2}
+                  className={`w-5 h-5 transition-smooth ${isMediaDropdownOpen ? 'rotate-180' : ''}`}
+                  fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
                 >
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
               
-              <div
-                className={`
-                  overflow-hidden transition-all duration-300 ease-out
-                  ${isMediaDropdownOpen ? 'max-h-48 opacity-100 mt-1' : 'max-h-0 opacity-0'}
-                `}
-              >
-                <div className="ml-4 space-y-1 border-l-2 border-gray-200 pl-4">
-                  <Link 
-                    to="/media-informasi" 
-                    onClick={closeMobileMenu} 
-                    className={`
-                      block px-4 py-2.5 rounded-lg text-sm font-medium
-                      transition-all duration-200 ease-out
-                      ${isActivePath('/media-informasi') 
-                        ? 'text-primary-600 bg-primary-50' 
-                        : 'text-gray-600 hover:text-primary-600 hover:bg-gray-50'
-                      }
-                    `}
-                  >
-                    Media & Berita
-                  </Link>
-                  <Link 
-                    to="/penghargaan" 
-                    onClick={closeMobileMenu} 
-                    className={`
-                      block px-4 py-2.5 rounded-lg text-sm font-medium
-                      transition-all duration-200 ease-out
-                      ${isActivePath('/penghargaan') 
-                        ? 'text-primary-600 bg-primary-50' 
-                        : 'text-gray-600 hover:text-primary-600 hover:bg-gray-50'
-                      }
-                    `}
-                  >
-                    Penghargaan
-                  </Link>
-                  <Link 
-                    to="/laporan-tahunan" 
-                    onClick={closeMobileMenu} 
-                    className={`
-                      block px-4 py-2.5 rounded-lg text-sm font-medium
-                      transition-all duration-200 ease-out
-                      ${isActivePath('/laporan-tahunan') 
-                        ? 'text-primary-600 bg-primary-50' 
-                        : 'text-gray-600 hover:text-primary-600 hover:bg-gray-50'
-                      }
-                    `}
-                  >
-                    Laporan Tahunan
-                  </Link>
+              <div className={`overflow-hidden transition-smooth ${isMediaDropdownOpen ? 'max-h-48 opacity-100 mt-grid-1' : 'max-h-0 opacity-0'}`}>
+                <div className="ml-grid-4 space-y-grid-1 border-l-2 border-secondary-200 pl-grid-4">
+                  {mediaItems.map((item) => (
+                    <Link 
+                      key={item.path}
+                      to={item.path} 
+                      onClick={closeMobileMenu} 
+                      className={`
+                        block px-grid-4 py-grid-2.5 rounded-lg font-heading text-body-md font-semibold
+                        transition-smooth
+                        ${isActivePath(item.path) 
+                          ? 'text-primary-600 bg-primary-50' 
+                          : 'text-secondary-600 hover:text-primary-600 hover:bg-secondary-50'
+                        }
+                      `}
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
                 </div>
               </div>
             </div>
-
-            <Link 
-              to="/kontak" 
-              onClick={closeMobileMenu} 
-              className={`
-                block px-4 py-3 rounded-xl font-medium text-base
-                transition-all duration-200 ease-out
-                ${isActivePath('/kontak') 
-                  ? 'text-primary-600 bg-primary-50' 
-                  : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
-                }
-              `}
-            >
-              Kontak
-            </Link>
           </nav>
 
           {/* Mobile Search */}
-          <div className="mt-6 pt-6 border-t border-gray-200">
-            <button 
-              className="
-                w-full flex items-center gap-3 px-4 py-3 rounded-xl
-                text-gray-600 bg-gray-50 hover:bg-gray-100
-                transition-all duration-200 ease-out
-              "
-            >
-              <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                className="h-5 w-5" 
-                fill="none" 
-                viewBox="0 0 24 24" 
-                stroke="currentColor"
-                strokeWidth={2}
-              >
+          <div className="mt-grid-6 pt-grid-6 border-t border-secondary-200">
+            <button className="w-full flex items-center gap-grid-3 px-grid-4 py-grid-3 rounded-xl text-secondary-600 bg-secondary-50 hover:bg-secondary-100 transition-smooth font-heading font-medium text-body-md">
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
-              <span className="font-medium text-sm">Cari...</span>
+              <span>Cari...</span>
             </button>
           </div>
         </div>

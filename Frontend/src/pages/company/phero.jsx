@@ -1,35 +1,58 @@
 import React from 'react';
-import platformImage from '../../assets/contoh1.png';
 import { Link } from 'react-router-dom';
-import { FaHome } from 'react-icons/fa';
+import platformImage from '../../assets/contoh1.png';
 
+/**
+ * PHero Component - Simplified & Impactful
+ */
 const PHero = () => {
   return (
-    <div className="relative h-[60vh] overflow-hidden">
+    <section 
+      className="relative h-[45vh] min-h-[320px] max-h-[420px] overflow-hidden"
+      aria-labelledby="hero-title"
+    >
+      {/* Background */}
       <div className="absolute inset-0">
         <img 
           src={platformImage} 
-          alt="Platform"
+          alt=""
           className="w-full h-full object-cover"
+          loading="eager"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-black/50" />
+        <div className="absolute inset-0 bg-secondary-900/75" />
       </div>
-      <div className="relative container mx-auto px-8 lg:px-16 h-full flex items-center">
-        <div className="max-w-2xl text-white">
-          <div className="flex items-center gap-2 mb-4">
-            <Link to="/" className="text-gray-300 hover:text-white flex items-center gap-1">
-              <FaHome /> Home
-            </Link>
-            <span>/</span>
-            <span className="text-sm text-blue-400">Tentang Kami</span>
-          </div>
-          <h1 className="text-4xl md:text-5xl font-bold mb-6">Tentang Kami</h1>
-          <p className="text-lg text-gray-200">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-          </p>
-        </div>
+
+      {/* Content */}
+      <div className="relative z-10 section-container h-full flex flex-col justify-center">
+        {/* Breadcrumb */}
+        <nav className="mb-grid-4" aria-label="Breadcrumb">
+          <ol className="flex items-center gap-grid-2 text-body-sm">
+            <li>
+              <Link to="/" className="text-secondary-400 hover:text-white transition-colors">
+                Beranda
+              </Link>
+            </li>
+            <li className="text-secondary-500">/</li>
+            <li className="text-white font-medium">Tentang Kami</li>
+          </ol>
+        </nav>
+
+        {/* Title */}
+        <h1 id="hero-title" className="text-white max-w-2xl">
+          Tentang Kami
+        </h1>
+        
+        <p className="text-body-lg text-secondary-300 max-w-xl mt-grid-4">
+          Mengenal lebih dekat perjalanan dan komitmen kami dalam membangun Indonesia
+        </p>
       </div>
-    </div>
+
+      {/* Bottom Fade */}
+      <div 
+        className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-white to-transparent"
+        aria-hidden="true"
+      />
+    </section>
   );
 };
 

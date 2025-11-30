@@ -6,12 +6,12 @@ import PVisiMisi from './pvisimisi';
 
 const Tentang = () => {
   return (
-    <div className="min-h-screen bg-white">
+    <main className="min-h-screen bg-white" id="main-content">
       <PHero />
       <PProfile />
       <PSejarah />
       <PVisiMisi />
-    </div>
+    </main>
   );
 };
 
