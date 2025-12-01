@@ -1,15 +1,13 @@
 import React from 'react';
 import BHero from './bhero';
 import Bbisnis from './bbisnis';
-import Stakeholder from './stakeholder';
 
 const Mainbisnis = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white via-secondary-50 to-white">
+    <main className="min-h-screen bg-gradient-to-b from-white via-secondary-50/30 to-white overflow-hidden">
       <BHero />
       <Bbisnis />
-      <Stakeholder />
-    </div>
+    </main>
   );
 };
 
