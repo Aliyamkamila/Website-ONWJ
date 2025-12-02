@@ -2,31 +2,42 @@ import { FaChartBar, FaIndustry } from 'react-icons/fa';
 
 const DataProduksi = () => {
   return (
-    <div className="bg-gray-50 py-16">
-      <div className="container mx-auto px-8 lg:px-16">
-        <div className="bg-white rounded-xl shadow-lg p-12 text-center">
-          <div className="flex justify-center mb-6">
-            <div className="relative">
-              <FaChartBar className="w-20 h-20 text-blue-600" />
-              <FaIndustry className="w-10 h-10 text-amber-500 absolute -bottom-2 -right-2" />
+    <section className="py-12 bg-secondary-50">
+      <div className="section-container">
+        <div className="max-w-2xl mx-auto">
+          <div className="bg-white rounded-xl shadow-lg border border-secondary-200 p-10 text-center">
+            
+            {/* Icon */}
+            <div className="flex justify-center mb-6">
+              <div className="relative">
+                <div className="w-20 h-20 rounded-full bg-primary-100 flex items-center justify-center">
+                  <FaChartBar className="w-10 h-10 text-primary-600" />
+                </div>
+                <div className="absolute -bottom-1 -right-1 w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
+                  <FaIndustry className="w-5 h-5 text-amber-600" />
+                </div>
+              </div>
             </div>
-          </div>
-          
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">
-            📊 Data Produksi
-          </h2>
-          
-          <p className="text-gray-600 text-lg mb-6">
-            Halaman ini sedang dalam pengembangan. 
-          </p>
-          
-          <div className="inline-flex items-center gap-2 px-6 py-3 bg-blue-50 text-blue-700 rounded-lg">
-            <span className="animate-pulse">⚙️</span>
-            <span className="font-medium">Coming Soon</span>
+            
+            {/* Title */}
+            <h2 className="text-2xl font-heading font-bold text-secondary-900 mb-3">
+              📊 Data Produksi
+            </h2>
+            
+            {/* Description */}
+            <p className="text-body-md text-secondary-600 mb-6 leading-relaxed">
+              Halaman ini sedang dalam pengembangan. Kami akan segera menyajikan data produksi lengkap.
+            </p>
+            
+            {/* Status Badge */}
+            <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-50 text-primary-700 rounded-lg border border-primary-200">
+              <span className="w-2 h-2 rounded-full bg-primary-600 animate-pulse"></span>
+              <span className="text-sm font-heading font-semibold">Coming Soon</span>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 };
 

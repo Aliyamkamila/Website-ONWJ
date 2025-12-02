@@ -6,7 +6,6 @@ import WilayahKerja from './wilayahkerja';
 import HargaMinyak from './HargaMinyak';
 import DataProduksi from './DataProduksi';
 
-// Main Page Component
 const WilayahKerjaMain = () => (
   <>
     <DeskripsiWK />
@@ -14,7 +13,6 @@ const WilayahKerjaMain = () => (
   </>
 );
 
-// Main Router Component
 const Mainwk = () => {
   return (
     <div className="min-h-screen bg-white">

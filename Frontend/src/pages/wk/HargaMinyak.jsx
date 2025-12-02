@@ -410,7 +410,7 @@ const HargaMinyak = () => {
       color: 'bg-blue-600',
     },
     {
-      title: 'WTI Crude',
+      title: 'Arjuna Crude',
       value: latestData.wti,
       change: calculateChange(latestData.wti, previousData.wti),
       icon: FaOilCan,
@@ -543,7 +543,7 @@ const HargaMinyak = () => {
                 {(selectedOilType === 'all' || selectedOilType === 'brent') &&
                   renderArea('brent', 'Brent Crude', CHART_COLORS.brent)}
                 {(selectedOilType === 'all' || selectedOilType === 'wti') &&
-                  renderArea('wti', 'WTI Crude', CHART_COLORS. wti)}
+                  renderArea('wti', 'Arjuna Crude', CHART_COLORS. wti)}
                 {(selectedOilType === 'all' || selectedOilType === 'icp') &&
                   renderArea('icp', 'ICP Indonesia', CHART_COLORS.icp)}
               </AreaChart>
