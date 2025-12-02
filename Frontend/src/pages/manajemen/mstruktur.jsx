@@ -2,82 +2,66 @@ import React from 'react';
 
 const Struktur = () => {
   return (
-    <div className="py-16 bg-gray-50">
-      <div className="container mx-auto px-4">
-        <h2 className="text-3xl font-bold text-center text-gray-800 mb-12">
-          Struktur Organisasi
-        </h2>
+    <section className="py-12 bg-white">
+      <div className="section-container">
         
-        <div className="max-w-5xl mx-auto">
-          {/* Main structure container */}
-          <div className="flex flex-col items-center">
-            {/* CEO Level */}
-            <div className="bg-blue-600 text-white p-4 rounded-lg shadow-lg w-64 text-center mb-8">
-              <h3 className="font-bold">Direktur Utama</h3>
-            </div>
+        {/* Compact Section Header */}
+        <div className="mb-8 text-center">
+          <h2 className="text-2xl lg:text-3xl font-heading font-bold text-secondary-900 mb-2">
+            Struktur Organisasi
+          </h2>
+          <div className="w-12 h-0.5 bg-primary-600 mx-auto"></div>
+        </div>
+        
+        {/* Compact Org Chart */}
+        <div className="max-w-4xl mx-auto">
+          <div className="flex flex-col items-center space-y-5">
             
-            {/* Lines */}
-            <div className="w-px h-8 bg-gray-400"></div>
-            
-            {/* C-Level Executives */}
-            <div className="grid grid-cols-3 gap-8 mb-8">
-              <div className="bg-blue-500 text-white p-4 rounded-lg shadow-lg w-48 text-center">
-                <h3 className="font-bold">Direktur Operasional</h3>
-              </div>
-              <div className="bg-blue-500 text-white p-4 rounded-lg shadow-lg w-48 text-center">
-                <h3 className="font-bold">Direktur Keuangan</h3>
-              </div>
-              <div className="bg-blue-500 text-white p-4 rounded-lg shadow-lg w-48 text-center">
-                <h3 className="font-bold">Direktur Teknik</h3>
+            {/* CEO - Compact */}
+            <div className="w-full max-w-xs">
+              <div className="bg-primary-600 text-white px-5 py-3 rounded text-center border border-primary-700">
+                <p className="font-heading font-bold text-sm">Direktur Utama</p>
               </div>
             </div>
             
-            {/* Lines */}
-            <div className="grid grid-cols-3 gap-8 w-full max-w-3xl mb-8">
-              <div className="flex justify-center">
-                <div className="w-px h-8 bg-gray-400"></div>
-              </div>
-              <div className="flex justify-center">
-                <div className="w-px h-8 bg-gray-400"></div>
-              </div>
-              <div className="flex justify-center">
-                <div className="w-px h-8 bg-gray-400"></div>
-              </div>
+            {/* Compact Connector */}
+            <div className="w-px h-6 bg-secondary-300"></div>
+            
+            {/* C-Level - Compact */}
+            <div className="w-full grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {['Direktur Operasional', 'Direktur Keuangan', 'Direktur Teknik'].map((title, idx) => (
+                <div key={idx} className="flex flex-col items-center space-y-4">
+                  <div className="w-full bg-primary-500 text-white px-4 py-2.5 rounded text-center border border-primary-600">
+                    <p className="font-heading font-semibold text-xs">{title}</p>
+                  </div>
+                  <div className="w-px h-5 bg-secondary-300 hidden sm:block"></div>
+                </div>
+              ))}
             </div>
             
-            {/* Department Level */}
-            <div className="grid grid-cols-3 gap-4 w-full max-w-4xl">
-              <div className="space-y-4">
-                <div className="bg-blue-400 text-white p-3 rounded-lg shadow-lg text-center">
-                  <h4 className="font-semibold">Divisi Operasional</h4>
+            {/* Departments - Compact */}
+            <div className="w-full grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {[
+                ['Divisi Operasional', 'Divisi Logistik'],
+                ['Divisi Keuangan', 'Divisi Akuntansi'],
+                ['Divisi Teknik', 'Divisi R&D']
+              ].map((group, groupIdx) => (
+                <div key={groupIdx} className="space-y-2.5">
+                  {group.map((dept, deptIdx) => (
+                    <div 
+                      key={deptIdx}
+                      className="bg-white border border-primary-200 px-4 py-2.5 rounded text-center transition-colors hover:border-primary-600 hover:bg-primary-50"
+                    >
+                      <p className="font-heading font-medium text-xs text-secondary-900">{dept}</p>
+                    </div>
+                  ))}
                 </div>
-                <div className="bg-blue-400 text-white p-3 rounded-lg shadow-lg text-center">
-                  <h4 className="font-semibold">Divisi Logistik</h4>
-                </div>
-              </div>
-              
-              <div className="space-y-4">
-                <div className="bg-blue-400 text-white p-3 rounded-lg shadow-lg text-center">
-                  <h4 className="font-semibold">Divisi Keuangan</h4>
-                </div>
-                <div className="bg-blue-400 text-white p-3 rounded-lg shadow-lg text-center">
-                  <h4 className="font-semibold">Divisi Akuntansi</h4>
-                </div>
-              </div>
-              
-              <div className="space-y-4">
-                <div className="bg-blue-400 text-white p-3 rounded-lg shadow-lg text-center">
-                  <h4 className="font-semibold">Divisi Teknik</h4>
-                </div>
-                <div className="bg-blue-400 text-white p-3 rounded-lg shadow-lg text-center">
-                  <h4 className="font-semibold">Divisi R&D</h4>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 };
 

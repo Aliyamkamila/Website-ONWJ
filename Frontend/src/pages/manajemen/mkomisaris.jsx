@@ -1,79 +1,108 @@
 import React, { useState } from 'react';
-import './mkomisaris.css';
 
 const Komisaris = () => {
   const [selectedCommissioner, setSelectedCommissioner] = useState(null);
 
   const commissioners = [
     {
-      name: 'Lorem Ipsum',
+      name: 'Lorem Ipsum Dolor',
       position: 'President Commissioner',
-      image: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3',
-      description: 'Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit.'
+      image: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&w=800&q=80',
+      description: 'Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.'
+    },
+    {
+      name: 'Sit Amet Consectetur',
+      position: 'Commissioner',
+      image: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?ixlib=rb-4.0.3&w=800&q=80',
+      description: 'Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt.'
     }
   ];
 
-  const openModal = (commissioner) => {
-    setSelectedCommissioner(commissioner);
-  };
-
-  const closeModal = () => {
-    setSelectedCommissioner(null);
-  };
+  const openModal = (commissioner) => setSelectedCommissioner(commissioner);
+  const closeModal = () => setSelectedCommissioner(null);
 
   return (
-    <section className="komisaris-section">
+    <section className="py-12 bg-white">
       <div className="section-container">
-        <h2 className="section-title">
-          Dewan Komisaris
-        </h2>
-        <div className="komisaris-grid">
+        
+        {/* Compact Section Header */}
+        <div className="mb-8">
+          <h2 className="text-2xl lg:text-3xl font-heading font-bold text-secondary-900 mb-2">
+            Dewan Komisaris
+          </h2>
+          <div className="w-12 h-0.5 bg-primary-600"></div>
+        </div>
+        
+        {/* Compact Card Grid */}
+        <div className="grid sm:grid-cols-2 gap-5 max-w-2xl">
           {commissioners.map((commissioner, index) => (
             <div 
               key={index} 
-              className="commissioner-card"
               onClick={() => openModal(commissioner)}
+              className="group bg-white border border-secondary-200 rounded-lg overflow-hidden cursor-pointer transition-all duration-200 hover:border-primary-600 hover:shadow-md"
             >
-              <div className="commissioner-card-inner">
+              {/* Compact Image */}
+              <div className="aspect-[4/4.5] overflow-hidden bg-secondary-50">
                 <img
-                  className="commissioner-image"
                   src={commissioner.image}
                   alt={commissioner.name}
+                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  loading="lazy"
                 />
-                <div className="commissioner-overlay"></div>
-                <div className="commissioner-info">
-                  <p className="commissioner-position">{commissioner.position}</p>
-                  <h3 className="commissioner-name">{commissioner.name}</h3>
-                </div>
+              </div>
+              
+              {/* Compact Info */}
+              <div className="p-4 border-t border-secondary-100">
+                <p className="text-xs font-heading font-semibold text-primary-600 uppercase tracking-wide mb-1">
+                  {commissioner.position}
+                </p>
+                <h3 className="text-base font-heading font-bold text-secondary-900 leading-snug">
+                  {commissioner.name}
+                </h3>
               </div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Modal */}
+      {/* Compact Modal */}
       {selectedCommissioner && (
-        <div className="modal-overlay" onClick={closeModal}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <button className="modal-close" onClick={closeModal}>
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+        <div 
+          className="fixed inset-0 bg-secondary-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          onClick={closeModal}
+        >
+          <div 
+            className="bg-white rounded-lg max-w-xl w-full max-h-[80vh] overflow-y-auto relative shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Compact Close Button */}
+            <button 
+              onClick={closeModal}
+              className="absolute top-3 right-3 w-8 h-8 bg-secondary-100 hover:bg-secondary-200 rounded-full flex items-center justify-center transition-colors z-10"
+              aria-label="Close"
+            >
+              <svg className="w-4 h-4 text-secondary-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
-            <div className="modal-body">
-              <img
-                className="modal-image"
-                src={selectedCommissioner.image}
-                alt={selectedCommissioner.name}
-              />
-              <div className="modal-info">
-                <h3 className="modal-title">
-                  {selectedCommissioner.name}
-                </h3>
-                <p className="modal-position">
+
+            {/* Compact Content */}
+            <div className="flex flex-col sm:flex-row">
+              <div className="sm:w-2/5">
+                <img
+                  src={selectedCommissioner.image}
+                  alt={selectedCommissioner.name}
+                  className="w-full h-48 sm:h-full object-cover"
+                />
+              </div>
+              <div className="p-6 sm:w-3/5">
+                <p className="text-xs font-heading font-semibold text-primary-600 uppercase tracking-wide mb-1.5">
                   {selectedCommissioner.position}
                 </p>
-                <p className="modal-description">
+                <h3 className="text-xl font-heading font-bold text-secondary-900 mb-4">
+                  {selectedCommissioner.name}
+                </h3>
+                <p className="text-sm text-secondary-600 leading-relaxed">
                   {selectedCommissioner.description}
                 </p>
               </div>
