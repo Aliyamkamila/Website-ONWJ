@@ -4,59 +4,29 @@ import logo from '../../assets/LOGO-HD.webp';
 
 const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [isMediaDropdownOpen, setMediaDropdownOpen] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState(null);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isInHero, setIsInHero] = useState(true);
-  const [isVisible, setIsVisible] = useState(true);
-  const [prevScrollPos, setPrevScrollPos] = useState(0);
   const location = useLocation();
 
   const handleScroll = useCallback(() => {
     const currentScrollPos = window.scrollY;
     const heroSection = document.getElementById('hero-section');
-    const heroHeight = heroSection ? heroSection.offsetHeight : 600;
+    const heroHeight = heroSection ?  heroSection.offsetHeight : 600;
     
     setIsScrolled(currentScrollPos > 20);
     setIsInHero(currentScrollPos < heroHeight - 100);
-
-    if (currentScrollPos < 10) {
-      setIsVisible(true);
-    } else if (currentScrollPos < prevScrollPos) {
-      setIsVisible(true);
-    } else if (currentScrollPos > prevScrollPos && currentScrollPos > 100) {
-      setIsVisible(false);
-      setMediaDropdownOpen(false);
-    }
-
-    setPrevScrollPos(currentScrollPos);
-  }, [prevScrollPos]);
+  }, []);
 
   useEffect(() => {
-    let rafId = null;
-    let lastScrollTime = 0;
-    const throttleDelay = 50;
-
-    const scrollListener = () => {
-      const now = Date.now();
-      if (now - lastScrollTime < throttleDelay) return;
-      
-      lastScrollTime = now;
-      if (rafId) cancelAnimationFrame(rafId);
-      rafId = requestAnimationFrame(handleScroll);
-    };
-
     handleScroll();
-    window.addEventListener('scroll', scrollListener, { passive: true });
-    
-    return () => {
-      window.removeEventListener('scroll', scrollListener);
-      if (rafId) cancelAnimationFrame(rafId);
-    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
   }, [handleScroll]);
 
   useEffect(() => {
     setIsOpen(false);
-    setMediaDropdownOpen(false);
+    setActiveDropdown(null);
   }, [location]);
 
   useEffect(() => {
@@ -64,292 +34,367 @@ const Header = () => {
     return () => { document.body.style.overflow = 'unset'; };
   }, [isOpen]);
 
-  const closeMobileMenu = () => setIsOpen(false);
-  const isActivePath = (path) => location.pathname === path;
-
-  // Dynamic styles based on hero position
-  const getTextColor = () => isInHero && !isScrolled ? 'text-white' : 'text-secondary-700';
-  const getHoverTextColor = () => isInHero && !isScrolled ? 'hover:text-white/80' : 'hover:text-primary-600';
-  
-  const getHeaderStyle = () => {
-    if (isInHero && !isScrolled) {
-      return 'bg-white/10 backdrop-blur-lg border-white/20';
-    }
-    return 'bg-white/95 backdrop-blur-md border-secondary-200 shadow-md';
+  const closeMobileMenu = () => {
+    setIsOpen(false);
+    setActiveDropdown(null);
   };
 
-  // Navigation items
-  const navItems = [
-    { path: '/', label: 'Beranda' },
-    { path: '/tentang', label: 'Tentang Kami' },
-    { path: '/bisnis', label: 'Bisnis Kami' },
-  ];
+  const isActivePath = (path) => location.pathname === path;
 
-  const mediaItems = [
-    { path: '/media-informasi', label: 'Media & Berita' },
-    { path: '/penghargaan', label: 'Penghargaan' },
-    { path: '/laporan-tahunan', label: 'Laporan Tahunan' },
-  ];
+  // Menu Data
+  const menuData = {
+    tentang: {
+      label: 'Tentang Kami',
+      items: [
+        { label: 'Profil Perusahaan', path: '/tentang', desc: 'Visi, misi, dan sejarah perusahaan' },
+        { label: 'Manajemen', path: '/manajemen', desc: 'Struktur dewan direksi dan komisaris' },
+        { label: 'Tata Kelola', path: '/kelola', desc: 'Prinsip GCG dan tata kelola perusahaan' }
+      ]
+    },
+    bisnis: {
+      label: 'Bisnis & Operasional',
+      items: [
+        { label: 'Bisnis Kami', path: '/bisnis', desc: 'Model bisnis dan alur operasional' },
+        { label: 'Wilayah Kerja', path: '/wilayah-kerja', desc: 'Peta dan informasi wilayah operasi' }
+      ]
+    },
+    program: {
+      label: 'Program TJSL',
+      items: [
+        { label: 'Program TJSL', path: '/tjsl', desc: 'Tanggung Jawab Sosial & Lingkungan' },
+        { label: 'Berita TJSL', path: '/berita-tjsl', desc: 'Update kegiatan program sosial' },
+        { label: 'UMKM Binaan', path: '/umkm-binaan', desc: 'Program pemberdayaan UMKM' },
+        { label: 'Semua Program', path: '/program-berkelanjutan', desc: 'Daftar lengkap program' }
+      ]
+    },
+    media: {
+      label: 'Media & Informasi',
+      items: [
+        { label: 'Media & Berita', path: '/media-informasi', desc: 'Artikel dan konten media terbaru' },
+        { label: 'Penghargaan', path: '/penghargaan', desc: 'Prestasi dan penghargaan perusahaan' },
+        { label: 'Laporan Tahunan', path: '/laporan-tahunan', desc: 'Laporan keuangan dan kinerja' }
+      ]
+    }
+  };
 
-  const NavLink = ({ to, children, onClick }) => (
-    <Link
-      to={to}
-      onClick={onClick}
-      className={`
-        relative font-heading font-semibold text-body-md tracking-wide
-        transition-smooth will-change-transform
-        ${isActivePath(to) 
-          ? (isInHero && !isScrolled ?  'text-white' : 'text-primary-600')
-          : `${getTextColor()} ${getHoverTextColor()}`
-        }
-        after:content-[''] after:absolute after:bottom-0 after:left-0 
-        after:w-0 after:h-0.5 after:transition-smooth
-        hover:after:w-full
-        ${isActivePath(to) ?  'after:w-full' : ''}
-        ${isInHero && !isScrolled ? 'after:bg-white' : 'after:bg-primary-600'}
-      `}
-    >
-      {children}
-    </Link>
-  );
+  const getHeaderStyle = () => {
+    if (isInHero && ! isScrolled) {
+      return 'bg-transparent border-transparent';
+    }
+    return 'bg-white border-b border-secondary-200';
+  };
+
+  const getTextColor = () => isInHero && !isScrolled ? 'text-white' : 'text-secondary-900';
+  const getHoverColor = () => isInHero && !isScrolled ? 'hover:text-white/80' : 'hover:text-primary-600';
+  const getActiveColor = () => isInHero && !isScrolled ? 'text-white' : 'text-primary-600';
+
+  const NavLink = ({ to, children, onClick }) => {
+    const isActive = isActivePath(to);
+    return (
+      <Link
+        to={to}
+        onClick={onClick}
+        className={`
+          relative font-heading font-medium text-body-md transition-all duration-300 ease-out
+          ${isActive ? getActiveColor() : `${getTextColor()} ${getHoverColor()}`}
+          after:content-[''] after:absolute after:bottom-[-4px] after:left-0 after:h-[2px] 
+          after:bg-current after:transition-all after:duration-300 after:ease-out
+          ${isActive ? 'after:w-full' : 'after:w-0 hover:after:w-full'}
+        `}
+      >
+        {children}
+      </Link>
+    );
+  };
+
+  const DropdownButton = ({ menuKey }) => {
+    const menu = menuData[menuKey];
+    const isActive = menu?.items.some(item => isActivePath(item.path));
+
+    return (
+      <div 
+        className="relative group"
+        onMouseEnter={() => setActiveDropdown(menuKey)}
+        onMouseLeave={() => setActiveDropdown(null)}
+      >
+        <button
+          className={`
+            relative flex items-center gap-1 font-heading font-medium text-body-md 
+            transition-all duration-300 ease-out
+            ${isActive ? getActiveColor() : `${getTextColor()} ${getHoverColor()}`}
+            after:content-[''] after:absolute after:bottom-[-4px] after:left-0 after:h-[2px] 
+            after:bg-current after:transition-all after:duration-300 after:ease-out
+            ${isActive ? 'after:w-full' : 'after:w-0 group-hover:after:w-full'}
+          `}
+        >
+          <span>{menu.label}</span>
+          <svg 
+            className={`w-3.5 h-3.5 transition-all duration-300 ease-out ${activeDropdown === menuKey ? 'rotate-180' : 'rotate-0'}`}
+            fill="none" 
+            viewBox="0 0 24 24" 
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+
+        {/* Smooth Fade Dropdown */}
+        <div
+          className={`
+            absolute top-full left-0 pt-6 min-w-[240px] z-50
+            transition-all duration-300 ease-out
+            ${activeDropdown === menuKey 
+              ? 'opacity-100 visible translate-y-0' 
+              : 'opacity-0 invisible -translate-y-2 pointer-events-none'
+            }
+          `}
+          onMouseEnter={() => setActiveDropdown(menuKey)}
+          onMouseLeave={() => setActiveDropdown(null)}
+          style={{
+            transitionProperty: 'opacity, visibility, transform',
+            transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)'
+          }}
+        >
+          {/* Dropdown Container with Fade */}
+          <div 
+            className="bg-white rounded border border-secondary-200 shadow-lg overflow-hidden"
+            style={{
+              animation: activeDropdown === menuKey ?  'fadeInScale 0.3s ease-out forwards' : 'none'
+            }}
+          >
+            <div className="py-2">
+              {menu.items.map((item, index) => (
+                <Link
+                  key={index}
+                  to={item.path}
+                  onClick={() => setActiveDropdown(null)}
+                  className={`
+                    block px-4 py-2.5 transition-all duration-200 ease-out
+                    ${isActivePath(item.path)
+                      ? 'text-primary-600 bg-primary-50'
+                      : 'text-secondary-700 hover:text-primary-600 hover:bg-secondary-50 hover:translate-x-1'
+                    }
+                  `}
+                  style={{
+                    transitionProperty: 'color, background-color, transform',
+                    transitionDelay: `${index * 30}ms`
+                  }}
+                >
+                  <div className="font-heading font-semibold text-sm mb-0.5 transition-colors duration-200">
+                    {item.label}
+                  </div>
+                  <div className="text-xs text-secondary-500 leading-tight transition-colors duration-200">
+                    {item.desc}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <>
       {/* Header */}
       <header
         className={`
-          fixed top-0 left-0 right-0 z-50 border-b
-          transition-smooth-slow will-change-transform
+          fixed top-0 left-0 right-0 z-50 transition-all duration-500 ease-out
           ${getHeaderStyle()}
-          ${isVisible ? 'translate-y-0' : '-translate-y-full'}
         `}
+        style={{
+          transitionProperty: 'background-color, border-color'
+        }}
       >
         <div className="section-container">
-          <div className="flex justify-between items-center" style={{ height: '5rem' }}>
+          <div className="flex justify-between items-center h-20">
             
             {/* Logo */}
-            <div className="flex-shrink-0 z-50">
+            <div className="flex-shrink-0">
               <Link 
                 to="/" 
                 onClick={closeMobileMenu}
-                className="block transition-smooth hover:scale-105 will-change-transform"
+                className="block transition-all duration-300 ease-out hover:scale-105"
               >
                 <img 
-                  className={`w-auto transition-smooth ${
-                    isInHero && ! isScrolled ? 'brightness-0 invert h-11' : 'h-10'
-                  }`}
+                  className="h-11 w-auto"
                   src={logo} 
-                  alt="Migas Logo"
+                  alt="Migas Hulu Jabar ONWJ"
                   loading="eager"
                 />
               </Link>
             </div>
 
             {/* Desktop Navigation */}
-            <nav className="hidden lg:flex items-center gap-grid-10">
-              {navItems.map((item) => (
-                <NavLink key={item.path} to={item.path}>
-                  {item.label}
-                </NavLink>
-              ))}
-
-              {/* Dropdown Menu */}
-              <div
-                className="relative group"
-                onMouseEnter={() => setMediaDropdownOpen(true)}
-                onMouseLeave={() => setMediaDropdownOpen(false)}
-              >
-                <button 
-                  className={`
-                    flex items-center gap-grid-2 font-heading font-semibold text-body-md tracking-wide
-                    transition-smooth
-                    ${mediaItems.some(item => isActivePath(item.path))
-                      ? (isInHero && !isScrolled ? 'text-white' : 'text-primary-600')
-                      : `${getTextColor()} ${getHoverTextColor()}`
-                    }
-                  `}
-                  aria-expanded={isMediaDropdownOpen}
-                >
-                  <span>Media & Informasi</span>
-                  <svg 
-                    className={`w-4 h-4 transition-smooth ${isMediaDropdownOpen ? 'rotate-180' : ''}`}
-                    fill="none" 
-                    viewBox="0 0 24 24" 
-                    stroke="currentColor"
-                    strokeWidth={2.5}
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-
-                {/* Dropdown Content */}
-                <div
-                  className={`
-                    absolute top-full left-1/2 -translate-x-1/2 pt-grid-3
-                    transition-smooth
-                    ${isMediaDropdownOpen ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'}
-                  `}
-                >
-                  <div className="w-64 bg-white border border-secondary-100 rounded-xl shadow-lg overflow-hidden">
-                    <div className="py-grid-2">
-                      {mediaItems.map((item) => (
-                        <Link 
-                          key={item.path}
-                          to={item.path} 
-                          className={`
-                            block px-grid-5 py-grid-3 font-heading text-body-md font-semibold
-                            transition-fast border-l-4 border-transparent
-                            ${isActivePath(item.path)
-                              ? 'text-primary-600 bg-primary-50 border-l-primary-600'
-                              : 'text-secondary-700 hover:text-primary-600 hover:bg-secondary-50 hover:border-l-primary-600'
-                            }
-                          `}
-                        >
-                          {item.label}
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
+            <nav className="hidden lg:flex items-center gap-8">
+              <NavLink to="/">Beranda</NavLink>
+              <DropdownButton menuKey="tentang" />
+              <DropdownButton menuKey="bisnis" />
+              <DropdownButton menuKey="program" />
+              <DropdownButton menuKey="media" />
               <NavLink to="/kontak">Kontak</NavLink>
             </nav>
 
-            {/* Search & Mobile Menu Button */}
-            <div className="flex items-center gap-grid-4">
-              {/* Search Button */}
-              <button 
-                className={`
-                  hidden lg:flex items-center justify-center
-                  w-10 h-10 rounded-full transition-smooth
-                  ${isInHero && !isScrolled
-                    ? 'text-white hover:bg-white/20'
-                    : 'text-secondary-600 hover:text-primary-600 hover:bg-secondary-100'
-                  }
-                `}
-                aria-label="Search"
-              >
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </button>
-
-              {/* Mobile Menu Button */}
-              <button 
-                onClick={() => setIsOpen(!isOpen)} 
-                className={`
-                  lg:hidden flex items-center justify-center
-                  w-10 h-10 rounded-lg transition-smooth z-50
-                  ${isInHero && !isScrolled
-                    ? 'text-white hover:bg-white/20'
-                    : 'text-secondary-700 hover:text-primary-600 hover:bg-secondary-100'
-                  }
-                `}
-                aria-expanded={isOpen}
-                aria-label="Toggle menu"
-              >
-                <div className="w-6 h-5 relative flex flex-col justify-center items-center">
-                  <span className={`w-6 h-0.5 bg-current rounded-full transition-smooth absolute ${isOpen ? 'rotate-45 translate-y-0' : '-translate-y-2'}`} />
-                  <span className={`w-6 h-0.5 bg-current rounded-full transition-smooth ${isOpen ? 'opacity-0 scale-0' : 'opacity-100'}`} />
-                  <span className={`w-6 h-0.5 bg-current rounded-full transition-smooth absolute ${isOpen ? '-rotate-45 translate-y-0' : 'translate-y-2'}`} />
-                </div>
-              </button>
-            </div>
+            {/* Mobile Menu Button */}
+            <button 
+              onClick={() => setIsOpen(!isOpen)} 
+              className={`
+                lg:hidden flex items-center justify-center w-10 h-10 rounded 
+                transition-all duration-300 ease-out
+                ${isInHero && !isScrolled ?  'text-white hover:bg-white/10' : 'text-secondary-700 hover:bg-secondary-100'}
+              `}
+              aria-label="Toggle menu"
+            >
+              <div className="w-6 h-5 relative flex flex-col justify-center">
+                <span className={`w-6 h-0.5 bg-current rounded-full transition-all duration-300 ease-out absolute ${isOpen ? 'rotate-45' : '-translate-y-2'}`} />
+                <span className={`w-6 h-0.5 bg-current rounded-full transition-all duration-300 ease-out ${isOpen ? 'opacity-0 scale-0' : 'opacity-100 scale-100'}`} />
+                <span className={`w-6 h-0.5 bg-current rounded-full transition-all duration-300 ease-out absolute ${isOpen ? '-rotate-45' : 'translate-y-2'}`} />
+              </div>
+            </button>
           </div>
         </div>
       </header>
 
-      {/* Mobile Navigation Overlay */}
+      {/* Mobile Overlay */}
       <div
         className={`
-          fixed inset-0 bg-secondary-900/60 backdrop-blur-sm z-40
-          lg:hidden transition-smooth
-          ${isOpen ?  'opacity-100 visible' : 'opacity-0 invisible'}
+          fixed inset-0 bg-secondary-900/50 backdrop-blur-sm z-40 lg:hidden 
+          transition-all duration-400 ease-out
+          ${isOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}
         `}
         onClick={closeMobileMenu}
+        style={{
+          transitionProperty: 'opacity, visibility'
+        }}
       />
 
-      {/* Mobile Navigation Panel */}
+      {/* Mobile Menu */}
       <div
         className={`
-          fixed top-0 right-0 bottom-0 w-80 max-w-[85vw]
-          bg-white shadow-2xl z-40 lg:hidden overflow-y-auto custom-scrollbar
-          transition-smart
+          fixed top-0 right-0 bottom-0 w-80 max-w-[85vw] bg-white z-40 lg:hidden overflow-y-auto
+          transition-all duration-400 ease-out shadow-2xl
           ${isOpen ? 'translate-x-0' : 'translate-x-full'}
         `}
+        style={{
+          transitionProperty: 'transform',
+          transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)'
+        }}
       >
-        <div className="pt-24 pb-grid-8 px-grid-6">
-          <nav className="space-y-grid-1">
-            {/* Main Nav Items */}
-            {[...navItems, { path: '/kontak', label: 'Kontak' }].map((item) => (
-              <Link 
-                key={item.path}
-                to={item.path} 
-                onClick={closeMobileMenu} 
-                className={`
-                  block px-grid-4 py-grid-3 rounded-xl font-heading font-semibold text-body-lg
-                  transition-smooth
-                  ${isActivePath(item.path) 
-                    ? 'text-primary-600 bg-primary-50' 
-                    : 'text-secondary-700 hover:text-primary-600 hover:bg-secondary-50'
-                  }
-                `}
-              >
-                {item.label}
-              </Link>
-            ))}
+        <div className="pt-24 pb-8 px-6">
+          <nav className="space-y-1">
             
-            {/* Mobile Dropdown */}
-            <div className="pt-grid-2">
-              <button
-                onClick={() => setMediaDropdownOpen(!isMediaDropdownOpen)}
-                className="w-full flex items-center justify-between px-grid-4 py-grid-3 rounded-xl font-heading font-semibold text-body-lg text-secondary-700 hover:text-primary-600 hover:bg-secondary-50 transition-smooth"
-              >
-                <span>Media & Informasi</span>
-                <svg 
-                  className={`w-5 h-5 transition-smooth ${isMediaDropdownOpen ? 'rotate-180' : ''}`}
-                  fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
+            {/* Beranda */}
+            <Link 
+              to="/" 
+              onClick={closeMobileMenu}
+              className={`
+                block px-4 py-3 rounded font-heading font-medium 
+                transition-all duration-300 ease-out
+                ${isActivePath('/') ? 'text-primary-600 bg-primary-50' : 'text-secondary-700 hover:bg-secondary-50 hover:translate-x-1'}
+              `}
+            >
+              Beranda
+            </Link>
+
+            {/* Dropdown Sections */}
+            {Object.entries(menuData).map(([key, menu]) => (
+              <div key={key} className="py-1">
+                <button
+                  onClick={() => setActiveDropdown(activeDropdown === key ? null : key)}
+                  className="w-full flex items-center justify-between px-4 py-3 rounded font-heading font-medium text-secondary-700 hover:bg-secondary-50 transition-all duration-300 ease-out"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-              
-              <div className={`overflow-hidden transition-smooth ${isMediaDropdownOpen ? 'max-h-48 opacity-100 mt-grid-1' : 'max-h-0 opacity-0'}`}>
-                <div className="ml-grid-4 space-y-grid-1 border-l-2 border-secondary-200 pl-grid-4">
-                  {mediaItems.map((item) => (
-                    <Link 
-                      key={item.path}
-                      to={item.path} 
-                      onClick={closeMobileMenu} 
-                      className={`
-                        block px-grid-4 py-grid-2.5 rounded-lg font-heading text-body-md font-semibold
-                        transition-smooth
-                        ${isActivePath(item.path) 
-                          ? 'text-primary-600 bg-primary-50' 
-                          : 'text-secondary-600 hover:text-primary-600 hover:bg-secondary-50'
-                        }
-                      `}
-                    >
-                      {item.label}
-                    </Link>
-                  ))}
+                  <span>{menu.label}</span>
+                  <svg 
+                    className={`w-4 h-4 transition-all duration-300 ease-out ${activeDropdown === key ? 'rotate-180' : 'rotate-0'}`} 
+                    fill="none" 
+                    viewBox="0 0 24 24" 
+                    stroke="currentColor" 
+                    strokeWidth={2}
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                
+                <div 
+                  className={`
+                    overflow-hidden transition-all duration-400 ease-out
+                    ${activeDropdown === key ?  'max-h-96 opacity-100' : 'max-h-0 opacity-0'}
+                  `}
+                  style={{
+                    transitionProperty: 'max-height, opacity',
+                    transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)'
+                  }}
+                >
+                  <div className="mt-1 ml-4 pl-4 border-l border-secondary-200 space-y-1">
+                    {menu.items.map((item, idx) => (
+                      <Link
+                        key={idx}
+                        to={item.path}
+                        onClick={closeMobileMenu}
+                        className={`
+                          block px-3 py-2 rounded text-sm 
+                          transition-all duration-300 ease-out
+                          ${isActivePath(item.path) 
+                            ?  'text-primary-600 bg-primary-50 font-medium' 
+                            : 'text-secondary-600 hover:bg-secondary-50 hover:translate-x-1'
+                          }
+                        `}
+                        style={{
+                          transitionDelay: activeDropdown === key ? `${idx * 40}ms` : '0ms'
+                        }}
+                      >
+                        <div className="font-medium mb-0.5">{item.label}</div>
+                        <div className="text-xs text-secondary-500">{item.desc}</div>
+                      </Link>
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
-          </nav>
+            ))}
 
-          {/* Mobile Search */}
-          <div className="mt-grid-6 pt-grid-6 border-t border-secondary-200">
-            <button className="w-full flex items-center gap-grid-3 px-grid-4 py-grid-3 rounded-xl text-secondary-600 bg-secondary-50 hover:bg-secondary-100 transition-smooth font-heading font-medium text-body-md">
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              <span>Cari...</span>
-            </button>
-          </div>
+            {/* Kontak */}
+            <Link 
+              to="/kontak" 
+              onClick={closeMobileMenu}
+              className={`
+                block px-4 py-3 rounded font-heading font-medium 
+                transition-all duration-300 ease-out
+                ${isActivePath('/kontak') ? 'text-primary-600 bg-primary-50' : 'text-secondary-700 hover:bg-secondary-50 hover:translate-x-1'}
+              `}
+            >
+              Kontak
+            </Link>
+
+          </nav>
         </div>
       </div>
+
+      {/* CSS Keyframe Animations */}
+      <style>{`
+        @keyframes fadeInScale {
+          from {
+            opacity: 0;
+            transform: scale(0.95);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+
+        @keyframes slideInRight {
+          from {
+            opacity: 0;
+            transform: translateX(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+      `}</style>
     </>
   );
 };
