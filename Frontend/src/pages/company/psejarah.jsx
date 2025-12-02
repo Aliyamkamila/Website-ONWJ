@@ -7,341 +7,486 @@ import contoh4 from '../../assets/contoh4.png';
 /**
  * Constants
  */
-const AUTO_INTERVAL = 6000; // 6 detik per slide
-const FADE_DURATION = 500;
+const AUTO_INTERVAL = 5000;
+const TRANSITION_DURATION = 600;
 
 /**
- * PSejarah Component - COMPLETE REDESIGN
+ * PSejarah Component - Truly Smooth Progress
  * 
- * Features:
- * - Auto-play dengan progress bar visual
- * - Manual navigation (click dots, arrows, timeline)
- * - Smooth fade transitions
- * - Pause on hover/interaction
+ * Fixed: No jumping, pure linear progression
  */
 const PSejarah = () => {
   const [activeIndex, setActiveIndex] = useState(0);
-  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
-  const [progress, setProgress] = useState(0);
-  const [isFading, setIsFading] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [progress, setProgress] = useState(0); // 0-100 across ALL slides
   
-  const progressRef = useRef(null);
-  const autoPlayRef = useRef(null);
+  const animationFrameRef = useRef(null);
+  const autoAdvanceTimeoutRef = useRef(null);
   
   const images = useMemo(() => [contoh1, contoh2, contoh3, contoh4], []);
   
-  const timelineData = useMemo(() => 
-    Array.from({ length: 13 }, (_, index) => ({
-      year: 2010 + index,
-      title: `Milestone ${2010 + index}`,
-      content: `Tahun ${2010 + index} menandai pencapaian penting dalam perjalanan kami.Berbagai inisiatif strategis dilaksanakan untuk memperkuat posisi perusahaan dalam industri energi nasional.`,
-      image: images[index % images.length]
-    })),
-    [images]
-  );
-
-  // Reset progress dan start timer
-  const startProgress = useCallback(() => {
-    setProgress(0);
-    
-    if (progressRef.current) {
-      cancelAnimationFrame(progressRef.current);
+  const timelineData = useMemo(() => [
+    {
+      year: 2010,
+      title: "Fondasi Awal",
+      description: "Persiapan strategis dan studi kelayakan untuk pengelolaan aset energi daerah",
+      image: images[0]
+    },
+    {
+      year: 2011,
+      title: "Pembentukan Struktur",
+      description: "Pembentukan struktur organisasi dan tim manajemen profesional",
+      image: images[1]
+    },
+    {
+      year: 2012,
+      title: "Pengembangan Kapasitas",
+      description: "Investasi dalam pengembangan SDM dan infrastruktur operasional",
+      image: images[2]
+    },
+    {
+      year: 2013,
+      title: "Ekspansi Regional",
+      description: "Perluasan jangkauan operasional ke provinsi-provinsi strategis",
+      image: images[3]
+    },
+    {
+      year: 2014,
+      title: "Kemitraan Strategis",
+      description: "Membangun kolaborasi dengan stakeholder pemerintah dan industri",
+      image: images[0]
+    },
+    {
+      year: 2015,
+      title: "Optimalisasi Proses",
+      description: "Implementasi sistem manajemen modern dan best practices",
+      image: images[1]
+    },
+    {
+      year: 2016,
+      title: "Pendirian Resmi",
+      description: "Pendirian resmi perusahaan sebagai pengelola Partisipasi Indonesia 10%",
+      highlight: true,
+      image: images[2]
+    },
+    {
+      year: 2017,
+      title: "Operasional Penuh",
+      description: "Memulai operasional penuh dengan tim 1.000+ profesional",
+      image: images[3]
+    },
+    {
+      year: 2018,
+      title: "Diversifikasi Portofolio",
+      description: "Diversifikasi portofolio aset energi untuk keberlanjutan",
+      image: images[0]
+    },
+    {
+      year: 2019,
+      title: "Inovasi Digital",
+      description: "Transformasi digital dan adopsi teknologi dalam operasional",
+      image: images[1]
+    },
+    {
+      year: 2020,
+      title: "Resiliensi",
+      description: "Mempertahankan operasional optimal di tengah tantangan global",
+      image: images[2]
+    },
+    {
+      year: 2021,
+      title: "Pertumbuhan Berkelanjutan",
+      description: "Fokus pada pembangunan berkelanjutan dan ESG",
+      image: images[3]
+    },
+    {
+      year: 2022,
+      title: "Masa Depan Energi",
+      description: "Komitmen menuju transisi energi bersih dan net-zero emission",
+      image: images[0]
     }
-    
+  ], [images]);
+
+  const totalSlides = timelineData.length;
+
+  // Continuous progress animation (0-100% linear)
+  useEffect(() => {
+    const totalDuration = AUTO_INTERVAL * totalSlides; // Total time for all slides
     const startTime = Date.now();
+    const initialProgress = (activeIndex / totalSlides) * 100;
     
     const animate = () => {
       const elapsed = Date.now() - startTime;
-      const newProgress = Math.min((elapsed / AUTO_INTERVAL) * 100, 100);
+      const progressIncrement = (elapsed / AUTO_INTERVAL) * (100 / totalSlides);
+      const newProgress = Math.min(initialProgress + progressIncrement, 100);
       
       setProgress(newProgress);
       
-      if (newProgress < 100 && isAutoPlaying) {
-        progressRef.current = requestAnimationFrame(animate);
+      if (newProgress < 100) {
+        animationFrameRef.current = requestAnimationFrame(animate);
       }
     };
     
-    if (isAutoPlaying) {
-      progressRef.current = requestAnimationFrame(animate);
-    }
-  }, [isAutoPlaying]);
-
-  // Navigate to index dengan fade effect
-  const goToSlide = useCallback((index) => {
-    if (isFading || index === activeIndex) return;
+    animationFrameRef.current = requestAnimationFrame(animate);
     
-    setIsFading(true);
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
+  }, [activeIndex, totalSlides]);
+
+  // Auto-advance to next slide
+  useEffect(() => {
+    autoAdvanceTimeoutRef.current = setTimeout(() => {
+      const nextIndex = (activeIndex + 1) % totalSlides;
+      
+      // Smooth transition
+      setIsTransitioning(true);
+      
+      setTimeout(() => {
+        setActiveIndex(nextIndex);
+        setIsTransitioning(false);
+        
+        // Set progress to exact next slide position
+        const nextProgress = (nextIndex / totalSlides) * 100;
+        setProgress(nextProgress);
+      }, TRANSITION_DURATION / 2);
+      
+    }, AUTO_INTERVAL);
+    
+    return () => {
+      if (autoAdvanceTimeoutRef.current) {
+        clearTimeout(autoAdvanceTimeoutRef.current);
+      }
+    };
+  }, [activeIndex, totalSlides]);
+
+  // Manual navigation
+  const goToSlide = useCallback((targetIndex) => {
+    if (targetIndex === activeIndex || isTransitioning) return;
+    
+    // Cancel animations
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+    }
+    if (autoAdvanceTimeoutRef.current) {
+      clearTimeout(autoAdvanceTimeoutRef.current);
+    }
+    
+    setIsTransitioning(true);
     
     setTimeout(() => {
-      setActiveIndex(index);
-      setIsFading(false);
-      startProgress();
-    }, FADE_DURATION / 2);
-  }, [activeIndex, isFading, startProgress]);
-
-  // Auto-play logic
-  useEffect(() => {
-    if (! isAutoPlaying) {
-      if (autoPlayRef.current) clearTimeout(autoPlayRef.current);
-      if (progressRef.current) cancelAnimationFrame(progressRef.current);
-      return;
-    }
-
-    startProgress();
+      setActiveIndex(targetIndex);
+      setIsTransitioning(false);
+      
+      // Set progress to exact target position
+      const targetProgress = (targetIndex / totalSlides) * 100;
+      setProgress(targetProgress);
+    }, TRANSITION_DURATION / 2);
     
-    autoPlayRef.current = setTimeout(() => {
-      const nextIndex = (activeIndex + 1) % timelineData.length;
-      goToSlide(nextIndex);
-    }, AUTO_INTERVAL);
-
-    return () => {
-      if (autoPlayRef.current) clearTimeout(autoPlayRef.current);
-      if (progressRef.current) cancelAnimationFrame(progressRef.current);
-    };
-  }, [activeIndex, isAutoPlaying, timelineData.length, goToSlide, startProgress]);
-
-  // Pause on interaction
-  const handleInteractionStart = () => setIsAutoPlaying(false);
-  const handleInteractionEnd = () => setIsAutoPlaying(true);
+  }, [activeIndex, isTransitioning, totalSlides]);
 
   const goToPrev = () => {
-    const prevIndex = activeIndex === 0 ? timelineData.length - 1 : activeIndex - 1;
+    const prevIndex = activeIndex === 0 ? totalSlides - 1 : activeIndex - 1;
     goToSlide(prevIndex);
   };
 
   const goToNext = () => {
-    const nextIndex = (activeIndex + 1) % timelineData.length;
+    const nextIndex = (activeIndex + 1) % totalSlides;
     goToSlide(nextIndex);
   };
 
   const currentItem = timelineData[activeIndex];
+  
+  // Calculate current slide progress (0-100 for current slide only)
+  const currentSlideProgress = ((progress * totalSlides) % 100);
 
   return (
     <section 
       id="sejarah"
-      className="py-grid-12 lg:py-grid-16 bg-gradient-to-b from-secondary-900 to-secondary-800"
-      onMouseEnter={handleInteractionStart}
-      onMouseLeave={handleInteractionEnd}
+      className="py-grid-10 relative overflow-hidden"
       aria-labelledby="sejarah-title"
     >
-      <div className="section-container">
+      {/* Animated Flowing Waves Background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#0a1929] via-[#0d2847] to-[#1a2332]">
+        
+        {/* Wave Layer 1 */}
+        <div className="absolute inset-0 opacity-20">
+          <svg className="absolute w-full h-full" viewBox="0 0 1440 800" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="wave1" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#1e40af" stopOpacity="0.3" />
+                <stop offset="50%" stopColor="#3b82f6" stopOpacity="0.5" />
+                <stop offset="100%" stopColor="#1e40af" stopOpacity="0.3" />
+              </linearGradient>
+            </defs>
+            <path 
+              fill="url(#wave1)" 
+              d="M0,400 C320,300 420,500 720,400 C1020,300 1120,500 1440,400 L1440,800 L0,800 Z"
+            >
+              <animate
+                attributeName="d"
+                dur="20s"
+                repeatCount="indefinite"
+                values="
+                  M0,400 C320,300 420,500 720,400 C1020,300 1120,500 1440,400 L1440,800 L0,800 Z;
+                  M0,450 C320,350 420,550 720,450 C1020,350 1120,550 1440,450 L1440,800 L0,800 Z;
+                  M0,400 C320,300 420,500 720,400 C1020,300 1120,500 1440,400 L1440,800 L0,800 Z"
+              />
+            </path>
+          </svg>
+        </div>
+
+        {/* Wave Layer 2 */}
+        <div className="absolute inset-0 opacity-15">
+          <svg className="absolute w-full h-full" viewBox="0 0 1440 800" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="wave2" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#2563eb" stopOpacity="0.4" />
+                <stop offset="50%" stopColor="#60a5fa" stopOpacity="0.6" />
+                <stop offset="100%" stopColor="#2563eb" stopOpacity="0.4" />
+              </linearGradient>
+            </defs>
+            <path 
+              fill="url(#wave2)" 
+              d="M0,500 C360,400 540,600 900,500 C1260,400 1380,600 1440,500 L1440,800 L0,800 Z"
+            >
+              <animate
+                attributeName="d"
+                dur="15s"
+                repeatCount="indefinite"
+                values="
+                  M0,500 C360,400 540,600 900,500 C1260,400 1380,600 1440,500 L1440,800 L0,800 Z;
+                  M0,550 C360,450 540,650 900,550 C1260,450 1380,650 1440,550 L1440,800 L0,800 Z;
+                  M0,500 C360,400 540,600 900,500 C1260,400 1380,600 1440,500 L1440,800 L0,800 Z"
+              />
+            </path>
+          </svg>
+        </div>
+
+        {/* Wave Layer 3 */}
+        <div className="absolute inset-0 opacity-10">
+          <svg className="absolute w-full h-full" viewBox="0 0 1440 800" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="wave3" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.5" />
+                <stop offset="50%" stopColor="#93c5fd" stopOpacity="0.7" />
+                <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.5" />
+              </linearGradient>
+            </defs>
+            <path 
+              fill="url(#wave3)" 
+              d="M0,600 C480,520 600,680 960,600 C1320,520 1380,680 1440,600 L1440,800 L0,800 Z"
+            >
+              <animate
+                attributeName="d"
+                dur="10s"
+                repeatCount="indefinite"
+                values="
+                  M0,600 C480,520 600,680 960,600 C1320,520 1380,680 1440,600 L1440,800 L0,800 Z;
+                  M0,640 C480,560 600,720 960,640 C1320,560 1380,720 1440,640 L1440,800 L0,800 Z;
+                  M0,600 C480,520 600,680 960,600 C1320,520 1380,680 1440,600 L1440,800 L0,800 Z"
+              />
+            </path>
+          </svg>
+        </div>
+
+        <div className="absolute inset-0 bg-gradient-radial from-primary-600/5 via-transparent to-transparent" />
+        <div 
+          className="absolute inset-0 opacity-[0.015]"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`
+          }}
+        />
+      </div>
+
+      {/* Content */}
+      <div className="section-container relative z-10">
+        
         {/* Header */}
-        <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-grid-4 mb-grid-8 lg:mb-grid-10">
+        <div className="flex items-center justify-between mb-grid-6">
           <div>
-            <span className="text-label-sm text-primary-400 uppercase tracking-wider">
+            <span className="inline-block px-grid-3 py-grid-1 bg-white/5 backdrop-blur-sm text-primary-400 rounded text-body-xs font-semibold mb-grid-2 uppercase tracking-wide border border-white/10">
               Perjalanan Kami
             </span>
-            <h2 
-              id="sejarah-title" 
-              className="text-display-lg lg:text-display-xl font-bold text-white mt-grid-2"
-            >
+            <h2 id="sejarah-title" className="text-display-md lg:text-display-lg font-heading font-bold text-white">
               Sejarah Perusahaan
             </h2>
           </div>
           
           {/* Navigation */}
-          <div className="flex items-center gap-grid-4">
-            {/* Arrows */}
-            <div className="flex items-center gap-grid-2">
-              <button
-                onClick={goToPrev}
-                className="w-10 h-10 rounded-full border border-secondary-600
-                           flex items-center justify-center
-                           text-secondary-400 hover:text-white hover:border-white
-                           transition-colors duration-base
-                           focus:outline-none focus:ring-2 focus:ring-primary-500"
-                aria-label="Sebelumnya"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
-              
-              <span className="text-body-sm text-secondary-400 min-w-[50px] text-center tabular-nums">
-                {activeIndex + 1} / {timelineData.length}
-              </span>
-              
-              <button
-                onClick={goToNext}
-                className="w-10 h-10 rounded-full border border-secondary-600
-                           flex items-center justify-center
-                           text-secondary-400 hover:text-white hover:border-white
-                           transition-colors duration-base
-                           focus:outline-none focus:ring-2 focus:ring-primary-500"
-                aria-label="Selanjutnya"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-            </div>
-
-            {/* Auto-play indicator */}
+          <div className="flex items-center gap-grid-3">
             <button
-              onClick={() => setIsAutoPlaying(!isAutoPlaying)}
-              className={`
-                w-10 h-10 rounded-full border
-                flex items-center justify-center
-                transition-colors duration-base
-                focus:outline-none focus:ring-2 focus:ring-primary-500
-                ${isAutoPlaying 
-                  ? 'border-primary-500 text-primary-400 bg-primary-500/10' 
-                  : 'border-secondary-600 text-secondary-400'
-                }
-              `}
-              aria-label={isAutoPlaying ?  'Pause autoplay' : 'Play autoplay'}
+              onClick={goToPrev}
+              className="w-9 h-9 rounded bg-white/5 hover:bg-white/10 backdrop-blur-sm flex items-center justify-center text-white transition-all border border-white/10"
+              aria-label="Sebelumnya"
             >
-              {isAutoPlaying ?  (
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
-                </svg>
-              ) : (
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M8 5v14l11-7z"/>
-                </svg>
-              )}
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            
+            <span className="text-body-sm text-white/80 min-w-[60px] text-center tabular-nums font-medium">
+              {activeIndex + 1} / {totalSlides}
+            </span>
+            
+            <button
+              onClick={goToNext}
+              className="w-9 h-9 rounded bg-white/5 hover:bg-white/10 backdrop-blur-sm flex items-center justify-center text-white transition-all border border-white/10"
+              aria-label="Selanjutnya"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
             </button>
           </div>
         </div>
 
-        {/* Timeline Bar */}
-        <div className="relative mb-grid-10 overflow-x-auto custom-scrollbar pb-grid-2">
-          {/* Progress Line Background */}
-          <div className="absolute top-[7px] left-0 right-0 h-0.5 bg-secondary-700" aria-hidden="true" />
+        {/* Progress Bar - Absolute Progress */}
+        <div className="mb-grid-8">
+          <div className="relative h-1.5 bg-white/5 backdrop-blur-sm rounded-full overflow-hidden border border-white/10">
+            {/* Background segments */}
+            <div className="absolute inset-0 flex">
+              {timelineData.map((_, index) => (
+                <div
+                  key={index}
+                  className={`flex-1 ${index < activeIndex ? 'bg-primary-500/50' : ''}`}
+                  style={{ marginRight: index < totalSlides - 1 ? '2px' : '0' }}
+                />
+              ))}
+            </div>
+            
+            {/* Smooth continuous progress - NO JUMPING */}
+            <div 
+              className="absolute inset-y-0 left-0 bg-gradient-to-r from-primary-600 to-primary-500"
+              style={{ 
+                width: `${progress}%`,
+                boxShadow: '0 0 10px rgba(59, 130, 246, 0.5)',
+                transition: 'none' // Pure requestAnimationFrame, no CSS transition
+              }}
+            />
+          </div>
           
-          {/* Active Progress Line */}
-          <div 
-            className="absolute top-[7px] left-0 h-0.5 bg-primary-500 transition-all duration-300"
-            style={{ width: `${(activeIndex / (timelineData.length - 1)) * 100}%` }}
-            aria-hidden="true"
-          />
-          
-          {/* Timeline Points */}
-          <div className="relative flex justify-between min-w-[800px]">
-            {timelineData.map((item, index) => (
+          {/* Year markers */}
+          <div className="flex justify-between mt-grid-2 px-1">
+            {timelineData.filter((_, i) => i % 2 === 0).map((item) => (
               <button
                 key={item.year}
-                onClick={() => goToSlide(index)}
-                className={`
-                  flex flex-col items-center
-                  focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-secondary-900
-                  rounded transition-all duration-base
-                  group
-                `}
-                aria-label={`Tahun ${item.year}`}
-                aria-pressed={index === activeIndex}
+                onClick={() => goToSlide(timelineData.findIndex(d => d.year === item.year))}
+                className={`text-body-xs transition-all ${
+                  item.year === currentItem.year 
+                    ? 'text-primary-400 font-bold' 
+                    : 'text-white/50 hover:text-white/80'
+                }`}
               >
-                {/* Dot */}
-                <div 
-                  className={`
-                    w-3.5 h-3.5 rounded-full transition-all duration-base
-                    ${index === activeIndex 
-                      ? 'bg-primary-500 ring-4 ring-primary-500/30 scale-125' 
-                      : index < activeIndex 
-                        ? 'bg-primary-600' 
-                        : 'bg-secondary-600 group-hover:bg-secondary-500'
-                    }
-                  `}
-                />
-                
-                {/* Year Label */}
-                <span 
-                  className={`
-                    mt-grid-3 text-body-xs font-medium transition-colors duration-base
-                    ${index === activeIndex 
-                      ? 'text-primary-400' 
-                      : 'text-secondary-500 group-hover:text-secondary-400'
-                    }
-                  `}
-                >
-                  {item.year}
-                </span>
+                {item.year}
               </button>
             ))}
           </div>
         </div>
 
-        {/* Content Area */}
-        <div 
-          className={`
-            grid lg:grid-cols-2 gap-grid-8 lg:gap-grid-12 items-center
-            transition-opacity duration-300
-            ${isFading ? 'opacity-0' : 'opacity-100'}
-          `}
-        >
-          {/* Text */}
-          <div className="order-2 lg:order-1">
-            <div className="inline-block px-grid-3 py-grid-1 bg-primary-500/20 rounded-full mb-grid-4">
-              <span className="text-label-sm text-primary-400 uppercase tracking-wider">
-                Tahun {currentItem.year}
-              </span>
-            </div>
-            
-            <h3 className="text-display-md lg:text-display-lg font-bold text-white mb-grid-4">
-              {currentItem.title}
-            </h3>
-            
-            <p className="text-body-lg text-secondary-300 leading-relaxed mb-grid-6">
-              {currentItem.content}
-            </p>
-
-            {/* Progress Bar - Visual auto-play indicator */}
-            {isAutoPlaying && (
-              <div className="w-full max-w-xs h-1 bg-secondary-700 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-primary-500 transition-none"
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
-            )}
-
-            {/* Quick Navigation Dots */}
-            <div className="flex items-center gap-grid-2 mt-grid-6">
-              {timelineData.slice(
-                Math.max(0, activeIndex - 2),
-                Math.min(timelineData.length, activeIndex + 3)
-              ).map((item, idx) => {
-                const realIndex = Math.max(0, activeIndex - 2) + idx;
-                return (
-                  <button
-                    key={realIndex}
-                    onClick={() => goToSlide(realIndex)}
-                    className={`
-                      h-2 rounded-full transition-all duration-base
-                      ${realIndex === activeIndex 
-                        ? 'w-8 bg-primary-500' 
-                        : 'w-2 bg-secondary-600 hover:bg-secondary-500'
-                      }
-                    `}
-                    aria-label={`Tahun ${item.year}`}
-                  />
-                );
-              })}
-            </div>
-          </div>
-
+        {/* Main Content */}
+        <div className="grid lg:grid-cols-5 gap-grid-6 items-center">
+          
           {/* Image */}
-          <div className="order-1 lg:order-2">
-            <div className="relative rounded-2xl overflow-hidden">
+          <div className="lg:col-span-3 order-2 lg:order-1">
+            <div 
+              className={`
+                relative rounded overflow-hidden border border-white/10 shadow-2xl
+                transition-all duration-500
+                ${isTransitioning ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}
+              `}
+            >
               <img
                 src={currentItem.image}
-                alt={`${currentItem.title}`}
-                className="w-full aspect-[4/3] object-cover"
+                alt={currentItem.title}
+                className="w-full aspect-[16/10] object-cover"
                 loading="lazy"
               />
               
-              {/* Year Badge on Image */}
-              <div 
-                className="absolute top-4 left-4 px-grid-4 py-grid-2 
-                           bg-white/95 backdrop-blur-sm rounded-lg shadow-lg"
-              >
-                <span className="text-display-sm font-bold text-secondary-900">
+              <div className="absolute inset-0 bg-gradient-to-t from-secondary-900/50 via-transparent to-transparent" />
+              
+              <div className={`
+                absolute top-4 right-4 px-grid-4 py-grid-2 rounded backdrop-blur-md shadow-xl border
+                ${currentItem.highlight 
+                  ? 'bg-primary-600 border-primary-400/30' 
+                  : 'bg-white/90 border-white/30'
+                }
+              `}>
+                <span className={`text-body-lg font-bold ${currentItem.highlight ? 'text-white' : 'text-secondary-900'}`}>
                   {currentItem.year}
                 </span>
               </div>
+
+              {/* Current slide progress on image */}
+              <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/10">
+                <div 
+                  className="h-full bg-primary-500"
+                  style={{ 
+                    width: `${currentSlideProgress}%`,
+                    boxShadow: '0 0 8px rgba(59, 130, 246, 0.6)',
+                    transition: 'none'
+                  }}
+                />
+              </div>
             </div>
           </div>
+
+          {/* Text Content */}
+          <div className="lg:col-span-2 order-1 lg:order-2">
+            <div 
+              className={`
+                transition-all duration-500
+                ${isTransitioning ? 'opacity-0 translate-x-4' : 'opacity-100 translate-x-0'}
+              `}
+            >
+              {currentItem.highlight && (
+                <div className="inline-flex items-center gap-grid-2 px-grid-3 py-grid-1 bg-primary-600/20 backdrop-blur-sm rounded border border-primary-500/30 mb-grid-3">
+                  <span className="w-2 h-2 rounded-full bg-primary-400 animate-pulse" />
+                  <span className="text-body-xs font-semibold text-primary-300 uppercase tracking-wide">
+                    Milestone Penting
+                  </span>
+                </div>
+              )}
+              
+              <h3 className="text-display-sm lg:text-display-md font-heading font-bold text-white mb-grid-3 leading-tight">
+                {currentItem.title}
+              </h3>
+              
+              <p className="text-body-md text-white/85 leading-relaxed mb-grid-4">
+                {currentItem.description}
+              </p>
+
+              {/* Navigation dots */}
+              <div className="flex items-center gap-grid-2">
+                {timelineData.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => goToSlide(index)}
+                    className={`
+                      h-1.5 rounded-full transition-all duration-300
+                      ${index === activeIndex 
+                        ? 'w-8 bg-primary-500' 
+                        : 'w-1.5 bg-white/25 hover:bg-white/50'
+                      }
+                    `}
+                    style={index === activeIndex ? { boxShadow: '0 0 8px rgba(59, 130, 246, 0.6)' } : {}}
+                    aria-label={`Tahun ${timelineData[index].year}`}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+
         </div>
+
+        {/* Auto-play indicator */}
+        <div className="mt-grid-6 flex items-center justify-center gap-grid-2 text-white/50 text-body-xs">
+          <div className="w-2 h-2 rounded-full bg-primary-400 animate-pulse" style={{ boxShadow: '0 0 6px rgba(59, 130, 246, 0.6)' }} />
+          <span>Otomatis berpindah setiap {AUTO_INTERVAL / 1000} detik</span>
+        </div>
+
       </div>
     </section>
   );

@@ -41,27 +41,29 @@ const featuredVideo = videoData[0];
 const galleryVideos = videoData.slice(1); 
 
 const MediaHero = () => (
-    <div className="relative h-[60vh] overflow-hidden">
-        <div className="absolute inset-0">
-            <img src={bannerImage} alt="Banner Media" className="w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-black/50" />
-        </div>
-        <div className="relative container mx-auto px-8 lg:px-16 h-full flex items-center">
-            <div className="max-w-3xl text-white">
-                <div className="flex items-center gap-2 mb-4 text-sm">
-                    <Link to="/" className="text-gray-300 hover:text-white flex items-center gap-1">
-                        <FaHome /> Home
-                    </Link>
-                    <span>/</span>
-                    <span className="font-semibold text-white">Media & Informasi</span>
-                </div>
-                <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">Media & Informasi</h1>
-                <p className="text-lg text-gray-200 leading-relaxed">
-                    Kumpulan berita, rilis media, dan galeri video terbaru dari aktivitas perusahaan kami.
-                </p>
-            </div>
-        </div>
+  <div className="relative h-[60vh] overflow-hidden">
+    <div className="absolute inset-0">
+      <img src={bannerImage} alt="Banner Media" className="w-full h-full object-cover" />
+      <div className="absolute inset-0 bg-gradient-to-r from-secondary-900/70 to-secondary-900/50" />
     </div>
+    <div className="relative container mx-auto px-8 lg:px-16 h-full flex items-center">
+      <div className="max-w-3xl text-white">
+        <div className="flex items-center gap-2 mb-4 text-sm">
+          <Link to="/" className="text-white/70 hover:text-white flex items-center gap-1 transition-colors">
+            <FaHome /> Home
+          </Link>
+          <span className="text-white/50">/</span>
+          <span className="font-semibold text-white">Media & Informasi</span>
+        </div>
+        <h1 className="text-4xl md:text-6xl font-heading font-bold mb-6 leading-tight text-white">
+          Media & Informasi
+        </h1>
+        <p className="text-lg text-white/90 leading-relaxed">
+          Kumpulan berita, rilis media, dan galeri video terbaru dari aktivitas perusahaan kami.
+        </p>
+      </div>
+    </div>
+  </div>
 );
 
 const SubNav = () => {
