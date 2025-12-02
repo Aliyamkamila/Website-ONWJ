@@ -1,127 +1,150 @@
 import React from 'react';
 import companyImage from '../../assets/contoh2.png';
+import { FaBuilding, FaUsers, FaMapMarkerAlt, FaBolt, FaArrowRight } from 'react-icons/fa';
 
 /**
- * PProfile Component - REDESIGN TOTAL
+ * PProfile Component - Balanced Visual Hierarchy
  * 
- * Konsep: "Company Snapshot" 
- * - Hero-style dengan gambar besar
- * - Stats overlay untuk visual impact
- * - Storytelling approach
+ * Konsep: "Natural Reading Flow"
+ * - Top-down information flow
+ * - Balanced 3-column layout
+ * - Clear visual grouping
  */
 const PProfile = () => {
-  const highlights = [
-    { value: "2016", label: "Didirikan", suffix: "" },
-    { value: "1.000", label: "Karyawan", suffix: "+" },
-    { value: "6", label: "Provinsi", suffix: "" },
-    { value: "500", label: "Kapasitas", suffix: "MW" },
+  const keyStats = [
+    { icon: FaBuilding, value: "2016", label: "Didirikan" },
+    { icon: FaUsers, value: "1.000+", label: "Karyawan" },
+    { icon: FaMapMarkerAlt, value: "6", label: "Provinsi" },
+    { icon: FaBolt, value: "500", label: "MW Kapasitas" },
   ];
 
   return (
-    <section className="relative" aria-labelledby="profile-title">
-      {/* Main Content Area */}
-      <div className="section-container py-grid-12 lg:py-grid-16">
+    <section className="relative bg-white py-grid-10" aria-labelledby="profile-title">
+      
+      <div className="section-container">
         
-        {/* Two Column Layout - Text + Image */}
-        <div className="grid lg:grid-cols-12 gap-grid-8 lg:gap-grid-12 items-center">
+        {/* Header Section - Centered */}
+        <div className="max-w-4xl mx-auto text-center mb-grid-8">
+          <span className="inline-block px-grid-3 py-grid-1 bg-secondary-100 text-secondary-700 rounded text-body-xs font-semibold mb-grid-2 uppercase tracking-wide">
+            Siapa Kami
+          </span>
           
-          {/* Left: Text Content */}
-          <div className="lg:col-span-5 order-2 lg:order-1">
-            <span className="text-label-md text-primary-600 uppercase tracking-wider">
-              Siapa Kami
-            </span>
-            
-            <h2 
-              id="profile-title" 
-              className="text-display-lg lg:text-display-xl font-bold text-secondary-900 mt-grid-3 mb-grid-6"
-            >
-              Membangun Masa Depan Energi Indonesia
-            </h2>
-            
-            <p className="text-body-lg text-secondary-600 leading-relaxed mb-grid-6">
-              Sebagai pengelola Partisipasi Indonesia 10% Daerah, kami berkomitmen 
-              mengoptimalkan nilai tambah bagi masyarakat dan mendukung pembangunan 
-              berkelanjutan di wilayah operasi.
-            </p>
-            
-            <p className="text-body-md text-secondary-500 leading-relaxed mb-grid-8">
-              Berdiri sejak 2016, kami telah berkembang menjadi salah satu 
-              perusahaan terdepan dalam pengelolaan aset energi dengan jangkauan 
-              operasional di 6 provinsi strategis di Indonesia.
-            </p>
+          <h2 id="profile-title" className="text-display-md lg:text-display-lg font-heading font-bold text-secondary-900 mb-grid-3">
+            Migas Hulu Jabar ONWJ
+          </h2>
+          
+          <p className="text-body-md lg:text-body-lg font-semibold text-primary-600 mb-grid-3">
+            Pengelola Partisipasi Indonesia 10% Daerah
+          </p>
+          
+          <p className="text-body-sm text-secondary-600 leading-relaxed">
+            Mengoptimalkan nilai tambah bagi masyarakat dan mendukung pembangunan berkelanjutan di wilayah operasi sejak 2016
+          </p>
+        </div>
 
-            {/* CTA */}
-            <a 
-              href="#sejarah" 
-              className="inline-flex items-center gap-grid-2 
-                         text-primary-600 hover:text-primary-700
-                         font-semibold text-body-md
-                         group transition-colors duration-base"
-            >
-              Lihat Perjalanan Kami
-              <svg 
-                className="w-5 h-5 transform group-hover:translate-x-1 transition-transform duration-base" 
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24" 
-                strokeWidth={2}
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
-            </a>
+        {/* Main Content - 3 Column Balanced Layout */}
+        <div className="max-w-6xl mx-auto">
+          
+          {/* Stats Bar - Horizontal */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-grid-4 mb-grid-6">
+            {keyStats.map((stat, index) => {
+              const IconComponent = stat.icon;
+              return (
+                <div 
+                  key={index}
+                  className="bg-white border border-secondary-200 rounded p-grid-4 text-center hover:border-primary-600 hover:shadow-sm transition-all"
+                >
+                  <div className="inline-flex items-center justify-center w-10 h-10 rounded bg-secondary-100 text-secondary-700 mb-grid-2">
+                    <IconComponent className="w-5 h-5" />
+                  </div>
+                  <p className="text-display-sm font-heading font-bold text-secondary-900 mb-grid-0.5">
+                    {stat.value}
+                  </p>
+                  <p className="text-body-xs text-secondary-600">
+                    {stat.label}
+                  </p>
+                </div>
+              );
+            })}
           </div>
 
-          {/* Right: Image with Stats Overlay */}
-          <div className="lg:col-span-7 order-1 lg:order-2 relative">
-            {/* Main Image */}
-            <div className="relative rounded-2xl overflow-hidden shadow-xl">
-              <img 
-                src={companyImage}
-                alt="Operasional perusahaan"
-                className="w-full aspect-[4/3] object-cover"
-                loading="lazy"
-              />
-              
-              {/* Gradient Overlay */}
-              <div 
-                className="absolute inset-0 bg-gradient-to-t from-secondary-900/80 via-transparent to-transparent"
-                aria-hidden="true"
-              />
-              
-              {/* Stats Bar - Overlay di bawah gambar */}
-              <div className="absolute bottom-0 left-0 right-0 p-grid-6">
-                <div className="grid grid-cols-4 gap-grid-4">
-                  {highlights.map((item, index) => (
-                    <div 
-                      key={index} 
-                      className="text-center"
-                    >
-                      <p className="text-display-md lg:text-display-lg font-bold text-white">
-                        {item.value}
-                        <span className="text-primary-400">{item.suffix}</span>
-                      </p>
-                      <p className="text-body-xs text-secondary-300 mt-grid-1">
-                        {item.label}
-                      </p>
-                    </div>
-                  ))}
+          {/* Content Grid - Image + Info Side by Side */}
+          <div className="grid lg:grid-cols-3 gap-grid-5">
+            
+            {/* Image - Takes 2 columns */}
+            <div className="lg:col-span-2">
+              <div className="relative h-full rounded overflow-hidden border border-secondary-200">
+                <img 
+                  src={companyImage}
+                  alt="Operasional Migas Hulu Jabar ONWJ"
+                  className="w-full h-full object-cover min-h-[300px]"
+                  loading="lazy"
+                />
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-secondary-900/90 to-transparent p-grid-4">
+                  <p className="text-body-sm text-white font-medium">
+                    Operasional lapangan migas di 6 provinsi strategis Indonesia
+                  </p>
                 </div>
               </div>
             </div>
 
-            {/* Decorative Badge */}
-            <div 
-              className="absolute -top-4 -right-4 lg:-top-6 lg:-right-6
-                         w-24 h-24 lg:w-32 lg:h-32
-                         bg-primary-600 rounded-full
-                         flex flex-col items-center justify-center
-                         text-white shadow-lg"
-            >
-              <span className="text-display-sm lg:text-display-md font-bold">8+</span>
-              <span className="text-body-xs text-primary-100">Tahun</span>
+            {/* Info Column - Takes 1 column */}
+            <div className="space-y-grid-4">
+              
+              {/* Fokus Utama Card */}
+              <div className="bg-secondary-50 border border-secondary-200 rounded p-grid-5">
+                <h3 className="font-heading font-bold text-body-md text-secondary-900 mb-grid-3">
+                  Fokus Utama
+                </h3>
+                <ul className="space-y-grid-2 text-body-sm text-secondary-700">
+                  <li className="flex items-start gap-grid-2">
+                    <span className="flex-shrink-0 w-1.5 h-1.5 rounded-full bg-primary-600 mt-1.5"></span>
+                    <span>Pengelolaan Partisipasi Indonesia 10%</span>
+                  </li>
+                  <li className="flex items-start gap-grid-2">
+                    <span className="flex-shrink-0 w-1.5 h-1.5 rounded-full bg-primary-600 mt-1.5"></span>
+                    <span>Optimalisasi nilai aset energi daerah</span>
+                  </li>
+                  <li className="flex items-start gap-grid-2">
+                    <span className="flex-shrink-0 w-1.5 h-1.5 rounded-full bg-primary-600 mt-1.5"></span>
+                    <span>Kontribusi pembangunan berkelanjutan</span>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Perjalanan Card */}
+              <div className="bg-white border border-secondary-200 rounded p-grid-5">
+                <h3 className="font-heading font-bold text-body-md text-secondary-900 mb-grid-3">
+                  Perjalanan Kami
+                </h3>
+                
+                <div className="flex items-center gap-grid-3 mb-grid-3">
+                  <div className="flex-shrink-0 w-14 h-14 rounded bg-primary-50 flex flex-col items-center justify-center">
+                    <span className="text-body-xl font-bold text-primary-600 leading-none">8+</span>
+                    <span className="text-body-xs text-primary-600">Tahun</span>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-body-sm text-secondary-700 leading-relaxed">
+                      Sejak 2016, kami telah berkembang menjadi perusahaan terdepan dalam pengelolaan aset energi
+                    </p>
+                  </div>
+                </div>
+
+                <a 
+                  href="#sejarah" 
+                  className="inline-flex items-center gap-grid-2 text-primary-600 hover:text-primary-700 font-semibold text-body-sm group transition-colors"
+                >
+                  Lihat Perjalanan Lengkap
+                  <FaArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                </a>
+              </div>
+
             </div>
+
           </div>
+
         </div>
+
       </div>
     </section>
   );
