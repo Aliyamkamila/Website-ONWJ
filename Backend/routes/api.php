@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\UmkmController;
 use App\Http\Controllers\Api\ProgramController;
 use App\Http\Controllers\Api\WkTekkomController;
 use App\Http\Controllers\Api\WkTjslController;
+use App\Http\Controllers\Api\PenghargaanController;
 
 // Guest routes (public access)
 Route::middleware(['guest.only'])->group(function () {
@@ -204,4 +205,43 @@ Route::prefix('v1')->group(function () {
             ]
         ], 200);
     });
+});
+
+/*
+|--------------------------------------------------------------------------
+| API Routes - Penghargaan
+|--------------------------------------------------------------------------
+*/
+
+// ===== PUBLIC ROUTES (untuk website visitor) =====
+Route::prefix('v1')->group(function () {
+    // Get penghargaan for Media Informasi Page
+    Route::get('/penghargaan', [PenghargaanController::class, 'index']);
+    
+    // Get penghargaan for Landing Page
+    Route::get('/penghargaan/landing', [PenghargaanController::class, 'forLanding']);
+    
+    // Get detail penghargaan
+    Route::get('/penghargaan/{id}', [PenghargaanController::class, 'show']);
+    
+    // Get filter options
+    Route::get('/penghargaan-years', [PenghargaanController::class, 'getYears']);
+    Route::get('/penghargaan-categories', [PenghargaanController::class, 'getCategories']);
+});
+
+// ===== ADMIN ROUTES (TEMPORARY WITHOUT AUTH) =====
+Route::prefix('v1/admin')->group(function () {
+// Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin.auth'])->group(function () {
+    // CRUD Operations
+    Route::get('/penghargaan', [PenghargaanController::class, 'adminIndex']);
+    Route::post('/penghargaan', [PenghargaanController::class, 'store']);
+    Route::get('/penghargaan/{id}', [PenghargaanController::class, 'show']);
+    Route::post('/penghargaan/{id}', [PenghargaanController::class, 'update']); // POST untuk support form-data dengan image
+    Route::delete('/penghargaan/{id}', [PenghargaanController::class, 'destroy']);
+    
+    // Bulk operations
+    Route::post('/penghargaan/bulk-delete', [PenghargaanController::class, 'bulkDestroy']);
+    
+    // Statistics
+    Route::get('/penghargaan-statistics', [PenghargaanController::class, 'getStatistics']);
 });

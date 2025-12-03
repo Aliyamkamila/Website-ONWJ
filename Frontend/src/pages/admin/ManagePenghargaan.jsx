@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaEdit, FaTrash, FaPlus, FaTimes, FaTrophy, FaSearch, FaFilter, FaCheck, FaArrowLeft, FaImage, FaCalendar, FaFileExcel } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import * as XLSX from 'xlsx';
+import toast from 'react-hot-toast';
+import penghargaanService from '../../services/penghargaanService';
 
 const ManagePenghargaan = () => {
   const navigate = useNavigate();
@@ -9,6 +11,8 @@ const ManagePenghargaan = () => {
   const [filteredPenghargaan, setFilteredPenghargaan] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   
   // Search & Filter States
   const [searchTerm, setSearchTerm] = useState('');
@@ -18,8 +22,9 @@ const ManagePenghargaan = () => {
   const [formData, setFormData] = useState({
     title: '',
     category: '',
-    pemberi: '',
+    given_by: '',
     year: new Date().getFullYear(),
+    month: '',
     date: '',
     description: '',
     image: null,
@@ -37,22 +42,48 @@ const ManagePenghargaan = () => {
     'Lainnya',
   ];
 
+  const months = [
+    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+  ];
+
+  // ===== FETCH DATA FROM API =====
+  useEffect(() => {
+    fetchPenghargaan();
+  }, []);
+
+  const fetchPenghargaan = async () => {
+    setLoading(true);
+    try {
+      const response = await penghargaanService.adminGetAllPenghargaan();
+      if (response.success) {
+        setPenghargaan(response.data);
+        toast.success('Data berhasil dimuat');
+      }
+    } catch (error) {
+      console.error('Error fetching penghargaan:', error);
+      toast.error(error.message || 'Gagal memuat data penghargaan');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Filter Logic
-  React.useEffect(() => {
+  useEffect(() => {
     let result = [...penghargaan];
 
     // Search
     if (searchTerm) {
       result = result.filter(item =>
-        item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.pemberi.toLowerCase().includes(searchTerm.toLowerCase())
+        item.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.category?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.given_by?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
     // Filter by year
     if (filterYear) {
-      result = result.filter(item => item.year.toString() === filterYear);
+      result = result.filter(item => item.year?.toString() === filterYear);
     }
 
     // Filter by category
@@ -63,23 +94,22 @@ const ManagePenghargaan = () => {
     setFilteredPenghargaan(result);
   }, [searchTerm, filterYear, filterCategory, penghargaan]);
 
-  // ✅ EXPORT TO EXCEL - OPTIMIZED VERSION
+  // ✅ EXPORT TO EXCEL
   const exportToExcel = () => {
     try {
-      // Check if data is empty
       if (filteredPenghargaan.length === 0) {
-        alert('⚠️ Tidak ada data untuk diexport!');
+        toast.error('Tidak ada data untuk diexport! ');
         return;
       }
 
-      // Prepare export data with proper formatting and null safety
       const exportData = filteredPenghargaan.map((item, index) => ({
         'No': index + 1,
         'Nama Penghargaan': item.title || '-',
         'Kategori': item.category || '-',
-        'Pemberi Penghargaan': item.pemberi || '-',
+        'Pemberi Penghargaan': item.given_by || '-',
         'Tahun': item.year || '-',
-        'Tanggal Penerimaan': item.date ? new Date(item.date).toLocaleDateString('id-ID', {
+        'Bulan': item.month || '-',
+        'Tanggal Penerimaan': item.date ?  new Date(item.date).toLocaleDateString('id-ID', {
           day: '2-digit',
           month: 'long',
           year: 'numeric'
@@ -89,46 +119,27 @@ const ManagePenghargaan = () => {
         'Tampil di Media Informasi': item.show_in_media_informasi ? 'Ya' : 'Tidak',
       }));
 
-      // Create workbook and worksheet
       const wb = XLSX.utils.book_new();
       const ws = XLSX.utils.json_to_sheet(exportData);
 
-      // Set column widths for better readability
       ws['!cols'] = [
-        { wch: 5 },   // No
-        { wch: 45 },  // Nama Penghargaan
-        { wch: 30 },  // Kategori
-        { wch: 35 },  // Pemberi
-        { wch: 10 },  // Tahun
-        { wch: 20 },  // Tanggal
-        { wch: 60 },  // Deskripsi
-        { wch: 20 },  // Landing
-        { wch: 25 }   // Media Informasi
+        { wch: 5 }, { wch: 45 }, { wch: 30 }, { wch: 35 },
+        { wch: 10 }, { wch: 15 }, { wch: 20 }, { wch: 60 },
+        { wch: 20 }, { wch: 25 }
       ];
 
-      // Add worksheet to workbook
       XLSX.utils.book_append_sheet(wb, ws, 'Penghargaan');
 
-      // Generate filename with timestamp
       const timestamp = new Date().toISOString().slice(0, 10);
       const filename = `Penghargaan_MHJ_ONWJ_${timestamp}.xlsx`;
 
-      // Write and download file
       XLSX.writeFile(wb, filename);
 
-      // Success notification with details
-      alert(`✅ Data berhasil diexport ke Excel!\n\nFile: ${filename}\nTotal data: ${filteredPenghargaan.length} penghargaan`);
+      toast.success(`Data berhasil diexport!  (${filteredPenghargaan.length} penghargaan)`);
       
-      console.log('✅ Export Excel berhasil:', {
-        filename,
-        totalRows: filteredPenghargaan.length,
-        timestamp,
-        exportedData: exportData
-      });
-
     } catch (error) {
-      console.error('❌ Error exporting to Excel:', error);
-      alert(`❌ Gagal export ke Excel!\n\nError: ${error.message}\n\nSilakan coba lagi atau hubungi administrator.`);
+      console.error('Export error:', error);
+      toast.error('Gagal export ke Excel! ');
     }
   };
 
@@ -151,38 +162,73 @@ const ManagePenghargaan = () => {
     const file = e.target.files[0];
     if (file) {
       if (file.size > 2 * 1024 * 1024) {
-        alert('Ukuran file maksimal 2MB');
+        toast.error('Ukuran file maksimal 2MB');
         return;
       }
       if (!file.type.startsWith('image/')) {
-        alert('File harus berupa gambar');
+        toast.error('File harus berupa gambar');
         return;
       }
       setFormData(prev => ({ ...prev, image: file }));
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (editingItem) {
-      setPenghargaan(prev => prev.map(item => 
-        item.id === editingItem.id 
-          ? { ...formData, id: item.id, image: formData.image || item.image }
-          : item
-      ));
-      alert('✅ Penghargaan berhasil diupdate!');
-    } else {
-      const newItem = {
-        ...formData,
-        id: Date.now(),
-        created_at: new Date().toISOString(),
-      };
-      setPenghargaan(prev => [newItem, ...prev]);
-      alert('✅ Penghargaan berhasil ditambahkan!');
+    // Validation
+    if (!formData.title || !formData.category || ! formData.given_by || ! formData.year || 
+        !formData.month || !formData.date || !formData.description) {
+      toast.error('Semua field wajib diisi!');
+      return;
     }
-    
-    resetForm();
+
+    if (! editingItem && !formData.image) {
+      toast.error('Gambar penghargaan wajib diupload!');
+      return;
+    }
+
+    setSubmitting(true);
+
+    try {
+      // Prepare FormData
+      const submitData = new FormData();
+      submitData.append('title', formData.title);
+      submitData.append('category', formData.category);
+      submitData.append('given_by', formData.given_by);
+      submitData.append('year', formData.year);
+      submitData.append('month', formData.month);
+      submitData.append('date', formData.date);
+      submitData.append('description', formData.description);
+      submitData.append('show_in_landing', formData.show_in_landing ?  '1' : '0');
+      submitData.append('show_in_media_informasi', formData.show_in_media_informasi ? '1' : '0');
+      
+      if (formData.image) {
+        submitData.append('image', formData.image);
+      }
+
+      let response;
+      if (editingItem) {
+        response = await penghargaanService.adminUpdatePenghargaan(editingItem.id, submitData);
+        toast.success('✅ Penghargaan berhasil diupdate! ');
+      } else {
+        response = await penghargaanService.adminCreatePenghargaan(submitData);
+        toast.success('✅ Penghargaan berhasil ditambahkan!');
+      }
+
+      // Refresh data
+      await fetchPenghargaan();
+      resetForm();
+
+    } catch (error) {
+      console.error('Submit error:', error);
+      const errorMsg = error.errors 
+        ? Object.values(error.errors).flat().join(', ')
+        : error.message || 'Gagal menyimpan penghargaan';
+      toast.error(errorMsg);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleEdit = (item) => {
@@ -190,11 +236,12 @@ const ManagePenghargaan = () => {
     setFormData({
       title: item.title,
       category: item.category,
-      pemberi: item.pemberi,
+      given_by: item.given_by,
       year: item.year,
+      month: item.month,
       date: item.date,
       description: item.description,
-      image: item.image,
+      image: null,
       show_in_landing: item.show_in_landing,
       show_in_media_informasi: item.show_in_media_informasi,
     });
@@ -202,10 +249,18 @@ const ManagePenghargaan = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleDelete = (id) => {
-    if (window.confirm('Apakah Anda yakin ingin menghapus penghargaan ini?')) {
-      setPenghargaan(prev => prev.filter(item => item.id !== id));
-      alert('✅ Penghargaan berhasil dihapus!');
+  const handleDelete = async (id) => {
+    if (! window.confirm('Apakah Anda yakin ingin menghapus penghargaan ini?')) {
+      return;
+    }
+
+    try {
+      await penghargaanService.adminDeletePenghargaan(id);
+      toast.success('✅ Penghargaan berhasil dihapus!');
+      await fetchPenghargaan();
+    } catch (error) {
+      console.error('Delete error:', error);
+      toast.error(error.message || 'Gagal menghapus penghargaan');
     }
   };
 
@@ -214,8 +269,9 @@ const ManagePenghargaan = () => {
     setFormData({
       title: '',
       category: '',
-      pemberi: '',
+      given_by: '',
       year: new Date().getFullYear(),
+      month: '',
       date: '',
       description: '',
       image: null,
@@ -226,7 +282,7 @@ const ManagePenghargaan = () => {
   };
 
   const handleCancel = () => {
-    if (window.confirm('Apakah Anda yakin ingin membatalkan? Data yang belum disimpan akan hilang.')) {
+    if (window.confirm('Apakah Anda yakin ingin membatalkan?  Data yang belum disimpan akan hilang.')) {
       resetForm();
     }
   };
@@ -242,9 +298,21 @@ const ManagePenghargaan = () => {
     thisYear: penghargaan.filter(item => item.year === new Date().getFullYear()).length,
   };
 
+  // Loading State
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Memuat data...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div>
-      {/* Tombol Kembali - Hanya Muncul di Page Input */}
+      {/* Tombol Kembali */}
       {showForm && (
         <button
           onClick={() => {
@@ -264,7 +332,7 @@ const ManagePenghargaan = () => {
           <h1 className="text-3xl font-bold text-gray-900">Kelola Penghargaan</h1>
           <p className="text-gray-600 mt-1">Manajemen penghargaan yang diterima perusahaan</p>
         </div>
-        {!showForm && (
+        {! showForm && (
           <button
             onClick={() => setShowForm(true)}
             className="flex items-center gap-2 bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-blue-700 transition-all transform hover:-translate-y-0.5"
@@ -276,7 +344,7 @@ const ManagePenghargaan = () => {
       </div>
 
       {/* Stats Cards */}
-      {!showForm && (
+      {! showForm && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white">
             <div className="flex items-center justify-between mb-4">
@@ -322,8 +390,8 @@ const ManagePenghargaan = () => {
         </div>
       )}
 
-      {/* Search & Filter Section + Export Button */}
-      {!showForm && (
+      {/* Search & Filter Section */}
+      {! showForm && (
         <div className="bg-white rounded-xl shadow-md p-6 mb-8">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
@@ -331,11 +399,9 @@ const ManagePenghargaan = () => {
               <h3 className="text-lg font-semibold text-gray-900">Pencarian & Filter</h3>
             </div>
 
-            {/* Export Excel Button */}
             <button
               onClick={exportToExcel}
               className="flex items-center gap-2 px-5 py-2.5 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
-              title="Export data penghargaan ke Excel"
             >
               <FaFileExcel className="w-5 h-5" />
               Export ke Excel
@@ -343,19 +409,17 @@ const ManagePenghargaan = () => {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Search */}
             <div className="relative">
               <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
-                placeholder="Cari penghargaan, kategori, pemberi..."
+                placeholder="Cari penghargaan..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
               />
             </div>
 
-            {/* Filter Year */}
             <select
               value={filterYear}
               onChange={(e) => setFilterYear(e.target.value)}
@@ -367,7 +431,6 @@ const ManagePenghargaan = () => {
               ))}
             </select>
 
-            {/* Filter Category */}
             <select
               value={filterCategory}
               onChange={(e) => setFilterCategory(e.target.value)}
@@ -380,7 +443,6 @@ const ManagePenghargaan = () => {
             </select>
           </div>
 
-          {/* Clear Filter & Result Counter */}
           {(searchTerm || filterYear || filterCategory) && (
             <div className="mt-4 flex justify-between items-center">
               <p className="text-sm text-gray-600">
@@ -400,7 +462,7 @@ const ManagePenghargaan = () => {
 
       {/* Form Input */}
       {showForm && (
-        <div className="bg-white rounded-xl shadow-lg p-8 mb-8 animate-fade-in">
+        <div className="bg-white rounded-xl shadow-lg p-8 mb-8">
           <div className="flex justify-between items-center mb-8 pb-6 border-b border-gray-200">
             <div>
               <h2 className="text-2xl font-bold text-gray-900">
@@ -467,8 +529,8 @@ const ManagePenghargaan = () => {
                   </label>
                   <input
                     type="text"
-                    name="pemberi"
-                    value={formData.pemberi}
+                    name="given_by"
+                    value={formData.given_by}
                     onChange={handleInputChange}
                     required
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
@@ -496,6 +558,24 @@ const ManagePenghargaan = () => {
                 </div>
 
                 <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Bulan <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    name="month"
+                    value={formData.month}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  >
+                    <option value="">Pilih Bulan</option>
+                    {months.map(month => (
+                      <option key={month} value={month}>{month}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="md:col-span-2">
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
                     Tanggal Penerimaan <span className="text-red-500">*</span>
                   </label>
@@ -536,7 +616,7 @@ const ManagePenghargaan = () => {
               </h3>
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Upload Gambar <span className="text-red-500">*</span>
+                  Upload Gambar {! editingItem && <span className="text-red-500">*</span>}
                 </label>
                 <input
                   type="file"
@@ -545,14 +625,24 @@ const ManagePenghargaan = () => {
                   className="w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-gray-50 hover:bg-white"
                 />
                 <p className="text-sm text-gray-500 mt-2">
-                  Format: JPG, PNG, WebP. Maksimal 2MB. Rasio 16:9 atau 4:3 recommended.
+                  Format: JPG, PNG, WebP.Maksimal 2MB.
                 </p>
                 {formData.image && (
                   <div className="mt-4 p-4 bg-green-50 rounded-lg border-2 border-green-200 flex items-center gap-3">
                     <FaCheck className="text-green-600 text-xl" />
                     <p className="text-sm font-semibold text-green-800">
-                      File terpilih: {formData.image.name || 'Gambar sudah ada'}
+                      File terpilih: {formData.image.name}
                     </p>
+                  </div>
+                )}
+                {editingItem && editingItem.image_url && ! formData.image && (
+                  <div className="mt-4">
+                    <p className="text-sm text-gray-600 mb-2">Gambar saat ini:</p>
+                    <img 
+                      src={editingItem.image_url} 
+                      alt="Current" 
+                      className="w-32 h-32 object-cover rounded-lg border-2 border-gray-200"
+                    />
                   </div>
                 )}
               </div>
@@ -613,15 +703,24 @@ const ManagePenghargaan = () => {
               <button
                 type="button"
                 onClick={handleCancel}
-                className="px-6 py-3 bg-white border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-all"
+                disabled={submitting}
+                className="px-6 py-3 bg-white border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-all disabled:opacity-50"
               >
                 Batal
               </button>
               <button
                 type="submit"
-                className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg transform hover:-translate-y-0.5"
+                disabled={submitting}
+                className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                {editingItem ? 'Update Penghargaan' : 'Simpan Penghargaan'}
+                {submitting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    <span>Menyimpan...</span>
+                  </>
+                ) : (
+                  <span>{editingItem ? 'Update Penghargaan' : 'Simpan Penghargaan'}</span>
+                )}
               </button>
             </div>
           </form>
@@ -629,7 +728,7 @@ const ManagePenghargaan = () => {
       )}
 
       {/* Table List */}
-      {!showForm && (
+      {! showForm && (
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
@@ -690,7 +789,9 @@ const ManagePenghargaan = () => {
                           <FaTrophy className="w-5 h-5 text-yellow-500 flex-shrink-0" />
                           <div>
                             <div className="text-sm font-semibold text-gray-900">{item.title}</div>
-                            <div className="text-xs text-gray-500">{item.date}</div>
+                            <div className="text-xs text-gray-500">
+                              {item.month} {item.year}
+                            </div>
                           </div>
                         </div>
                       </td>
@@ -700,7 +801,7 @@ const ManagePenghargaan = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600">
-                        {item.pemberi}
+                        {item.given_by}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
                         {item.year}
@@ -749,4 +850,4 @@ const ManagePenghargaan = () => {
   );
 };
 
-export default ManagePenghargaan; 
+export default ManagePenghargaan;
