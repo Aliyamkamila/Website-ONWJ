@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useInView, useMotionValue, useSpring } from 'framer-motion';
+import toast from 'react-hot-toast';
+import penghargaanService from '../../../services/penghargaanService';
 import './penghargaan.css';
 
 // ============================================
-// ASSETS
+// ASSETS (Fallback images)
 // ============================================
 import contoh1 from '../../../assets/contoh1.png';
 import contoh2 from '../../../assets/contoh2.png';
@@ -12,56 +14,7 @@ import contoh3 from '../../../assets/contoh3.png';
 // ============================================
 // CONSTANTS
 // ============================================
-const AWARDS_DATA = [
-  {
-    id: 1,
-    title: 'National Awards 2019',
-    image: contoh1,
-    description: 'Best Industry Leader',
-    fullDescription: 'Penghargaan ini diberikan sebagai pengakuan atas kepemimpinan luar biasa dalam industri minyak dan gas.Prestasi ini mencerminkan dedikasi kami dalam memberikan layanan terbaik dan inovasi berkelanjutan.',
-    year: '2019',
-  },
-  {
-    id: 2,
-    title: 'Excellence Award 2020',
-    image: contoh2,
-    description: 'Outstanding Performance',
-    fullDescription: 'Diberikan atas kinerja luar biasa dalam pengelolaan operasional dan pencapaian target yang melampaui ekspektasi.Penghargaan ini membuktikan komitmen kami terhadap keunggulan operasional.',
-    year: '2020',
-  },
-  {
-    id: 3,
-    title: 'Innovation Award 2021',
-    image: contoh3,
-    description: 'Technology Pioneer',
-    fullDescription: 'Penghargaan inovasi ini mengakui kontribusi kami dalam mengembangkan teknologi terdepan di industri energi.Kami terus berinovasi untuk masa depan yang lebih berkelanjutan.',
-    year: '2021',
-  },
-  {
-    id: 4,
-    title: 'Global Recognition 2022',
-    image: contoh1,
-    description: 'International Excellence',
-    fullDescription: 'Pengakuan internasional atas standar keunggulan global yang kami terapkan.Penghargaan ini menegaskan posisi kami sebagai pemain kelas dunia di industri energi.',
-    year: '2022',
-  },
-  {
-    id: 5,
-    title: 'Prestige Award 2023',
-    image: contoh2,
-    description: 'Industry Champion',
-    fullDescription: 'Sebagai juara industri, penghargaan ini mengakui kepemimpinan kami dalam menetapkan standar baru dan mendorong pertumbuhan sektor energi secara berkelanjutan.',
-    year: '2023',
-  },
-  {
-    id: 6,
-    title: 'Achievement Award 2024',
-    image: contoh3,
-    description: 'Outstanding Service',
-    fullDescription: 'Penghargaan pencapaian tertinggi untuk layanan luar biasa kepada stakeholder dan masyarakat.Komitmen kami terhadap pelayanan prima terus diakui secara nasional.',
-    year: '2024',
-  },
-];
+const FALLBACK_IMAGES = [contoh1, contoh2, contoh3];
 
 const STATISTICS_DATA = [
   { id: 1, value: 20, suffix: '+', label: 'Tahun Pengalaman' },
@@ -71,11 +24,11 @@ const STATISTICS_DATA = [
 ];
 
 const CAROUSEL_CONFIG = {
-  SPEED: 20000,
+  SPEED: 10000,
   CARD_WIDTH: 200,
   CARD_HEIGHT: 280,
   GAP: 40,
-  UPDATE_INTERVAL: 100, // Throttled update
+  UPDATE_INTERVAL: 100,
 };
 
 // ============================================
@@ -124,7 +77,7 @@ const useCountUp = ({ to, from = 0, delay = 0, duration = 2, separator = '' }) =
         const hasDecimals = maxDecimals > 0;
         const options = {
           useGrouping: !!separator,
-          minimumFractionDigits: hasDecimals ? maxDecimals : 0,
+          minimumFractionDigits: hasDecimals ?  maxDecimals : 0,
           maximumFractionDigits: hasDecimals ? maxDecimals : 0,
         };
         const formattedNumber = Intl.NumberFormat('en-US', options).format(latest);
@@ -156,7 +109,6 @@ const useInfiniteCarousel = (itemsCount) => {
   return { trackRef, duplicateCount };
 };
 
-// FIXED: Throttled center focus to prevent jitter
 const useCenterFocus = (carouselRef) => {
   const rafRef = useRef(null);
   const lastUpdateRef = useRef(0);
@@ -165,7 +117,6 @@ const useCenterFocus = (carouselRef) => {
     const updateCenterFocus = () => {
       const now = Date.now();
       
-      // Throttle updates to every 100ms
       if (now - lastUpdateRef.current < CAROUSEL_CONFIG.UPDATE_INTERVAL) {
         rafRef.current = requestAnimationFrame(updateCenterFocus);
         return;
@@ -237,24 +188,36 @@ const CloseIcon = () => (
   </svg>
 );
 
-const AwardCard = ({ award, onClick }) => (
-  <div
-    className="award-item"
-    onClick={() => onClick(award)}
-    onKeyPress={(e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        onClick(award);
-      }
-    }}
-    role="button"
-    tabIndex={0}
-    aria-label={`View ${award.title} details`}
-  >
-    <img src={award.image} alt={award.title} className="award-image" loading="lazy" />
-    <div className="award-year-badge">{award.year}</div>
-  </div>
-);
+const AwardCard = ({ award, onClick, fallbackImage }) => {
+  const imageUrl = award.image_url || fallbackImage;
+  
+  return (
+    <div
+      className="award-item"
+      onClick={() => onClick(award)}
+      onKeyPress={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick(award);
+        }
+      }}
+      role="button"
+      tabIndex={0}
+      aria-label={`View ${award.title} details`}
+    >
+      <img 
+        src={imageUrl} 
+        alt={award.title} 
+        className="award-image" 
+        loading="lazy"
+        onError={(e) => {
+          e.target.src = fallbackImage; // Fallback if image fails
+        }}
+      />
+      <div className="award-year-badge">{award.year}</div>
+    </div>
+  );
+};
 
 const InfiniteCarousel = ({ items, onItemClick }) => {
   const { trackRef, duplicateCount } = useInfiniteCarousel(items.length);
@@ -272,11 +235,12 @@ const InfiniteCarousel = ({ items, onItemClick }) => {
     >
       {Array.from({ length: duplicateCount }).map((_, setIndex) => (
         <div key={setIndex} className="award-carousel-content">
-          {items.map((award) => (
+          {items.map((award, index) => (
             <AwardCard 
               key={`${setIndex}-${award.id}`}
               award={award}
               onClick={onItemClick}
+              fallbackImage={FALLBACK_IMAGES[index % FALLBACK_IMAGES.length]}
             />
           ))}
         </div>
@@ -285,7 +249,6 @@ const InfiniteCarousel = ({ items, onItemClick }) => {
   );
 };
 
-// FIXED: Modal with larger image
 const AwardModal = ({ award, isOpen, onClose }) => {
   useEffect(() => {
     const handleEscape = (e) => {
@@ -304,6 +267,8 @@ const AwardModal = ({ award, isOpen, onClose }) => {
   }, [isOpen, onClose]);
 
   if (!isOpen || !award) return null;
+
+  const imageUrl = award.image_url || FALLBACK_IMAGES[0];
 
   return (
     <div 
@@ -326,12 +291,14 @@ const AwardModal = ({ award, isOpen, onClose }) => {
         </button>
 
         <div className="flex flex-col md:flex-row overflow-y-auto custom-scrollbar max-h-[90vh]">
-          {/* FIXED: Larger image container */}
           <div className="relative w-full md:w-96 bg-gradient-to-br from-secondary-50 to-secondary-100 p-8 flex items-center justify-center min-h-80 md:min-h-[500px]">
             <img
-              src={award.image}
+              src={imageUrl}
               alt={award.title}
               className="w-full h-auto max-h-96 object-contain rounded-xl shadow-lg"
+              onError={(e) => {
+                e.target.src = FALLBACK_IMAGES[0];
+              }}
             />
             <div className="absolute top-4 left-4 px-4 py-2 rounded-full bg-primary-600 text-white font-heading font-bold text-sm shadow-lg">
               {award.year}
@@ -343,11 +310,11 @@ const AwardModal = ({ award, isOpen, onClose }) => {
               {award.title}
             </h3>
             <p className="font-heading font-bold text-xs uppercase tracking-wider text-primary-600 mb-4">
-              {award.description}
+              {award.given_by} • {award.month} {award.year}
             </p>
             <div className="w-16 h-1 rounded-full bg-gradient-to-r from-primary-600 to-primary-400 mb-6" />
             <p className="text-base sm:text-lg text-secondary-600 leading-relaxed">
-              {award.fullDescription}
+              {award.description}
             </p>
           </div>
         </div>
@@ -381,9 +348,40 @@ const StatisticCard = ({ stat, index }) => (
 const Penghargaan = () => {
   const [selectedAward, setSelectedAward] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [awardsData, setAwardsData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [statistics, setStatistics] = useState(STATISTICS_DATA);
   const carouselRef = useRef(null);
 
   useCenterFocus(carouselRef);
+
+  // ✅ Fetch penghargaan from API
+  useEffect(() => {
+    fetchPenghargaan();
+  }, []);
+
+  const fetchPenghargaan = async () => {
+    setLoading(true);
+    try {
+      const response = await penghargaanService.getForLanding(6); // Limit 6 untuk landing page
+      
+      if (response.success && response.data.length > 0) {
+        setAwardsData(response.data);
+        
+        // Update statistics - total penghargaan
+        setStatistics(prev => prev.map(stat => 
+          stat.id === 2 
+            ? { ...stat, value: response.data.length } 
+            : stat
+        ));
+      }
+    } catch (error) {
+      console.error('Error fetching penghargaan:', error);
+      // Don't show error toast on landing page, just use fallback
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleAwardClick = useCallback((award) => {
     setSelectedAward(award);
@@ -395,6 +393,61 @@ const Penghargaan = () => {
     setTimeout(() => setSelectedAward(null), 300);
   }, []);
 
+  // Show loading skeleton
+  if (loading) {
+    return (
+      <section 
+        id="awards" 
+        className="py-16 sm:py-20 lg:py-24 bg-gradient-to-b from-white to-secondary-50"
+      >
+        <div className="section-container">
+          <div className="flex flex-col items-center text-center mb-12 sm:mb-16">
+            <span className="section-label">OUR AWARDS</span>
+            <h2 className="font-heading font-bold text-3xl sm:text-4xl lg:text-5xl text-secondary-900 mt-2">
+              Awards & Recognition
+            </h2>
+            <p className="text-base sm:text-lg text-secondary-600 max-w-3xl mx-auto mt-4">
+              Our commitment to excellence has been acknowledged by industry leaders
+            </p>
+          </div>
+
+          {/* Loading Skeleton */}
+          <div className="mb-10 sm:mb-12">
+            <div className="flex items-center justify-center py-20">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // Show message if no data
+  if (awardsData.length === 0) {
+    return (
+      <section 
+        id="awards" 
+        className="py-16 sm:py-20 lg:py-24 bg-gradient-to-b from-white to-secondary-50"
+      >
+        <div className="section-container">
+          <div className="flex flex-col items-center text-center mb-12 sm:mb-16">
+            <span className="section-label">OUR AWARDS</span>
+            <h2 className="font-heading font-bold text-3xl sm:text-4xl lg:text-5xl text-secondary-900 mt-2">
+              Awards & Recognition
+            </h2>
+            <p className="text-base sm:text-lg text-secondary-600 max-w-3xl mx-auto mt-4">
+              Our commitment to excellence has been acknowledged by industry leaders
+            </p>
+          </div>
+
+          <div className="text-center py-20">
+            <p className="text-secondary-600">Belum ada data penghargaan</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section 
       id="awards" 
@@ -402,7 +455,6 @@ const Penghargaan = () => {
       aria-labelledby="awards-heading"
     >
       <div className="section-container">
-        {/* FIXED: Forced center alignment */}
         <div className="flex flex-col items-center text-center mb-12 sm:mb-16">
           <span className="section-label">OUR AWARDS</span>
           <h2 
@@ -425,14 +477,14 @@ const Penghargaan = () => {
             role="list"
             aria-label="Daftar penghargaan"
           >
-            <InfiniteCarousel items={AWARDS_DATA} onItemClick={handleAwardClick} />
+            <InfiniteCarousel items={awardsData} onItemClick={handleAwardClick} />
           </div>
         </div>
 
         {/* Statistics */}
         <div className="pt-8 sm:pt-10">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 max-w-6xl mx-auto">
-            {STATISTICS_DATA.map((stat, index) => (
+            {statistics.map((stat, index) => (
               <StatisticCard key={stat.id} stat={stat} index={index} />
             ))}
           </div>
