@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { FaCalendarAlt, FaMapMarkerAlt, FaCheckCircle, FaArrowLeft, FaUsers, FaClock, FaSpinner } from 'react-icons/fa';
-import { beritaApi } from '../services/BeritaService'; // ← FIXED: Pakai BeritaService
+import { beritaApi } from '../services/BeritaService';
 import toast from 'react-hot-toast';
 import bannerImage from '../assets/hero-bg.png';
 import programImage from '../assets/rectangle.png';
