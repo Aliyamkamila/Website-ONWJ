@@ -4,6 +4,8 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\Umkm;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class UmkmSeeder extends Seeder
 {
@@ -12,81 +14,107 @@ class UmkmSeeder extends Seeder
      */
     public function run(): void
     {
+        // Clear existing data
+        DB::table('umkm')->truncate();
+
         $umkmData = [
             [
                 'name' => 'Kopi Mangrove Segara',
+                'slug' => Str::slug('Kopi Mangrove Segara'), // ← TAMBAHKAN SLUG
                 'category' => 'Kuliner',
-                'owner' => 'Ibu Siti',
+                'owner' => 'Ibu Siti Aminah',
                 'location' => 'Muara Gembong, Bekasi',
-                'description' => 'Kopi olahan dari biji kopi lokal dengan sentuhan aroma mangrove khas pesisir. Dikemas higienis dan ramah lingkungan.',
-                'testimonial' => 'Dulu saya cuma bisa jual 10 bungkus, setelah dapat pelatihan pengemasan dari MUJ ONWJ, sekarang bisa kirim ke luar kota. Omzet naik 300%!',
+                'description' => 'Kopi premium yang dihasilkan dari biji kopi mangrove pilihan. Memiliki cita rasa unik dengan aroma khas hutan mangrove yang menyegarkan.',
+                'testimonial' => 'Dulu saya cuma bisa jual 10 bungkus sehari. Setelah dapat pelatihan pengemasan dari MHJ ONWJ, sekarang produk saya bisa dikirim ke luar kota.  Omzet naik 300%!',
                 'shop_link' => 'https://tokopedia.com/kopi-mangrove',
                 'contact_number' => '6281234567890',
                 'status' => 'Aktif',
-                'year_started' => 2024,
-                'achievement' => 'Omzet naik 300%, ekspor ke 5 kota',
+                'year_started' => 2022,
+                'achievement' => 'Omzet naik 300%, ekspansi ke 5 kota',
                 'is_featured' => true,
+                'display_order' => 100,
+                'image_url' => null,
             ],
             [
-                'name' => 'Kerajinan Enceng Gondok',
+                'name' => 'Kerajinan Bambu Hijau',
+                'slug' => Str::slug('Kerajinan Bambu Hijau'), // ← TAMBAHKAN SLUG
                 'category' => 'Kerajinan',
-                'owner' => 'Bapak Joko',
-                'location' => 'Kalibaru, Jakarta Utara',
-                'description' => 'Produk kerajinan tangan dari enceng gondok yang ramah lingkungan. Berbagai macam tas, tempat pensil, dan aksesori rumah.',
-                'testimonial' => '',
-                'shop_link' => 'https://shopee.co.id/kerajinan-gondok',
-                'contact_number' => '6281398765432',
+                'owner' => 'Bapak Joko Susilo',
+                'location' => 'Karawang',
+                'description' => 'Kerajinan tangan dari bambu berkualitas tinggi. Produk meliputi peralatan rumah tangga, dekorasi, dan furniture ramah lingkungan.',
+                'testimonial' => 'Berkat pembinaan MHJ, saya bisa memasarkan produk secara online. Sekarang pesanan datang dari berbagai daerah.',
+                'shop_link' => 'https://shopee.co.id/bambu-hijau',
+                'contact_number' => '6281234567891',
                 'status' => 'Aktif',
-                'year_started' => 2023,
-                'achievement' => '50 produk terjual/bulan',
+                'year_started' => 2021,
+                'achievement' => 'Ekspor ke Malaysia',
                 'is_featured' => false,
+                'display_order' => 90,
             ],
             [
-                'name' => 'Madu Hutan Asli Subang',
+                'name' => 'Gula Aren Organik',
+                'slug' => Str::slug('Gula Aren Organik'), // ← TAMBAHKAN SLUG
                 'category' => 'Agribisnis',
-                'owner' => 'Ibu Aminah',
-                'location' => 'Mayangan, Subang',
-                'description' => 'Madu murni dari hutan Subang, dipanen langsung dari sarang lebah liar. Kualitas terjamin dan organik.',
-                'testimonial' => '',
-                'shop_link' => '',
-                'contact_number' => '6281222333444',
+                'owner' => 'Ibu Dewi Lestari',
+                'location' => 'Subang',
+                'description' => 'Gula aren murni 100% tanpa campuran gula pasir. Diproses secara tradisional dengan standar kebersihan modern.',
+                'shop_link' => 'https://bukalapak.com/gula-aren-organik',
+                'contact_number' => '6281234567892',
                 'status' => 'Aktif',
                 'year_started' => 2023,
-                'achievement' => '100 botol/bulan',
+                'achievement' => 'Sertifikat Organic',
                 'is_featured' => false,
-            ],
-            [
-                'name' => 'Olahan Ikan Balongan',
-                'category' => 'Kuliner',
-                'owner' => 'Bapak Udin',
-                'location' => 'Balongan, Indramayu',
-                'description' => 'Berbagai olahan ikan segar khas Balongan. Ikan asin, kerupuk ikan, dan produk laut berkualitas.',
-                'testimonial' => '',
-                'shop_link' => 'https://shopee.co.id/olahan-ikan',
-                'contact_number' => '',
-                'status' => 'Aktif',
-                'year_started' => 2024,
-                'achievement' => 'Distribusi ke 10 toko',
-                'is_featured' => false,
+                'display_order' => 80,
             ],
             [
                 'name' => 'Batik Pesisir',
+                'slug' => Str::slug('Batik Pesisir'), // ← TAMBAHKAN SLUG
                 'category' => 'Fashion',
-                'owner' => 'Ibu Dewi',
-                'location' => 'Sungai Buntu, Karawang',
-                'description' => 'Batik tulis khas pesisir dengan motif tradisional dan modern. Kualitas premium dengan pewarna alami.',
-                'testimonial' => '',
-                'shop_link' => '',
-                'contact_number' => '6281555666777',
+                'owner' => 'Ibu Sri Mulyani',
+                'location' => 'Indramayu',
+                'description' => 'Batik tulis dan cap dengan motif khas pesisir utara Jawa.  Menggunakan pewarna alami dari tumbuhan lokal.',
+                'testimonial' => 'Produk batik saya sekarang dikenal sampai Jakarta. Terima kasih MHJ ONWJ atas pelatihan dan bantuan pemasarannya! ',
+                'shop_link' => null,
+                'contact_number' => '6281234567893',
                 'status' => 'Lulus Binaan',
-                'year_started' => 2022,
+                'year_started' => 2020,
                 'achievement' => 'Pameran di Jakarta Fashion Week',
                 'is_featured' => false,
+                'display_order' => 70,
+            ],
+            [
+                'name' => 'Ikan Asap Muara',
+                'slug' => Str::slug('Ikan Asap Muara'), // ← TAMBAHKAN SLUG
+                'category' => 'Kuliner',
+                'owner' => 'Bapak Ahmad Fauzi',
+                'location' => 'Muara Gembong, Bekasi',
+                'description' => 'Ikan asap dengan bumbu tradisional khas pesisir. Proses pengasapan menggunakan kayu mangrove yang memberikan aroma unik.',
+                'shop_link' => 'https://tokopedia.com/ikan-asap-muara',
+                'contact_number' => '6281234567894',
+                'status' => 'Aktif',
+                'year_started' => 2022,
+                'is_featured' => false,
+                'display_order' => 60,
+            ],
+            [
+                'name' => 'Anyaman Pandan Wangi',
+                'slug' => Str::slug('Anyaman Pandan Wangi'), // ← TAMBAHKAN SLUG
+                'category' => 'Kerajinan',
+                'owner' => 'Ibu Rina Wati',
+                'location' => 'Bekasi',
+                'description' => 'Tas, dompet, dan aksesoris dari anyaman pandan berkualitas. Desain modern dengan sentuhan tradisional.',
+                'contact_number' => '6281234567895',
+                'status' => 'Dalam Proses',
+                'year_started' => 2024,
+                'is_featured' => false,
+                'display_order' => 50,
             ],
         ];
 
         foreach ($umkmData as $data) {
             Umkm::create($data);
         }
+
+        $this->command->info('✅ UMKM seeder completed!  ' . count($umkmData) . ' UMKM created.');
     }
 }

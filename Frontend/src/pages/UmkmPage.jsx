@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FaHome, FaStore, FaBookOpen, FaPhone, FaWhatsapp } from 'react-icons/fa';
+import { FaHome, FaStore, FaBookOpen, FaPhone, FaWhatsapp, FaSpinner } from 'react-icons/fa';
 import { umkmService } from '../services/umkmService';
 import toast from 'react-hot-toast';
 
@@ -9,7 +9,7 @@ import bannerImage from '../assets/hero-bg.png';
 import featuredImage from '../assets/contoh1.png';
 import productImage from '../assets/rectangle.png';
 
-// --- SUB-KOMPONEN HALAMAN (sama seperti sebelumnya, tidak perlu diubah) ---
+// --- SUB-KOMPONEN HALAMAN ---
 const UmkmHero = () => (
     <div className="relative h-[60vh] overflow-hidden">
         <div className="absolute inset-0">
@@ -49,6 +49,9 @@ const FeaturedUmkm = ({ item }) => {
                                 src={item.full_image_url || item.image_url || featuredImage} 
                                 alt={item.name} 
                                 className="w-full h-full object-cover aspect-[4/3]" 
+                                onError={(e) => {
+                                    e.target.src = featuredImage;
+                                }}
                             />
                         </div>
                     </div>
@@ -115,7 +118,10 @@ const UmkmCard = ({ item }) => (
                 src={item.full_image_url || item.image_url || productImage} 
                 alt={item.name} 
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" 
-                loading="lazy" 
+                loading="lazy"
+                onError={(e) => {
+                    e.target.src = productImage;
+                }}
             />
             {item.status && (
                 <div className="absolute top-2 right-2">
@@ -133,7 +139,7 @@ const UmkmCard = ({ item }) => (
         </div>
         <div className="p-5 flex flex-col flex-grow">
             <span className="text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-1 rounded-full self-start">
-                {item.category}
+                {item. category}
             </span>
             <h3 className="text-lg font-bold text-gray-800 mt-3 mb-1 line-clamp-2">
                 {item.name}
@@ -143,7 +149,7 @@ const UmkmCard = ({ item }) => (
             </p>
             <div className="flex items-center gap-1 text-xs text-gray-500 mb-4">
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                    <path fillRule="evenodd" d="M5. 05 4.05a7 7 0 119.9 9.9L10 18. 9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
                 </svg>
                 {item.location}
             </div>
@@ -169,7 +175,7 @@ const UmkmCard = ({ item }) => (
                         <FaWhatsapp /> WhatsApp
                     </a>
                 )}
-                {!item.shop_link && !item.contact_number && (
+                {! item.shop_link && !item.contact_number && (
                     <div className="text-center py-2 text-gray-500 text-sm">
                         Informasi kontak tersedia
                     </div>
@@ -185,7 +191,7 @@ const CategoryFilter = ({ categories, activeCategory, onCategoryChange }) => (
             onClick={() => onCategoryChange('Semua')}
             className={`px-6 py-2 rounded-full font-medium transition-colors ${
                 activeCategory === 'Semua'
-                    ? 'bg-blue-600 text-white shadow-md'
+                    ?  'bg-blue-600 text-white shadow-md'
                     : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
             }`}
         >
@@ -223,27 +229,49 @@ const UmkmPage = () => {
             try {
                 setLoading(true);
                 
+                console.log('🔍 [UmkmPage] Fetching UMKM data...');
+                console.log('📍 [UmkmPage] Active category:', activeCategory);
+                
                 const response = await umkmService.getAllUmkm({ 
                     category: activeCategory 
                 });
                 
+                console.log('📥 [UmkmPage] Response received:', response);
+                
                 if (response.success) {
+                    console.log('✅ [UmkmPage] Response success = true');
+                    console.log('📊 [UmkmPage] Featured:', response.data.featured);
+                    console.log('📊 [UmkmPage] UMKM list:', response.data.umkm);
+                    console.log('📊 [UmkmPage] Categories:', response.data.categories);
+                    
                     // Combine featured and regular UMKM
                     const allUmkm = response.data.featured 
                         ? [response.data.featured, ...response.data.umkm]
                         : response.data.umkm;
                     
+                    console.log('📋 [UmkmPage] All UMKM combined:', allUmkm);
+                    console.log('🔢 [UmkmPage] Total UMKM:', allUmkm.length);
+                    
                     setUmkmData(allUmkm);
                     setCategoryCounts(response.data.categories || {});
+                    
+                    toast.success(`✅ ${allUmkm.length} UMKM berhasil dimuat!`);
                 } else {
+                    console.warn('⚠️ [UmkmPage] Response success = false');
                     throw new Error(response.message || 'Gagal memuat data');
                 }
                 
                 setLoading(false);
             } catch (error) {
-                console.error('Error fetching UMKM data:', error);
+                console.error('❌ [UmkmPage] Error fetching UMKM:', error);
+                console.error('Error details:', {
+                    message: error.message,
+                    response: error. response,
+                    data: error.data,
+                });
+                
                 setLoading(false);
-                toast.error('Gagal memuat data UMKM. Silakan refresh halaman.');
+                toast.error('Gagal memuat data UMKM.  Silakan refresh halaman.');
             }
         };
 
@@ -252,16 +280,18 @@ const UmkmPage = () => {
 
     // Get featured UMKM
     const featuredUmkm = umkmData.find(item => item.is_featured);
+    console.log('⭐ [UmkmPage] Featured UMKM:', featuredUmkm);
 
     // Filter UMKM by category (exclude featured from gallery)
-    const filteredUmkm = umkmData.filter(item => !item.is_featured);
+    const filteredUmkm = umkmData.filter(item => ! item.is_featured);
+    console.log('🎨 [UmkmPage] Filtered UMKM (without featured):', filteredUmkm. length);
 
     return (
         <div className="bg-gray-50 min-h-screen">
             <UmkmHero />
             
             {/* Featured UMKM */}
-            {!loading && featuredUmkm && <FeaturedUmkm item={featuredUmkm} />}
+            {! loading && featuredUmkm && <FeaturedUmkm item={featuredUmkm} />}
 
             {/* Gallery Section */}
             <section className="py-20 bg-gray-50">
@@ -276,23 +306,13 @@ const UmkmPage = () => {
                     {/* Loading State */}
                     {loading && (
                         <div className="text-center py-12">
-                            <div className="animate-pulse">
-                                <div className="h-8 bg-gray-200 rounded w-48 mx-auto mb-8"></div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                                    {[1, 2, 3, 4].map(i => (
-                                        <div key={i} className="bg-white rounded-xl p-4">
-                                            <div className="h-48 bg-gray-200 rounded mb-4"></div>
-                                            <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                                            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
+                            <FaSpinner className="w-12 h-12 text-blue-600 animate-spin mx-auto mb-4" />
+                            <p className="text-gray-600 text-lg">Memuat data UMKM...</p>
                         </div>
                     )}
 
                     {/* Category Filter */}
-                    {!loading && Object.keys(categoryCounts).length > 0 && (
+                    {! loading && Object.keys(categoryCounts).length > 0 && (
                         <CategoryFilter 
                             categories={categoryCounts}
                             activeCategory={activeCategory}
@@ -304,20 +324,39 @@ const UmkmPage = () => {
                     {!loading && filteredUmkm.length > 0 && (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                             {filteredUmkm.map((item) => (
-                                <UmkmCard key={item.id} item={item} />
+                                <UmkmCard key={item. id} item={item} />
                             ))}
                         </div>
                     )}
 
                     {/* Empty State */}
-                    {!loading && filteredUmkm.length === 0 && (
+                    {!loading && umkmData.length === 0 && (
+                        <div className="text-center py-12">
+                            <FaStore className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                            <p className="text-gray-500 text-lg mb-2">
+                                Belum ada UMKM binaan yang ditambahkan. 
+                            </p>
+                            <p className="text-gray-400 text-sm">
+                                Data akan muncul setelah admin menambahkan UMKM pertama.
+                            </p>
+                        </div>
+                    )}
+
+                    {/* Empty Category State */}
+                    {!loading && umkmData.length > 0 && filteredUmkm.length === 0 && ! featuredUmkm && (
                         <div className="text-center py-12">
                             <FaStore className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                             <p className="text-gray-500 text-lg">
                                 {activeCategory === 'Semua' 
-                                    ? 'Belum ada UMKM binaan yang ditambahkan.' 
-                                    : `Belum ada UMKM di kategori ${activeCategory}.`}
+                                    ? 'Tidak ada UMKM yang ditemukan.' 
+                                    : `Belum ada UMKM di kategori ${activeCategory}. `}
                             </p>
+                            <button
+                                onClick={() => setActiveCategory('Semua')}
+                                className="mt-4 text-blue-600 hover:text-blue-700 font-semibold"
+                            >
+                                Lihat Semua Kategori
+                            </button>
                         </div>
                     )}
                 </div>

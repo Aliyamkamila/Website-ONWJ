@@ -1,7 +1,12 @@
 import axios from 'axios';
 
 // Base API URL
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
+const API_BASE_URL = import.meta.env. VITE_API_BASE_URL || 'http://localhost:8000/api';
+
+// ✅ DEBUG LOG
+console.log('🔧 umkmService initialized');
+console.log('📍 VITE_API_BASE_URL:', import.meta.env. VITE_API_BASE_URL);
+console.log('📍 API_BASE_URL:', API_BASE_URL);
 
 // Create axios instance
 const apiClient = axios.create({
@@ -10,13 +15,20 @@ const apiClient = axios.create({
         'Content-Type': 'application/json',
         'Accept': 'application/json',
     },
-    // DISABLE withCredentials untuk token-based auth
-    withCredentials: false, // UBAH JADI FALSE atau HAPUS BARIS INI
+    withCredentials: false,
 });
 
 // Add auth token to requests if available
 apiClient.interceptors.request.use(
     (config) => {
+        console.log('🚀 UMKM API Request:', {
+            method: config.method. toUpperCase(),
+            url: config.url,
+            baseURL: config.baseURL,
+            fullURL: `${config.baseURL}${config.url}`,
+            params: config.params,
+        });
+        
         const token = localStorage.getItem('admin_token');
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
@@ -24,17 +36,33 @@ apiClient.interceptors.request.use(
         return config;
     },
     (error) => {
-        return Promise.reject(error);
+        console.error('❌ Request Error:', error);
+        return Promise. reject(error);
     }
 );
 
 // Handle response errors
 apiClient.interceptors.response.use(
-    (response) => response,
+    (response) => {
+        console.log('✅ UMKM API Response:', {
+            status: response.status,
+            url: response.config.url,
+            data: response.data,
+        });
+        return response;
+    },
     (error) => {
+        console. error('❌ UMKM API Error:', {
+            message: error.message,
+            code: error.code,
+            status: error.response?.status,
+            data: error.response?.data,
+            url: error.config?.url,
+        });
+        
         if (error.response?.status === 401) {
             // Unauthorized - redirect to login
-            localStorage.removeItem('admin_token');
+            localStorage. removeItem('admin_token');
             window.location.href = '/tukang-minyak-dan-gas/login';
         }
         return Promise.reject(error);
@@ -46,19 +74,21 @@ export const umkmService = {
     // Public APIs
     getAllUmkm: async (params = {}) => {
         try {
+            console.log('📞 Calling getAllUmkm with params:', params);
             const response = await apiClient.get('/v1/umkm', { params });
             return response.data;
         } catch (error) {
-            throw error.response?.data || error.message;
+            console. error('❌ getAllUmkm error:', error);
+            throw error. response?.data || error.message;
         }
     },
 
     getUmkmById: async (id) => {
         try {
             const response = await apiClient.get(`/v1/umkm/${id}`);
-            return response.data;
+            return response. data;
         } catch (error) {
-            throw error.response?.data || error.message;
+            throw error.response?.data || error. message;
         }
     },
 
@@ -67,7 +97,7 @@ export const umkmService = {
             const response = await apiClient.get('/v1/umkm-categories');
             return response.data;
         } catch (error) {
-            throw error.response?.data || error.message;
+            throw error.response?. data || error.message;
         }
     },
 
@@ -99,7 +129,7 @@ export const umkmService = {
             });
             return response.data;
         } catch (error) {
-            throw error.response?.data || error.message;
+            throw error.response?.data || error. message;
         }
     },
 

@@ -49,9 +49,11 @@ Route::middleware(['auth:sanctum', 'admin.auth'])->group(function () {
     });
 });
 
+// ... existing routes ...
+
 /*
 |--------------------------------------------------------------------------
-| UMKM Routes
+| UMKM Routes (sudah ada tapi saya lengkapi)
 |--------------------------------------------------------------------------
 */
 
@@ -68,8 +70,7 @@ Route::prefix('v1')->group(function () {
     Route::get('/umkm-status-options', [UmkmController::class, 'statusOptions']);
 });
 
-// TEMPORARY: Admin routes WITHOUT authentication for testing CORS
-// TODO: Uncomment middleware after testing
+// Admin routes
 Route::prefix('v1/admin')->group(function () {
 // Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin'])->group(function () {
     // UMKM Management
@@ -288,3 +289,4 @@ Route::prefix('v1/admin')->group(function () {
     // Statistics
     Route::get('/berita-statistics', [BeritaController::class, 'getStatistics']);
 });
+

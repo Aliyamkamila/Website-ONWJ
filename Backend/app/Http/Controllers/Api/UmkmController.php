@@ -5,17 +5,15 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Umkm;
 use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Str;
 
 class UmkmController extends Controller
 {
     /**
-     * Display a listing of UMKM (for public frontend).
+     * PUBLIC: Get UMKM for website (with filters, pagination, featured)
      */
-    public function index(Request $request): JsonResponse
+    public function index(Request $request)
     {
         try {
             $query = Umkm::query();
@@ -30,284 +28,320 @@ class UmkmController extends Controller
                 $query->where('status', $request->status);
             }
 
-            // Get featured UMKM separately
+            // Search
+            if ($request->has('search') && $request->search) {
+                $query->search($request->search);
+            }
+
+            // Get featured UMKM (only one)
             $featured = Umkm::featured()->first();
 
-            // Get other UMKM
-            $umkm = $query->where('is_featured', false)
-                ->orderBy('created_at', 'desc')
-                ->get();
+            // Get regular UMKM (exclude featured)
+            $umkm = $query->when($featured, function ($q) use ($featured) {
+                            return $q->where('id', '!=', $featured->id);
+                        })
+                        ->ordered()
+                        ->paginate($request->per_page ??  12);
 
             // Get category counts
-            $categoryCounts = Umkm::where('is_featured', false)
-                ->selectRaw('category, COUNT(*) as count')
-                ->groupBy('category')
-                ->pluck('count', 'category')
-                ->toArray();
-
-            $categoryCounts['all'] = array_sum($categoryCounts);
+            $categories = Umkm::getCategoryCounts();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Data UMKM berhasil diambil',
+                'message' => 'UMKM retrieved successfully',
                 'data' => [
                     'featured' => $featured,
-                    'umkm' => $umkm,
-                    'categories' => $categoryCounts,
-                    'available_categories' => Umkm::getCategories(),
+                    'umkm' => $umkm->items(),
+                    'categories' => $categories,
+                ],
+                'meta' => [
+                    'current_page' => $umkm->currentPage(),
+                    'last_page' => $umkm->lastPage(),
+                    'per_page' => $umkm->perPage(),
+                    'total' => $umkm->total(),
                 ]
             ], 200);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal mengambil data UMKM',
-                'error' => $e->getMessage()
+                'message' => 'Failed to retrieve UMKM',
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
 
     /**
-     * Display a listing of UMKM (for admin).
+     * PUBLIC: Get single UMKM detail
      */
-    public function adminIndex(): JsonResponse
+    public function show($id)
     {
         try {
-            $umkm = Umkm::orderBy('created_at', 'desc')->get();
+            $umkm = Umkm::findOrFail($id);
+            
+            // Increment view count
+            $umkm->incrementViews();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Data UMKM berhasil diambil',
-                'data' => $umkm
+                'message' => 'UMKM detail retrieved successfully',
+                'data' => $umkm,
             ], 200);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal mengambil data UMKM',
-                'error' => $e->getMessage()
+                'message' => 'UMKM not found',
+                'error' => $e->getMessage(),
+            ], 404);
+        }
+    }
+
+    /**
+     * ADMIN: Get all UMKM with filters (for management page)
+     */
+    public function adminIndex(Request $request)
+    {
+        try {
+            $query = Umkm::query();
+
+            // Search
+            if ($request->has('search') && $request->search) {
+                $query->search($request->search);
+            }
+
+            // Filter by category
+            if ($request->has('category') && $request->category) {
+                $query->where('category', $request->category);
+            }
+
+            // Filter by status
+            if ($request->has('status') && $request->status) {
+                $query->where('status', $request->status);
+            }
+
+            // Filter by featured
+            if ($request->has('is_featured')) {
+                $query->where('is_featured', $request->is_featured);
+            }
+
+            // Sorting
+            $sortBy = $request->sort_by ?? 'created_at';
+            $sortOrder = $request->sort_order ??  'desc';
+            $query->orderBy($sortBy, $sortOrder);
+
+            // Pagination
+            $perPage = $request->per_page ??  999;
+            $umkm = $query->paginate($perPage);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'UMKM retrieved successfully',
+                'data' => $umkm->items(),
+                'meta' => [
+                    'current_page' => $umkm->currentPage(),
+                    'last_page' => $umkm->lastPage(),
+                    'per_page' => $umkm->perPage(),
+                    'total' => $umkm->total(),
+                ]
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve UMKM',
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
 
     /**
-     * Store a newly created UMKM.
+     * ADMIN: Create new UMKM
      */
-    public function store(Request $request): JsonResponse
+    public function store(Request $request)
     {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+            'category' => 'required|string',
+            'owner' => 'required|string|max:255',
+            'location' => 'required|string|max:255',
+            'description' => 'required|string',
+            'testimonial' => 'nullable|string',
+            'shop_link' => 'nullable|url',
+            'contact_number' => 'nullable|string|max:20',
+            'status' => 'required|in:Aktif,Lulus Binaan,Dalam Proses',
+            'year_started' => 'required|integer|min:2020|max:' . (date('Y') + 1),
+            'achievement' => 'nullable|string',
+            'is_featured' => 'nullable|boolean',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120', // 5MB
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation error',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
         try {
-            $validator = Validator::make($request->all(), [
-                'name' => 'required|string|max:255',
-                'category' => 'required|string|in:' . implode(',', Umkm::getCategories()),
-                'owner' => 'required|string|max:255',
-                'location' => 'required|string|max:255',
-                'description' => 'required|string',
-                'testimonial' => 'nullable|string',
-                'shop_link' => 'nullable|url',
-                'contact_number' => 'nullable|string|max:20',
-                'status' => 'required|string|in:' . implode(',', Umkm::getStatusOptions()),
-                'year_started' => 'required|integer|min:2020|max:2030',
-                'achievement' => 'nullable|string|max:255',
-                'is_featured' => 'boolean',
-                'image' => 'required|image|mimes:jpeg,png,jpg,webp|max:5120', // 5MB
-            ]);
-
-            if ($validator->fails()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Validasi gagal',
-                    'errors' => $validator->errors()
-                ], 422);
-            }
-
-            // Validate featured UMKM must have testimonial
-            if ($request->is_featured && empty($request->testimonial)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'UMKM Featured harus memiliki testimonial',
-                ], 422);
-            }
-
-            // Check if there's already a featured UMKM
-            if ($request->is_featured) {
-                Umkm::where('is_featured', true)->update(['is_featured' => false]);
-            }
-
             $data = $request->except('image');
 
             // Handle image upload
             if ($request->hasFile('image')) {
                 $image = $request->file('image');
-                $imageName = time() . '_' . Str::slug($request->name) . '.' . $image->getClientOriginalExtension();
-                $imagePath = $image->storeAs('umkm', $imageName, 'public');
-                $data['image_url'] = $imagePath;
+                $filename = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
+                $path = $image->storeAs('umkm', $filename, 'public');
+                $data['image_path'] = $path;
+            }
+
+            // If this is featured, unset other featured
+            if ($request->is_featured) {
+                Umkm::where('is_featured', true)->update(['is_featured' => false]);
             }
 
             $umkm = Umkm::create($data);
 
             return response()->json([
                 'success' => true,
-                'message' => 'UMKM berhasil ditambahkan',
-                'data' => $umkm
+                'message' => 'UMKM created successfully',
+                'data' => $umkm,
             ], 201);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal menambahkan UMKM',
-                'error' => $e->getMessage()
+                'message' => 'Failed to create UMKM',
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
 
     /**
-     * Display the specified UMKM.
+     * ADMIN: Update UMKM
      */
-    public function show($id): JsonResponse
+    public function update(Request $request, $id)
     {
-        try {
-            $umkm = Umkm::findOrFail($id);
+        $validator = Validator::make($request->all(), [
+            'name' => 'sometimes|required|string|max:255',
+            'category' => 'sometimes|required|string',
+            'owner' => 'sometimes|required|string|max:255',
+            'location' => 'sometimes|required|string|max:255',
+            'description' => 'sometimes|required|string',
+            'testimonial' => 'nullable|string',
+            'shop_link' => 'nullable|url',
+            'contact_number' => 'nullable|string|max:20',
+            'status' => 'sometimes|required|in:Aktif,Lulus Binaan,Dalam Proses',
+            'year_started' => 'sometimes|required|integer|min:2020|max:' . (date('Y') + 1),
+            'achievement' => 'nullable|string',
+            'is_featured' => 'nullable|boolean',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
+        ]);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Data UMKM berhasil diambil',
-                'data' => $umkm
-            ], 200);
-
-        } catch (\Exception $e) {
+        if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => 'UMKM tidak ditemukan',
-                'error' => $e->getMessage()
-            ], 404);
+                'message' => 'Validation error',
+                'errors' => $validator->errors(),
+            ], 422);
         }
-    }
 
-    /**
-     * Update the specified UMKM.
-     */
-    public function update(Request $request, $id): JsonResponse
-    {
         try {
             $umkm = Umkm::findOrFail($id);
-
-            $validator = Validator::make($request->all(), [
-                'name' => 'required|string|max:255',
-                'category' => 'required|string|in:' . implode(',', Umkm::getCategories()),
-                'owner' => 'required|string|max:255',
-                'location' => 'required|string|max:255',
-                'description' => 'required|string',
-                'testimonial' => 'nullable|string',
-                'shop_link' => 'nullable|url',
-                'contact_number' => 'nullable|string|max:20',
-                'status' => 'required|string|in:' . implode(',', Umkm::getStatusOptions()),
-                'year_started' => 'required|integer|min:2020|max:2030',
-                'achievement' => 'nullable|string|max:255',
-                'is_featured' => 'boolean',
-                'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
-            ]);
-
-            if ($validator->fails()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Validasi gagal',
-                    'errors' => $validator->errors()
-                ], 422);
-            }
-
-            // Validate featured UMKM must have testimonial
-            if ($request->is_featured && empty($request->testimonial)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'UMKM Featured harus memiliki testimonial',
-                ], 422);
-            }
-
-            // Check if there's already a featured UMKM
-            if ($request->is_featured && !$umkm->is_featured) {
-                Umkm::where('is_featured', true)->update(['is_featured' => false]);
-            }
-
             $data = $request->except('image');
 
             // Handle image upload
             if ($request->hasFile('image')) {
                 // Delete old image
-                if ($umkm->image_url && Storage::disk('public')->exists($umkm->image_url)) {
-                    Storage::disk('public')->delete($umkm->image_url);
+                if ($umkm->image_path && Storage::disk('public')->exists($umkm->image_path)) {
+                    Storage::disk('public')->delete($umkm->image_path);
                 }
 
+                // Upload new image
                 $image = $request->file('image');
-                $imageName = time() . '_' . Str::slug($request->name) . '.' . $image->getClientOriginalExtension();
-                $imagePath = $image->storeAs('umkm', $imageName, 'public');
-                $data['image_url'] = $imagePath;
+                $filename = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
+                $path = $image->storeAs('umkm', $filename, 'public');
+                $data['image_path'] = $path;
+            }
+
+            // If this is featured, unset other featured
+            if ($request->has('is_featured') && $request->is_featured) {
+                Umkm::where('is_featured', true)
+                    ->where('id', '!=', $id)
+                    ->update(['is_featured' => false]);
             }
 
             $umkm->update($data);
 
             return response()->json([
                 'success' => true,
-                'message' => 'UMKM berhasil diupdate',
-                'data' => $umkm
+                'message' => 'UMKM updated successfully',
+                'data' => $umkm->fresh(),
             ], 200);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal mengupdate UMKM',
-                'error' => $e->getMessage()
+                'message' => 'Failed to update UMKM',
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
 
     /**
-     * Remove the specified UMKM.
+     * ADMIN: Delete UMKM
      */
-    public function destroy($id): JsonResponse
+    public function destroy($id)
     {
         try {
             $umkm = Umkm::findOrFail($id);
-
-            // Delete image
-            if ($umkm->image_url && Storage::disk('public')->exists($umkm->image_url)) {
-                Storage::disk('public')->delete($umkm->image_url);
-            }
-
-            $umkm->delete();
+            $umkm->delete(); // Soft delete
 
             return response()->json([
                 'success' => true,
-                'message' => 'UMKM berhasil dihapus'
+                'message' => 'UMKM deleted successfully',
             ], 200);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal menghapus UMKM',
-                'error' => $e->getMessage()
+                'message' => 'Failed to delete UMKM',
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
 
     /**
-     * Get categories list.
+     * Get categories for filter
      */
-    public function categories(): JsonResponse
+    public function categories()
     {
-        return response()->json([
-            'success' => true,
-            'data' => Umkm::getCategories()
-        ], 200);
+        try {
+            $categories = Umkm::getCategories();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Categories retrieved successfully',
+                'data' => $categories,
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve categories',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 
     /**
-     * Get status options list.
+     * Get status options
      */
-    public function statusOptions(): JsonResponse
+    public function statusOptions()
     {
         return response()->json([
             'success' => true,
-            'data' => Umkm::getStatusOptions()
+            'data' => ['Aktif', 'Lulus Binaan', 'Dalam Proses'],
         ], 200);
     }
 }
