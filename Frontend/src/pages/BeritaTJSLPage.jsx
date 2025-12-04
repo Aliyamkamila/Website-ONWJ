@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { FaHome, FaSpinner } from 'react-icons/fa'; 
 import bannerImage from '../assets/hero-bg.png';
-import { beritaApi } from '../services/BeritaService';
+import { beritaApi } from '../services/BeritaService'; 
 import toast from 'react-hot-toast';
 
 const BeritaHero = () => (
