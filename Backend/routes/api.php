@@ -245,3 +245,46 @@ Route::prefix('v1/admin')->group(function () {
     // Statistics
     Route::get('/penghargaan-statistics', [PenghargaanController::class, 'getStatistics']);
 });
+
+/*
+|--------------------------------------------------------------------------
+| API Routes - Berita TJSL
+|--------------------------------------------------------------------------
+*/
+
+use App\Http\Controllers\Api\BeritaController;
+
+// ===== PUBLIC ROUTES (untuk website visitor) =====
+Route::prefix('v1')->group(function () {
+    // Get berita for TJSL Page
+    Route::get('/berita', [BeritaController::class, 'index']);
+    
+    // Get berita for Media Informasi Page
+    Route::get('/berita/media-informasi', [BeritaController::class, 'forMediaInformasi']);
+    
+    // Get pinned berita for Homepage
+    Route::get('/berita/homepage', [BeritaController::class, 'forHomepage']);
+    
+    // Get single berita detail by slug
+    Route::get('/berita/{slug}', [BeritaController::class, 'show']);
+    
+    // Get recent berita (for sidebar)
+    Route::get('/berita-recent', [BeritaController::class, 'recent']);
+    
+    // Get categories
+    Route::get('/berita-categories', [BeritaController::class, 'categories']);
+});
+
+// ===== ADMIN ROUTES (TEMPORARY WITHOUT AUTH) =====
+Route::prefix('v1/admin')->group(function () {
+// Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin. auth'])->group(function () {
+    // CRUD Operations
+    Route::get('/berita', [BeritaController::class, 'adminIndex']);
+    Route::post('/berita', [BeritaController::class, 'store']);
+    Route::get('/berita/{id}', [BeritaController::class, 'show']);
+    Route::post('/berita/{id}', [BeritaController::class, 'update']); // POST untuk support form-data dengan image
+    Route::delete('/berita/{id}', [BeritaController::class, 'destroy']);
+    
+    // Statistics
+    Route::get('/berita-statistics', [BeritaController::class, 'getStatistics']);
+});
