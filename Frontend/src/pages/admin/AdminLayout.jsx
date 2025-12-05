@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { useToast } from '../../hooks/useToast';
-import logo from '../../assets/logo.webp';
+import logo from '../../assets/LOGO-HD.webp';
 import { 
     FaTachometerAlt, FaSignOutAlt, FaChevronDown, 
     FaUsers, FaHardHat, FaWallet, FaBuilding, FaFileExcel
