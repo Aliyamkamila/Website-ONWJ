@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { FaEdit, FaTrash, FaPlus, FaTimes, FaMapMarkerAlt, FaCheck, FaOilCan, FaSearch, FaFilter, FaIndustry, FaArrowLeft } from 'react-icons/fa';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import MapClickSelector from '../../components/MapClickSelector';
+import PetaImage from '../wk/Peta.png';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
@@ -104,6 +106,14 @@ const ManageWkTekkom = () => {
     }));
   };
 
+  const handlePositionSelect = (coordinates) => {
+    setFormData(prev => ({
+      ...prev,
+      position_x: coordinates.position_x || '',
+      position_y: coordinates.position_y || ''
+    }));
+  };
+
   const addFacility = () => {
     if (facilityInput.trim()) {
       setFormData(prev => ({
@@ -123,6 +133,13 @@ const ManageWkTekkom = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validation
+    if (!formData.position_x || !formData.position_y) {
+      toast.error('Silakan pilih posisi pada peta terlebih dahulu! ');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -179,7 +196,7 @@ const ManageWkTekkom = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Apakah Anda yakin ingin menghapus area TEKKOM ini?')) {
+    if (! window.confirm('Apakah Anda yakin ingin menghapus area TEKKOM ini?')) {
       return;
     }
 
@@ -219,7 +236,7 @@ const ManageWkTekkom = () => {
   };
 
   const handleCancel = () => {
-    if (window.confirm('Apakah Anda yakin ingin membatalkan? Data yang belum disimpan akan hilang.')) {
+    if (window.confirm('Apakah Anda yakin ingin membatalkan?  Data yang belum disimpan akan hilang.')) {
       setShowForm(false);
       resetForm();
     }
@@ -255,7 +272,7 @@ const ManageWkTekkom = () => {
           <h1 className="text-3xl font-bold text-gray-900">Kelola Wilayah Kerja TEKKOM</h1>
           <p className="text-gray-600 mt-1">Manajemen area pengeboran dan produksi hidrokarbon</p>
         </div>
-        {!showForm && (
+        {! showForm && (
           <button
             onClick={() => setShowForm(true)}
             className="flex items-center gap-2 bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-blue-700 transition-all transform hover:-translate-y-0.5"
@@ -267,7 +284,7 @@ const ManageWkTekkom = () => {
       </div>
 
       {/* Stats Cards */}
-      {!showForm && (
+      {! showForm && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white">
             <div className="flex items-center justify-between mb-4">
@@ -312,7 +329,7 @@ const ManageWkTekkom = () => {
       )}
 
       {/* Search & Filter Section */}
-      {!showForm && (
+      {! showForm && (
         <div className="bg-white rounded-xl shadow-md p-6 mb-8">
           <div className="flex items-center gap-2 mb-4">
             <FaFilter className="text-gray-500" />
@@ -462,55 +479,6 @@ const ManageWkTekkom = () => {
                     placeholder="0"
                   />
                 </div>
-              </div>
-            </div>
-
-            {/* Section 2: Position & Color */}
-            <div className="mb-8">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <FaMapMarkerAlt className="w-4 h-4 text-purple-600" />
-                </div>
-                Posisi & Tampilan
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Position X (%) <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    name="position_x"
-                    value={formData.position_x}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                    placeholder="0.00"
-                    min="0"
-                    max="100"
-                  />
-                  <p className="text-sm text-gray-500 mt-1">Koordinat X pada peta (0-100)</p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Position Y (%) <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    name="position_y"
-                    value={formData.position_y}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                    placeholder="0.00"
-                    min="0"
-                    max="100"
-                  />
-                  <p className="text-sm text-gray-500 mt-1">Koordinat Y pada peta (0-100)</p>
-                </div>
 
                 <div className="md:col-span-2">
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -534,6 +502,61 @@ const ManageWkTekkom = () => {
                       pattern="^#[0-9A-Fa-f]{6}$"
                     />
                   </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Section 2: Map Click Position Selector */}
+            <div className="mb-8">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                  <FaMapMarkerAlt className="w-4 h-4 text-purple-600" />
+                </div>
+                Pilih Posisi pada Peta <span className="text-red-500">*</span>
+              </h3>
+              
+              <MapClickSelector
+                imageSrc={PetaImage}
+                onPositionSelect={handlePositionSelect}
+                initialX={formData.position_x}
+                initialY={formData.position_y}
+                markerColor={formData.color}
+              />
+
+              {/* Display Coordinates */}
+              <div className="grid grid-cols-2 gap-4 mt-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Position X (%) <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    name="position_x"
+                    value={formData.position_x}
+                    onChange={handleInputChange}
+                    required
+                    readOnly
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 cursor-not-allowed"
+                    placeholder="Pilih pada peta"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Position Y (%) <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    name="position_y"
+                    value={formData.position_y}
+                    onChange={handleInputChange}
+                    required
+                    readOnly
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 cursor-not-allowed"
+                    placeholder="Pilih pada peta"
+                  />
                 </div>
               </div>
             </div>
@@ -722,7 +745,7 @@ const ManageWkTekkom = () => {
                 disabled={loading}
                 className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? 'Menyimpan...' : editingArea ? 'Update Area TEKKOM' : 'Simpan Area TEKKOM'}
+                {loading ?  'Menyimpan...' : editingArea ? 'Update Area TEKKOM' : 'Simpan Area TEKKOM'}
               </button>
             </div>
           </form>
@@ -730,7 +753,7 @@ const ManageWkTekkom = () => {
       )}
 
       {/* Table List */}
-      {!showForm && (
+      {! showForm && (
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
@@ -749,7 +772,7 @@ const ManageWkTekkom = () => {
                     Sumur
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
-                    Warna
+                    Posisi
                   </th>
                   <th className="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Aktif
@@ -824,14 +847,9 @@ const ManageWkTekkom = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                         {area.wells || '-'}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <div className="flex items-center gap-2">
-                          <div
-                            className="w-6 h-6 rounded border border-gray-300"
-                            style={{ backgroundColor: area.color }}
-                          />
-                          <span className="text-xs text-gray-600">{area.color}</span>
-                        </div>
+                      <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-500">
+                        <div>X: {area.position_x}%</div>
+                        <div>Y: {area.position_y}%</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
                         {area.is_active ? (

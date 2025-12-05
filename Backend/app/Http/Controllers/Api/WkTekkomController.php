@@ -85,6 +85,38 @@ class WkTekkomController extends Controller
     }
 
     /**
+     * Convert pixel coordinates to percentage
+     */
+    public function convertCoordinates(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'x' => 'required|numeric',
+            'y' => 'required|numeric',
+            'image_width' => 'required|numeric',
+            'image_height' => 'required|numeric',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation error',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $percentX = ($request->x / $request->image_width) * 100;
+        $percentY = ($request->y / $request->image_height) * 100;
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'position_x' => round($percentX, 2),
+                'position_y' => round($percentY, 2),
+            ]
+        ], 200);
+    }
+
+    /**
      * ==================== ADMIN ROUTES ====================
      */
 
@@ -210,7 +242,7 @@ class WkTekkomController extends Controller
         $area = WkTekkom::findOrFail($id);
 
         $validator = Validator::make($request->all(), [
-            'area_id' => 'required|string|max:255|unique:wk_tekkom,area_id,' . $id,
+            'area_id' => 'required|string|max:255|unique:wk_tekkom,area_id,' .$id,
             'name' => 'required|string|max:255',
             'position_x' => 'required|numeric|between:0,100',
             'position_y' => 'required|numeric|between:0,100',

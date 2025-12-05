@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { FaEdit, FaTrash, FaPlus, FaTimes, FaMapMarkerAlt, FaUsers, FaCheck, FaNewspaper, FaSearch, FaFilter, FaArrowLeft } from 'react-icons/fa';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import MapClickSelector from '../../components/MapClickSelector';
+import PetaImage from '../wk/Peta.png'; // Sesuaikan path jika berbeda
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
@@ -120,6 +122,15 @@ const ManageWkTjsl = () => {
     }));
   };
 
+  // NEW: Handle position select from MapClickSelector
+  const handlePositionSelect = (coordinates) => {
+    setFormData(prev => ({
+      ...prev,
+      position_x: coordinates.position_x || '',
+      position_y: coordinates.position_y || ''
+    }));
+  };
+
   const addProgram = () => {
     if (programInput.trim()) {
       setFormData(prev => ({
@@ -139,6 +150,13 @@ const ManageWkTjsl = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // NEW: Validation untuk posisi peta
+    if (!formData.position_x || !formData.position_y) {
+      toast.error('Silakan pilih posisi pada peta terlebih dahulu! ');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -195,7 +213,7 @@ const ManageWkTjsl = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Apakah Anda yakin ingin menghapus program TJSL ini?')) {
+    if (! window.confirm('Apakah Anda yakin ingin menghapus program TJSL ini?')) {
       return;
     }
 
@@ -235,7 +253,7 @@ const ManageWkTjsl = () => {
   };
 
   const handleCancel = () => {
-    if (window.confirm('Apakah Anda yakin ingin membatalkan? Data yang belum disimpan akan hilang.')) {
+    if (window.confirm('Apakah Anda yakin ingin membatalkan?  Data yang belum disimpan akan hilang.')) {
       setShowForm(false);
       resetForm();
     }
@@ -271,7 +289,7 @@ const ManageWkTjsl = () => {
           <h1 className="text-3xl font-bold text-gray-900">Kelola Wilayah Kerja TJSL</h1>
           <p className="text-gray-600 mt-1">Manajemen program tanggung jawab sosial dan lingkungan</p>
         </div>
-        {!showForm && (
+        {! showForm && (
           <button
             onClick={() => setShowForm(true)}
             className="flex items-center gap-2 bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-blue-700 transition-all transform hover:-translate-y-0.5"
@@ -283,7 +301,7 @@ const ManageWkTjsl = () => {
       </div>
 
       {/* Stats Cards */}
-      {!showForm && (
+      {! showForm && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white">
             <div className="flex items-center justify-between mb-4">
@@ -331,7 +349,7 @@ const ManageWkTjsl = () => {
       )}
 
       {/* Search & Filter Section */}
-      {!showForm && (
+      {! showForm && (
         <div className="bg-white rounded-xl shadow-md p-6 mb-8">
           <div className="flex items-center gap-2 mb-4">
             <FaFilter className="text-gray-500" />
@@ -481,58 +499,6 @@ const ManageWkTjsl = () => {
                     placeholder="0"
                   />
                 </div>
-              </div>
-            </div>
-
-            {/* Section 2: Position & Color */}
-            <div className="mb-8">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <svg className="w-4 h-4 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                </div>
-                Posisi & Tampilan di Peta
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Position X (%) <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    name="position_x"
-                    value={formData.position_x}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                    placeholder="0.00"
-                    min="0"
-                    max="100"
-                  />
-                  <p className="text-sm text-gray-500 mt-1">Koordinat X pada peta (0-100)</p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Position Y (%) <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    name="position_y"
-                    value={formData.position_y}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                    placeholder="0.00"
-                    min="0"
-                    max="100"
-                  />
-                  <p className="text-sm text-gray-500 mt-1">Koordinat Y pada peta (0-100)</p>
-                </div>
 
                 <div className="md:col-span-2">
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -557,6 +523,61 @@ const ManageWkTjsl = () => {
                     />
                   </div>
                   <p className="text-sm text-gray-500 mt-1">Warna yang akan ditampilkan pada marker peta</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Section 2: Map Click Position Selector - NEW */}
+            <div className="mb-8">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                  <FaMapMarkerAlt className="w-4 h-4 text-purple-600" />
+                </div>
+                Pilih Posisi pada Peta <span className="text-red-500">*</span>
+              </h3>
+              
+              <MapClickSelector
+                imageSrc={PetaImage}
+                onPositionSelect={handlePositionSelect}
+                initialX={formData.position_x}
+                initialY={formData.position_y}
+                markerColor={formData.color}
+              />
+
+              {/* Display Coordinates - Read Only */}
+              <div className="grid grid-cols-2 gap-4 mt-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Position X (%) <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    name="position_x"
+                    value={formData.position_x}
+                    onChange={handleInputChange}
+                    required
+                    readOnly
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 cursor-not-allowed"
+                    placeholder="Pilih pada peta"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Position Y (%) <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    name="position_y"
+                    value={formData.position_y}
+                    onChange={handleInputChange}
+                    required
+                    readOnly
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 cursor-not-allowed"
+                    placeholder="Pilih pada peta"
+                  />
                 </div>
               </div>
             </div>
@@ -761,7 +782,7 @@ const ManageWkTjsl = () => {
                 disabled={loading}
                 className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? 'Menyimpan...' : editingArea ? 'Update Program TJSL' : 'Simpan Program TJSL'}
+                {loading ?  'Menyimpan...' : editingArea ? 'Update Program TJSL' : 'Simpan Program TJSL'}
               </button>
             </div>
           </form>
@@ -769,7 +790,7 @@ const ManageWkTjsl = () => {
       )}
 
       {/* Table List */}
-      {!showForm && (
+      {! showForm && (
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
@@ -785,7 +806,7 @@ const ManageWkTjsl = () => {
                     Penerima Manfaat
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
-                    Berita Terkait
+                    Posisi
                   </th>
                   <th className="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Aktif
@@ -804,7 +825,7 @@ const ManageWkTjsl = () => {
                       </div>
                     </td>
                   </tr>
-                ) : filteredAreas.length === 0 ? (
+                ) : filteredAreas.length === 0 ?  (
                   <tr>
                     <td colSpan="6" className="px-6 py-16 text-center">
                       <div className="w-20 h-20 bg-gray-200 rounded-full mx-auto mb-4 flex items-center justify-center">
@@ -857,12 +878,9 @@ const ManageWkTjsl = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                         {area.beneficiaries || '-'}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        {area.related_news_id ? (
-                          <span className="text-blue-600 font-semibold">✓ Terlink</span>
-                        ) : (
-                          <span className="text-gray-400">-</span>
-                        )}
+                      <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-500">
+                        <div>X: {area.position_x}%</div>
+                        <div>Y: {area.position_y}%</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
                         {area.is_active ? (
