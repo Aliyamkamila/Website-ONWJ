@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
-use Carbon\Carbon;
 
 class Berita extends Model
 {
@@ -33,7 +32,7 @@ class Berita extends Model
         'show_in_dashboard',
         'pin_to_homepage',
         'views',
-        'published_at',
+        'display_order',
     ];
 
     protected $casts = [
@@ -43,7 +42,7 @@ class Berita extends Model
         'show_in_dashboard' => 'boolean',
         'pin_to_homepage' => 'boolean',
         'views' => 'integer',
-        'published_at' => 'datetime',
+        'display_order' => 'integer',
     ];
 
     protected $appends = ['full_image_url', 'formatted_date'];
@@ -53,22 +52,14 @@ class Berita extends Model
     {
         parent::boot();
 
+        // Auto-generate slug
         static::creating(function ($berita) {
             if (empty($berita->slug)) {
                 $berita->slug = static::generateUniqueSlug($berita->title);
             }
-            
-            if ($berita->status === 'published' && empty($berita->published_at)) {
-                $berita->published_at = now();
-            }
         });
 
-        static::updating(function ($berita) {
-            if ($berita->isDirty('status') && $berita->status === 'published' && empty($berita->published_at)) {
-                $berita->published_at = now();
-            }
-        });
-
+        // Delete image when deleting
         static::deleting(function ($berita) {
             if ($berita->image_path && Storage::disk('public')->exists($berita->image_path)) {
                 Storage::disk('public')->delete($berita->image_path);
@@ -76,15 +67,14 @@ class Berita extends Model
         });
     }
 
-    // ===== ACCESSORS (FIXED) =====
+    // ===== ACCESSORS =====
     public function getFullImageUrlAttribute()
     {
         if ($this->image_url) {
             return $this->image_url;
         }
         
-        if ($this->image_path) {
-            // ✅ FIXED: Gunakan asset() alih-alih Storage::url()
+        if ($this->image_path && Storage::disk('public')->exists($this->image_path)) {
             return asset('storage/' . $this->image_path);
         }
         
@@ -93,8 +83,7 @@ class Berita extends Model
 
     public function getFormattedDateAttribute()
     {
-        // ✅ FIXED: Parse date sebagai Carbon instance
-        return $this->date ? Carbon::parse($this->date)->format('F d, Y') : null;
+        return $this->date ? $this->date->format('d F Y') : null;
     }
 
     // ===== SCOPES =====
@@ -103,24 +92,24 @@ class Berita extends Model
         return $query->where('status', 'published');
     }
 
-    public function scopeDraft($query)
+    public function scopePinned($query)
     {
-        return $query->where('status', 'draft');
+        return $query->where('pin_to_homepage', true);
     }
 
-    public function scopeShowInTJSL($query)
+    public function scopeInTjsl($query)
     {
         return $query->where('show_in_tjsl', true);
     }
 
-    public function scopeShowInMediaInformasi($query)
+    public function scopeInMediaInformasi($query)
     {
         return $query->where('show_in_media_informasi', true);
     }
 
-    public function scopePinned($query)
+    public function scopeInDashboard($query)
     {
-        return $query->where('pin_to_homepage', true);
+        return $query->where('show_in_dashboard', true);
     }
 
     public function scopeByCategory($query, $category)
@@ -132,17 +121,17 @@ class Berita extends Model
     {
         return $query->where(function ($q) use ($search) {
             $q->where('title', 'like', "%{$search}%")
-              ->orWhere('short_description', 'like', "%{$search}%")
+              ->orWhere('author', 'like', "%{$search}%")
               ->orWhere('content', 'like', "%{$search}%")
-              ->orWhere('author', 'like', "%{$search}%");
+              ->orWhere('short_description', 'like', "%{$search}%");
         });
     }
 
-    public function scopeRecent($query, $limit = 5)
+    public function scopeOrdered($query)
     {
-        return $query->published()
+        return $query->orderBy('display_order', 'desc')
                      ->orderBy('date', 'desc')
-                     ->limit($limit);
+                     ->orderBy('created_at', 'desc');
     }
 
     // ===== HELPER METHODS =====
@@ -179,10 +168,9 @@ class Berita extends Model
     {
         return [
             'total' => static::count(),
-            'published' => static::published()->count(),
-            'draft' => static::draft()->count(),
-            'tjsl' => static::showInTJSL()->count(),
-            'pinned' => static::pinned()->count(),
+            'published' => static::where('status', 'published')->count(),
+            'tjsl' => static::where('show_in_tjsl', true)->count(),
+            'pinned' => static::where('pin_to_homepage', true)->count(),
             'total_views' => static::sum('views'),
         ];
     }
