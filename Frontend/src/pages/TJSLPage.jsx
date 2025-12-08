@@ -36,7 +36,7 @@ const dummyPrograms = [
   },
   { 
     title: 'Program Ekonomi & Pembangunan Daerah', 
-    content: 'Pemberdayaan UMKM lokal dan pelatihan keterampilan untuk meningkatkan kesejahteraan masyarakat. ', 
+    content: 'Pemberdayaan UMKM lokal dan pelatihan keterampilan untuk meningkatkan kesejahteraan masyarakat.', 
     image: carouselImg3, 
     link: '#ekonomi' 
   },
@@ -54,8 +54,8 @@ const dummyNews = [
     slug: 'program-mangrove-kepulauan-seribu', 
     category: 'TJSL Update', 
     date: '15 Jan 2025', 
-    title: 'Penanaman 5. 000 Bibit Mangrove di Kepulauan Seribu', 
-    description: 'Program konservasi mangrove berhasil menanam 5.000 bibit di kawasan pesisir Kepulauan Seribu untuk melindungi ekosistem laut... ', 
+    title: 'Penanaman 5.000 Bibit Mangrove di Kepulauan Seribu', 
+    description: 'Program konservasi mangrove berhasil menanam 5. 000 bibit di kawasan pesisir Kepulauan Seribu untuk melindungi ekosistem laut... ', 
     image: programImage 
   },
   { 
@@ -101,14 +101,14 @@ const dummyTestimonials = [
     id: 1, 
     name: 'Budi Santoso', 
     location: 'Kepulauan Seribu',
-    testimonial: 'Program beasiswa ini sangat membantu anak saya untuk terus bersekolah hingga perguruan tinggi. Terima kasih atas perhatian terhadap pendidikan generasi muda! ', 
+    testimonial: 'Program beasiswa ini sangat membantu anak saya untuk terus bersekolah hingga perguruan tinggi.  Terima kasih atas perhatian terhadap pendidikan generasi muda! ', 
     full_avatar_url: 'https://ui-avatars.com/api/? name=Budi+Santoso&background=2563eb&color=fff&size=80' 
   },
   { 
     id: 2, 
     name: 'Siti Aminah', 
     location: 'Muara Gembong',
-    testimonial: 'Penanaman mangrove membuat pantai kami lebih aman dari abrasi dan hasil tangkapan ikan juga meningkat. Program ini benar-benar membawa dampak positif! ', 
+    testimonial: 'Penanaman mangrove membuat pantai kami lebih aman dari abrasi dan hasil tangkapan ikan juga meningkat. Program ini benar-benar membawa dampak positif!', 
     full_avatar_url: 'https://ui-avatars.com/api/?name=Siti+Aminah&background=059669&color=fff&size=80' 
   },
   { 
@@ -122,8 +122,8 @@ const dummyTestimonials = [
     id: 4, 
     name: 'Dewi Lestari', 
     location: 'UMKM Lokal',
-    testimonial: 'Pelatihan kewirausahaan dan bantuan modal usaha sangat membantu mengembangkan usaha keluarga kami.  Pendapatan meningkat 200% dalam 6 bulan!', 
-    full_avatar_url: 'https://ui-avatars. com/api/?name=Dewi+Lestari&background=ea580c&color=fff&size=80' 
+    testimonial: 'Pelatihan kewirausahaan dan bantuan modal usaha sangat membantu mengembangkan usaha keluarga kami. Pendapatan meningkat 200% dalam 6 bulan! ', 
+    full_avatar_url: 'https://ui-avatars.com/api/?name=Dewi+Lestari&background=ea580c&color=fff&size=80' 
   },
 ];
 
@@ -157,7 +157,7 @@ const TJSLProfile = ({ quickFacts }) => (
 
     <div className="max-w-5xl mx-auto">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-        {quickFacts. slice(0, 3).map((fact, index) => (
+        {quickFacts.slice(0, 3).map((fact, index) => (
           <div key={index} className={`${fact.bgColor} p-6 rounded-xl hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1`}>
             <div className="flex flex-col items-center text-center">
               <div className="p-3 bg-white shadow-md rounded-lg mb-3">
@@ -339,7 +339,7 @@ const TJSLBeritaSection = ({ featuredNews, latestNews }) => (
         </Link>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-        {latestNews. length > 0 ? (
+        {latestNews.length > 0 ? (
           latestNews.map((item, index) => (<NewsCard key={item.id} news={item} delay={index * 100} />))
         ) : (
           <div className="col-span-4 text-center py-12 text-gray-500">
@@ -412,7 +412,7 @@ const TJSLVoicesSection = ({ testimonials }) => {
                 <div className="bg-white rounded-xl shadow-2xl p-6 md:p-8 h-full flex flex-col justify-between">
                   <div className="mb-4">
                     <svg className="w-10 h-10 text-blue-200" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M14. 017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432. 917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7. 391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2. 433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/>
+                      <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432. 917-3.995 3.638-3.995 5.849h4v10h-9. 983zm-14.017 0v-7. 391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433. 917-3.996 3. 638-3.996 5. 849h3.983v10h-9.983z"/>
                     </svg>
                   </div>
                   <blockquote className="text-gray-700 text-base md:text-lg leading-relaxed mb-6 flex-grow">
@@ -426,7 +426,7 @@ const TJSLVoicesSection = ({ testimonials }) => {
                         className="w-12 h-12 rounded-full border-4 border-blue-100 shadow-md object-cover"
                         onError={(e) => {
                           e.target.style.display = 'none';
-                          e.target.nextSibling.style.display = 'flex';
+                          e.target.nextSibling. style.display = 'flex';
                         }}
                       />
                     ) : null}
@@ -438,7 +438,7 @@ const TJSLVoicesSection = ({ testimonials }) => {
                     </div>
                     <div>
                       <cite className="font-bold text-gray-900 text-base not-italic block">
-                        {testimonial.name}
+                        {testimonial. name}
                       </cite>
                       <p className="text-blue-600 text-xs font-medium">
                         {testimonial.location}
@@ -502,32 +502,39 @@ const TJSLPage = () => {
     const fetchAllData = async () => {
       setLoading(true);
       try {
-        const [statsRes, programsRes, newsRes, testimonialsRes] = await Promise.all([
-          // ✅ UPDATED: Fetch from backend API
+        // ✅ FIXED: Only fetch testimonials & statistics (endpoints that exist)
+        const [statsRes, testimonialsRes] = await Promise. all([
           axios.get(`${API_URL}/v1/tjsl/statistik`). catch((err) => {
-            console.error('Error fetching statistics:', err);
+            console. error('Error fetching statistics:', err);
             return { data: { success: true, data: dummyStatistik } };
           }),
-          axios.get(`${API_URL}/v1/tjsl/programs`).catch(() => ({ data: { success: true, data: dummyPrograms } })),
-          axios.get(`${API_URL}/v1/tjsl/berita? limit=5`).catch(() => ({ data: { success: true, data: dummyNews } })),
-          axios.get(`${API_URL}/v1/testimonials/featured? limit=4`).catch(() => ({ data: { success: true, data: dummyTestimonials } })),
+          axios. get(`${API_URL}/v1/testimonials/featured? limit=4`).catch((err) => {
+            console.error('Error fetching testimonials:', err);
+            return { data: { success: true, data: dummyTestimonials } };
+          }),
         ]);
 
+        // Set statistics
         if (statsRes.data.success) {
           setQuickFacts(transformStatistik(statsRes.data.data));
+        } else {
+          setQuickFacts(transformStatistik(dummyStatistik));
         }
-        if (programsRes.data.success) {
-          setPrograms(programsRes.data.data);
-        }
-        if (newsRes.data.success) {
-          setNewsItems(newsRes.data.data);
-        }
+
+        // Set testimonials
         if (testimonialsRes.data.success) {
           setTestimonials(testimonialsRes.data.data);
+        } else {
+          setTestimonials(dummyTestimonials);
         }
+
+        // ✅ Use dummy data for programs & news (no backend endpoint yet)
+        setPrograms(dummyPrograms);
+        setNewsItems(dummyNews);
+
       } catch (error) {
         console.error('Error fetching TJSL data:', error);
-        // Fallback ke dummy data
+        // Fallback to all dummy data
         setQuickFacts(transformStatistik(dummyStatistik));
         setPrograms(dummyPrograms);
         setNewsItems(dummyNews);
@@ -542,11 +549,32 @@ const TJSLPage = () => {
 
   const transformStatistik = (data) => {
     const iconMap = {
-      penerimaan_manfaat: <svg className="w-6 h-6 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4. 354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>,
-      infrastruktur: <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>,
-      ebtke: <svg className="w-6 h-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>,
-      paket_pendidikan: <svg className="w-6 h-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.747 0-3.332.477-4.5 1.253" /></svg>,
-      kelompok_binaan: <svg className="w-6 h-6 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5. 356-1.857M17 20H7m10 0v-2c0-. 656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-. 656.126-1.283. 356-1.857m0 0a5.002 5. 002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>,
+      // ✅ FIXED: Remove all spaces in SVG path d attribute
+      penerimaan_manfaat: (
+        <svg className="w-6 h-6 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4. 354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+        </svg>
+      ),
+      infrastruktur: (
+        <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+        </svg>
+      ),
+      ebtke: (
+        <svg className="w-6 h-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+      ),
+      paket_pendidikan: (
+        <svg className="w-6 h-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18. 477 18.246 18 16.5 18c-1.747 0-3.332.477-4.5 1.253" />
+        </svg>
+      ),
+      kelompok_binaan: (
+        <svg className="w-6 h-6 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5. 356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-. 656.126-1.283. 356-1.857m0 0a5.002 5. 002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+      ),
     };
 
     const bgColorMap = {

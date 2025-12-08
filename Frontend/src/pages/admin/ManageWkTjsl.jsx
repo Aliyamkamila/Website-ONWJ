@@ -3,9 +3,10 @@ import { FaEdit, FaTrash, FaPlus, FaTimes, FaMapMarkerAlt, FaUsers, FaCheck, FaN
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import MapClickSelector from '../../components/MapClickSelector';
-import PetaImage from '../wk/Peta.png'; // Sesuaikan path jika berbeda
+import PetaImage from '../wk/Peta.png';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+// ✅ FIXED: Use correct env variable
+const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
 
 const ManageWkTjsl = () => {
   const [areas, setAreas] = useState([]);
@@ -15,7 +16,6 @@ const ManageWkTjsl = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingArea, setEditingArea] = useState(null);
   
-  // Search & Filter States
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [filterActive, setFilterActive] = useState('');
@@ -45,27 +45,23 @@ const ManageWkTjsl = () => {
     fetchBeritaList();
   }, []);
 
-  // Filter Logic
   useEffect(() => {
-    let result = [...areas];
+    let result = [... areas];
 
-    // Search
     if (searchTerm) {
       result = result.filter(item =>
         item.area_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.name. toLowerCase().includes(searchTerm. toLowerCase()) ||
         item.description.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
-    // Filter by status
     if (filterStatus) {
       result = result.filter(item => item.status === filterStatus);
     }
 
-    // Filter by active
     if (filterActive === 'true') {
-      result = result.filter(item => item.is_active === true);
+      result = result. filter(item => item.is_active === true);
     } else if (filterActive === 'false') {
       result = result.filter(item => item.is_active === false);
     }
@@ -73,7 +69,6 @@ const ManageWkTjsl = () => {
     setFilteredAreas(result);
   }, [searchTerm, filterStatus, filterActive, areas]);
 
-  // Clear Filters
   const clearFilters = () => {
     setSearchTerm('');
     setFilterStatus('');
@@ -122,7 +117,6 @@ const ManageWkTjsl = () => {
     }));
   };
 
-  // NEW: Handle position select from MapClickSelector
   const handlePositionSelect = (coordinates) => {
     setFormData(prev => ({
       ...prev,
@@ -135,7 +129,7 @@ const ManageWkTjsl = () => {
     if (programInput.trim()) {
       setFormData(prev => ({
         ...prev,
-        programs: [...prev.programs, programInput.trim()]
+        programs: [... prev.programs, programInput.trim()]
       }));
       setProgramInput('');
     }
@@ -151,9 +145,8 @@ const ManageWkTjsl = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // NEW: Validation untuk posisi peta
     if (!formData.position_x || !formData.position_y) {
-      toast.error('Silakan pilih posisi pada peta terlebih dahulu! ');
+      toast. error('Silakan pilih posisi pada peta terlebih dahulu! ');
       return;
     }
 
@@ -168,7 +161,7 @@ const ManageWkTjsl = () => {
 
       const response = await axios[method](endpoint, formData);
 
-      if (response.data.success) {
+      if (response. data.success) {
         toast.success(editingArea ? 'Program TJSL berhasil diperbarui!' : 'Program TJSL berhasil ditambahkan!');
         setShowForm(false);
         resetForm();
@@ -177,7 +170,7 @@ const ManageWkTjsl = () => {
     } catch (error) {
       console.error('Error saving TJSL area:', error);
       const errorMessage = error.response?.data?.message || 'Gagal menyimpan data program TJSL';
-      toast.error(errorMessage);
+      toast. error(errorMessage);
 
       if (error.response?.data?.errors) {
         Object.values(error.response.data.errors).forEach(err => {
@@ -192,7 +185,7 @@ const ManageWkTjsl = () => {
   const handleEdit = (area) => {
     setEditingArea(area);
     setFormData({
-      area_id: area.area_id,
+      area_id: area. area_id,
       name: area.name,
       position_x: area.position_x,
       position_y: area.position_y,
@@ -202,7 +195,7 @@ const ManageWkTjsl = () => {
       status: area.status,
       beneficiaries: area.beneficiaries || '',
       budget: area.budget || '',
-      duration: area.duration || '',
+      duration: area. duration || '',
       impact: area.impact || '',
       order: area.order || 0,
       is_active: area.is_active,
@@ -253,13 +246,12 @@ const ManageWkTjsl = () => {
   };
 
   const handleCancel = () => {
-    if (window.confirm('Apakah Anda yakin ingin membatalkan?  Data yang belum disimpan akan hilang.')) {
+    if (window.confirm('Apakah Anda yakin ingin membatalkan?  Data yang belum disimpan akan hilang. ')) {
       setShowForm(false);
       resetForm();
     }
   };
 
-  // Stats Calculation
   const stats = {
     total: areas.length,
     aktif: areas.filter(a => a.status === 'Aktif').length,
@@ -269,7 +261,6 @@ const ManageWkTjsl = () => {
 
   return (
     <div>
-      {/* Tombol Kembali - Hanya Muncul di Page Input */}
       {showForm && (
         <button
           onClick={() => {
@@ -283,7 +274,6 @@ const ManageWkTjsl = () => {
         </button>
       )}
 
-      {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Kelola Wilayah Kerja TJSL</h1>
@@ -300,7 +290,6 @@ const ManageWkTjsl = () => {
         )}
       </div>
 
-      {/* Stats Cards */}
       {! showForm && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white">
@@ -338,7 +327,7 @@ const ManageWkTjsl = () => {
               <div className="p-3 bg-white bg-opacity-20 rounded-lg">
                 <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3. 732 7.943 7. 523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                 </svg>
               </div>
             </div>
@@ -348,7 +337,6 @@ const ManageWkTjsl = () => {
         </div>
       )}
 
-      {/* Search & Filter Section */}
       {! showForm && (
         <div className="bg-white rounded-xl shadow-md p-6 mb-8">
           <div className="flex items-center gap-2 mb-4">
@@ -357,19 +345,17 @@ const ManageWkTjsl = () => {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Search */}
             <div className="relative">
               <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
                 placeholder="Cari ID area, nama program..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => setSearchTerm(e.target. value)}
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
               />
             </div>
 
-            {/* Filter Status */}
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
@@ -380,7 +366,6 @@ const ManageWkTjsl = () => {
               <option value="Non-Aktif">Non-Aktif</option>
             </select>
 
-            {/* Filter Active */}
             <select
               value={filterActive}
               onChange={(e) => setFilterActive(e.target.value)}
@@ -392,7 +377,6 @@ const ManageWkTjsl = () => {
             </select>
           </div>
 
-          {/* Clear Filter & Result Counter */}
           {(searchTerm || filterStatus || filterActive) && (
             <div className="mt-4 flex justify-between items-center">
               <p className="text-sm text-gray-600">
@@ -410,9 +394,8 @@ const ManageWkTjsl = () => {
         </div>
       )}
 
-      {/* Form Input */}
       {showForm && (
-        <div className="bg-white rounded-xl shadow-lg p-8 mb-8 animate-fade-in">
+        <div className="bg-white rounded-xl shadow-lg p-8 mb-8">
           <div className="flex justify-between items-center mb-8 pb-6 border-b border-gray-200">
             <div>
               <h2 className="text-2xl font-bold text-gray-900">
@@ -431,7 +414,7 @@ const ManageWkTjsl = () => {
           </div>
 
           <form onSubmit={handleSubmit}>
-            {/* Section 1: Basic Information */}
+            {/* Basic Information */}
             <div className="mb-8">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                 <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -447,10 +430,10 @@ const ManageWkTjsl = () => {
                   <input
                     type="text"
                     name="area_id"
-                    value={formData.area_id}
+                    value={formData. area_id}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Contoh: KEPULAUAN_SERIBU"
                   />
                 </div>
@@ -465,7 +448,7 @@ const ManageWkTjsl = () => {
                     value={formData.name}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Nama program TJSL"
                   />
                 </div>
@@ -476,10 +459,10 @@ const ManageWkTjsl = () => {
                   </label>
                   <select
                     name="status"
-                    value={formData.status}
+                    value={formData. status}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     <option value="Aktif">Aktif</option>
                     <option value="Non-Aktif">Non-Aktif</option>
@@ -493,9 +476,9 @@ const ManageWkTjsl = () => {
                   <input
                     type="number"
                     name="order"
-                    value={formData.order}
+                    value={formData. order}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="0"
                   />
                 </div>
@@ -517,17 +500,16 @@ const ManageWkTjsl = () => {
                       type="text"
                       value={formData.color}
                       onChange={(e) => setFormData(prev => ({ ...prev, color: e.target.value }))}
-                      className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="#0EA5E9"
                       pattern="^#[0-9A-Fa-f]{6}$"
                     />
                   </div>
-                  <p className="text-sm text-gray-500 mt-1">Warna yang akan ditampilkan pada marker peta</p>
                 </div>
               </div>
             </div>
 
-            {/* Section 2: Map Click Position Selector - NEW */}
+            {/* Map Position Selector */}
             <div className="mb-8">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                 <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
@@ -540,11 +522,10 @@ const ManageWkTjsl = () => {
                 imageSrc={PetaImage}
                 onPositionSelect={handlePositionSelect}
                 initialX={formData.position_x}
-                initialY={formData.position_y}
+                initialY={formData. position_y}
                 markerColor={formData.color}
               />
 
-              {/* Display Coordinates - Read Only */}
               <div className="grid grid-cols-2 gap-4 mt-4">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -582,7 +563,7 @@ const ManageWkTjsl = () => {
               </div>
             </div>
 
-            {/* Section 3: Description */}
+            {/* Description */}
             <div className="mb-8">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                 <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
@@ -598,12 +579,12 @@ const ManageWkTjsl = () => {
                 onChange={handleInputChange}
                 required
                 rows="4"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Deskripsi lengkap program TJSL..."
               />
             </div>
 
-            {/* Section 4: Program Data */}
+            {/* Program Data */}
             <div className="mb-8">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                 <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
@@ -621,7 +602,7 @@ const ManageWkTjsl = () => {
                     name="beneficiaries"
                     value={formData.beneficiaries}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Contoh: 850 Keluarga"
                   />
                 </div>
@@ -633,9 +614,9 @@ const ManageWkTjsl = () => {
                   <input
                     type="text"
                     name="budget"
-                    value={formData.budget}
+                    value={formData. budget}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Contoh: Rp 2.8 Miliar"
                   />
                 </div>
@@ -649,7 +630,7 @@ const ManageWkTjsl = () => {
                     name="duration"
                     value={formData.duration}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Contoh: 2023-2025"
                   />
                 </div>
@@ -663,14 +644,14 @@ const ManageWkTjsl = () => {
                     name="impact"
                     value={formData.impact}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Contoh: Peningkatan 35% pendapatan"
                   />
                 </div>
               </div>
             </div>
 
-            {/* Section 5: Programs List */}
+            {/* Programs List */}
             <div className="mb-8">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                 <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center">
@@ -685,8 +666,8 @@ const ManageWkTjsl = () => {
                   type="text"
                   value={programInput}
                   onChange={(e) => setProgramInput(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addProgram())}
-                  className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  onKeyPress={(e) => e. key === 'Enter' && (e.preventDefault(), addProgram())}
+                  className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Nama program/kegiatan (tekan Enter)"
                 />
                 <button
@@ -716,7 +697,7 @@ const ManageWkTjsl = () => {
               </div>
             </div>
 
-            {/* Section 6: Related News */}
+            {/* Related News */}
             <div className="mb-8">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                 <div className="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
@@ -732,7 +713,7 @@ const ManageWkTjsl = () => {
                   name="related_news_id"
                   value={formData.related_news_id}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="">-- Tidak ada berita terkait --</option>
                   {beritaList.map((berita) => (
@@ -789,7 +770,6 @@ const ManageWkTjsl = () => {
         </div>
       )}
 
-      {/* Table List */}
       {! showForm && (
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
           <div className="overflow-x-auto">
@@ -825,7 +805,7 @@ const ManageWkTjsl = () => {
                       </div>
                     </td>
                   </tr>
-                ) : filteredAreas.length === 0 ?  (
+                ) : filteredAreas.length === 0 ? (
                   <tr>
                     <td colSpan="6" className="px-6 py-16 text-center">
                       <div className="w-20 h-20 bg-gray-200 rounded-full mx-auto mb-4 flex items-center justify-center">
@@ -861,7 +841,7 @@ const ManageWkTjsl = () => {
                             style={{ backgroundColor: area.color }}
                           />
                           <div>
-                            <div className="text-sm font-semibold text-gray-900">{area.area_id}</div>
+                            <div className="text-sm font-semibold text-gray-900">{area. area_id}</div>
                             <div className="text-sm text-gray-500">{area.name}</div>
                           </div>
                         </div>
@@ -899,7 +879,7 @@ const ManageWkTjsl = () => {
                             <FaEdit className="w-5 h-5" />
                           </button>
                           <button
-                            onClick={() => handleDelete(area.id)}
+                            onClick={() => handleDelete(area. id)}
                             className="text-red-600 hover:text-red-900 transition-colors p-2 hover:bg-red-50 rounded-lg"
                             title="Hapus"
                           >
