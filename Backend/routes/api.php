@@ -9,9 +9,10 @@ use App\Http\Controllers\Api\ProgramController;
 use App\Http\Controllers\Api\WkTekkomController;
 use App\Http\Controllers\Api\WkTjslController;
 use App\Http\Controllers\Api\PenghargaanController;
+use App\Http\Controllers\Api\BeritaController;
 
 // Guest routes (public access)
-Route::middleware(['guest.only'])->group(function () {
+Route::middleware(['guest. only'])->group(function () {
     Route::get('/', function () {
         return response()->json([
             'success' => true,
@@ -32,7 +33,7 @@ Route::prefix('tukang-minyak-dan-gas')->group(function () {
 });
 
 // Protected admin routes
-Route::middleware(['auth:sanctum', 'admin.auth'])->group(function () {
+Route::middleware(['auth:sanctum', 'admin. auth'])->group(function () {
     // Auth routes
     Route::post('/admin/logout', [AdminAuthController::class, 'logout'])->name('admin.logout');
     Route::get('/admin/me', [AdminAuthController::class, 'me'])->name('admin.me');
@@ -49,7 +50,7 @@ Route::middleware(['auth:sanctum', 'admin.auth'])->group(function () {
     });
 });
 
-// ... existing routes ...
+// ...  existing routes ...
 
 /*
 |--------------------------------------------------------------------------
@@ -232,7 +233,7 @@ Route::prefix('v1')->group(function () {
 
 // ===== ADMIN ROUTES (TEMPORARY WITHOUT AUTH) =====
 Route::prefix('v1/admin')->group(function () {
-// Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin.auth'])->group(function () {
+// Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin. auth'])->group(function () {
     // CRUD Operations
     Route::get('/penghargaan', [PenghargaanController::class, 'adminIndex']);
     Route::post('/penghargaan', [PenghargaanController::class, 'store']);
@@ -253,8 +254,6 @@ Route::prefix('v1/admin')->group(function () {
 |--------------------------------------------------------------------------
 */
 
-use App\Http\Controllers\Api\BeritaController;
-
 // ===== PUBLIC ROUTES (untuk website visitor) =====
 Route::prefix('v1')->group(function () {
     // Get berita for TJSL Page
@@ -266,8 +265,9 @@ Route::prefix('v1')->group(function () {
     // Get pinned berita for Homepage
     Route::get('/berita/homepage', [BeritaController::class, 'forHomepage']);
     
-    // Get single berita detail by slug
-    Route::get('/berita/{slug}', [BeritaController::class, 'show']);
+    // ✅ FIXED: Add route constraint untuk slug (hanya lowercase, numbers, dan hyphens)
+    Route::get('/berita/{slug}', [BeritaController::class, 'show'])
+         ->where('slug', '[a-z0-9\-]+');
     
     // Get recent berita (for sidebar)
     Route::get('/berita-recent', [BeritaController::class, 'recent']);
@@ -278,15 +278,21 @@ Route::prefix('v1')->group(function () {
 
 // ===== ADMIN ROUTES (TEMPORARY WITHOUT AUTH) =====
 Route::prefix('v1/admin')->group(function () {
-// Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin. auth'])->group(function () {
+// Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin.auth'])->group(function () {
     // CRUD Operations
     Route::get('/berita', [BeritaController::class, 'adminIndex']);
     Route::post('/berita', [BeritaController::class, 'store']);
-    Route::get('/berita/{id}', [BeritaController::class, 'show']);
-    Route::post('/berita/{id}', [BeritaController::class, 'update']); // POST untuk support form-data dengan image
-    Route::delete('/berita/{id}', [BeritaController::class, 'destroy']);
+    
+    // ✅ FIXED: Add route constraint untuk ID (hanya numbers)
+    Route::get('/berita/{id}', [BeritaController::class, 'show'])
+         ->where('id', '[0-9]+');
+         
+    Route::post('/berita/{id}', [BeritaController::class, 'update'])
+         ->where('id', '[0-9]+'); // POST untuk support form-data dengan image
+         
+    Route::delete('/berita/{id}', [BeritaController::class, 'destroy'])
+         ->where('id', '[0-9]+');
     
     // Statistics
     Route::get('/berita-statistics', [BeritaController::class, 'getStatistics']);
 });
-

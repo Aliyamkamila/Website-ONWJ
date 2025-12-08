@@ -19,7 +19,8 @@ class BeritaController extends Controller
     public function index(Request $request)
     {
         try {
-            $query = Berita::published()->showInTJSL();
+            // ✅ FIXED: Ganti showInTJSL() dengan inTjsl()
+            $query = Berita::published()->inTjsl();
 
             // Filter by category
             if ($request->filled('category') && $request->category !== 'All') {
@@ -67,7 +68,8 @@ class BeritaController extends Controller
     public function forMediaInformasi(Request $request)
     {
         try {
-            $query = Berita::published()->showInMediaInformasi();
+            // ✅ FIXED: Ganti showInMediaInformasi() dengan inMediaInformasi()
+            $query = Berita::published()->inMediaInformasi();
 
             if ($request->filled('category') && $request->category !== 'All') {
                 $query->byCategory($request->category);
@@ -131,25 +133,36 @@ class BeritaController extends Controller
     }
 
     /**
-     * Get single berita detail by slug (for ArtikelPage.jsx)
+     * ✅ FIXED: Get single berita detail
+     * Handles both slug (public) and ID (admin)
      */
-    public function show($slug)
+    public function show($slugOrId)
     {
         try {
-            $berita = Berita::where('slug', $slug)
-                           ->published()
-                           ->firstOrFail();
+            // Check if parameter is numeric (ID for admin) or string (slug for public)
+            if (is_numeric($slugOrId)) {
+                // Admin: Get by ID (no published filter)
+                $berita = Berita::findOrFail($slugOrId);
+                
+                // For admin, don't increment views
+                $relatedArticles = [];
+            } else {
+                // Public: Get by slug with published filter
+                $berita = Berita::where('slug', $slugOrId)
+                               ->published()
+                               ->firstOrFail();
 
-            // Increment views
-            $berita->incrementViews();
+                // Increment views for public access
+                $berita->incrementViews();
 
-            // Get related articles (same category, exclude current)
-            $relatedArticles = Berita::published()
-                                    ->byCategory($berita->category)
-                                    ->where('id', '!=', $berita->id)
-                                    ->orderBy('date', 'desc')
-                                    ->limit(3)
-                                    ->get();
+                // Get related articles (same category, exclude current)
+                $relatedArticles = Berita::published()
+                                        ->byCategory($berita->category)
+                                        ->where('id', '!=', $berita->id)
+                                        ->orderBy('date', 'desc')
+                                        ->limit(3)
+                                        ->get();
+            }
 
             return response()->json([
                 'success' => true,
@@ -388,7 +401,7 @@ class BeritaController extends Controller
                 }
 
                 $image = $request->file('image');
-                $filename = time() .  '_' . Str::slug($request->input('title', $berita->title)) . '.' . $image->getClientOriginalExtension();
+                $filename = time() . '_' . Str::slug($request->input('title', $berita->title)) . '.' . $image->getClientOriginalExtension();
                 $path = $image->storeAs('berita', $filename, 'public');
                 $data['image_path'] = $path;
             }
