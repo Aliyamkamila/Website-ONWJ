@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\WkTekkomController;
 use App\Http\Controllers\Api\WkTjslController;
 use App\Http\Controllers\Api\PenghargaanController;
 use App\Http\Controllers\Api\BeritaController;
+use App\Http\Controllers\Api\TestimonialController; // ✅ ADDED
 
 // Guest routes (public access)
 Route::middleware(['guest. only'])->group(function () {
@@ -29,7 +30,7 @@ Route::middleware(['guest. only'])->group(function () {
 Route::prefix('tukang-minyak-dan-gas')->group(function () {
     Route::post('/login', [AdminAuthController::class, 'login'])
         ->middleware('throttle:5,1')
-        ->name('admin.login');
+        ->name('admin. login');
 });
 
 // Protected admin routes
@@ -50,23 +51,16 @@ Route::middleware(['auth:sanctum', 'admin. auth'])->group(function () {
     });
 });
 
-// ...  existing routes ...
-
 /*
 |--------------------------------------------------------------------------
-| UMKM Routes (sudah ada tapi saya lengkapi)
+| UMKM Routes
 |--------------------------------------------------------------------------
 */
 
 // Public routes (untuk frontend)
 Route::prefix('v1')->group(function () {
-    // Get all UMKM for public display
     Route::get('/umkm', [UmkmController::class, 'index']);
-
-    // Get single UMKM detail
     Route::get('/umkm/{id}', [UmkmController::class, 'show']);
-
-    // Get categories and status options
     Route::get('/umkm-categories', [UmkmController::class, 'categories']);
     Route::get('/umkm-status-options', [UmkmController::class, 'statusOptions']);
 });
@@ -74,11 +68,10 @@ Route::prefix('v1')->group(function () {
 // Admin routes
 Route::prefix('v1/admin')->group(function () {
 // Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin'])->group(function () {
-    // UMKM Management
     Route::get('/umkm', [UmkmController::class, 'adminIndex']);
     Route::post('/umkm', [UmkmController::class, 'store']);
     Route::get('/umkm/{id}', [UmkmController::class, 'show']);
-    Route::post('/umkm/{id}', [UmkmController::class, 'update']); // POST for FormData with image
+    Route::post('/umkm/{id}', [UmkmController::class, 'update']);
     Route::delete('/umkm/{id}', [UmkmController::class, 'destroy']);
 });
 
@@ -90,34 +83,21 @@ Route::prefix('v1/admin')->group(function () {
 
 // Public routes (untuk frontend website)
 Route::prefix('v1')->group(function () {
-    // Get all programs for public display (with filters, search, pagination)
     Route::get('/programs', [ProgramController::class, 'index']);
-
-    // Get single program detail by slug
     Route::get('/programs/{slug}', [ProgramController::class, 'show']);
-
-    // Get recent programs (for sidebar)
     Route::get('/programs-recent', [ProgramController::class, 'recent']);
-
-    // Get categories
     Route::get('/program-categories', [ProgramController::class, 'categories']);
-
-    // Get status options
     Route::get('/program-status-options', [ProgramController::class, 'statusOptions']);
-
-    // Get program statistics
     Route::get('/program-statistics', [ProgramController::class, 'statistics']);
 });
 
-// TEMPORARY: Admin routes WITHOUT authentication for testing CORS
-// TODO: Uncomment middleware after testing
+// Admin routes
 Route::prefix('v1/admin')->group(function () {
 // Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin'])->group(function () {
-    // Program Management
     Route::get('/programs', [ProgramController::class, 'adminIndex']);
     Route::post('/programs', [ProgramController::class, 'store']);
     Route::get('/programs/{id}', [ProgramController::class, 'show']);
-    Route::post('/programs/{id}', [ProgramController::class, 'update']); // POST for FormData with image
+    Route::post('/programs/{id}', [ProgramController::class, 'update']);
     Route::delete('/programs/{id}', [ProgramController::class, 'destroy']);
 });
 
@@ -129,20 +109,14 @@ Route::prefix('v1/admin')->group(function () {
 
 // Public routes (untuk frontend)
 Route::prefix('v1')->group(function () {
-    // Get all TEKKOM areas for public display
     Route::get('/wk-tekkom', [WkTekkomController::class, 'index']);
-
-    // Get single TEKKOM area detail
     Route::get('/wk-tekkom/{id}', [WkTekkomController::class, 'show']);
-
-    // Get status options
     Route::get('/wk-tekkom-status-options', [WkTekkomController::class, 'statusOptions']);
 });
 
 // Admin routes
 Route::prefix('v1/admin')->group(function () {
 // Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin'])->group(function () {
-    // TEKKOM Management
     Route::get('/wk-tekkom', [WkTekkomController::class, 'adminIndex']);
     Route::post('/wk-tekkom', [WkTekkomController::class, 'store']);
     Route::get('/wk-tekkom/{id}', [WkTekkomController::class, 'show']);
@@ -160,20 +134,14 @@ Route::prefix('v1/admin')->group(function () {
 
 // Public routes (untuk frontend)
 Route::prefix('v1')->group(function () {
-    // Get all TJSL areas for public display
     Route::get('/wk-tjsl', [WkTjslController::class, 'index']);
-
-    // Get single TJSL area detail
     Route::get('/wk-tjsl/{id}', [WkTjslController::class, 'show']);
-
-    // Get status options
     Route::get('/wk-tjsl-status-options', [WkTjslController::class, 'statusOptions']);
 });
 
 // Admin routes
 Route::prefix('v1/admin')->group(function () {
 // Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin'])->group(function () {
-    // TJSL Management
     Route::get('/wk-tjsl', [WkTjslController::class, 'adminIndex']);
     Route::post('/wk-tjsl', [WkTjslController::class, 'store']);
     Route::get('/wk-tjsl/{id}', [WkTjslController::class, 'show']);
@@ -183,7 +151,12 @@ Route::prefix('v1/admin')->group(function () {
     Route::post('/wk-tjsl/{id}/restore', [WkTjslController::class, 'restore']);
 });
 
-// Combined endpoint for wilayahkerja page (both TEKKOM and TJSL)
+/*
+|--------------------------------------------------------------------------
+| Combined Wilayah Kerja Endpoint
+|--------------------------------------------------------------------------
+*/
+
 Route::prefix('v1')->group(function () {
     Route::get('/wilayah-kerja', function () {
         $tekkom = \App\Models\WkTekkom::active()->ordered()->get()->map(function ($area) {
@@ -215,36 +188,24 @@ Route::prefix('v1')->group(function () {
 |--------------------------------------------------------------------------
 */
 
-// ===== PUBLIC ROUTES (untuk website visitor) =====
+// Public routes
 Route::prefix('v1')->group(function () {
-    // Get penghargaan for Media Informasi Page
     Route::get('/penghargaan', [PenghargaanController::class, 'index']);
-    
-    // Get penghargaan for Landing Page
     Route::get('/penghargaan/landing', [PenghargaanController::class, 'forLanding']);
-    
-    // Get detail penghargaan
     Route::get('/penghargaan/{id}', [PenghargaanController::class, 'show']);
-    
-    // Get filter options
     Route::get('/penghargaan-years', [PenghargaanController::class, 'getYears']);
     Route::get('/penghargaan-categories', [PenghargaanController::class, 'getCategories']);
 });
 
-// ===== ADMIN ROUTES (TEMPORARY WITHOUT AUTH) =====
+// Admin routes
 Route::prefix('v1/admin')->group(function () {
 // Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin. auth'])->group(function () {
-    // CRUD Operations
     Route::get('/penghargaan', [PenghargaanController::class, 'adminIndex']);
     Route::post('/penghargaan', [PenghargaanController::class, 'store']);
     Route::get('/penghargaan/{id}', [PenghargaanController::class, 'show']);
-    Route::post('/penghargaan/{id}', [PenghargaanController::class, 'update']); // POST untuk support form-data dengan image
+    Route::post('/penghargaan/{id}', [PenghargaanController::class, 'update']);
     Route::delete('/penghargaan/{id}', [PenghargaanController::class, 'destroy']);
-    
-    // Bulk operations
     Route::post('/penghargaan/bulk-delete', [PenghargaanController::class, 'bulkDestroy']);
-    
-    // Statistics
     Route::get('/penghargaan-statistics', [PenghargaanController::class, 'getStatistics']);
 });
 
@@ -254,45 +215,81 @@ Route::prefix('v1/admin')->group(function () {
 |--------------------------------------------------------------------------
 */
 
-// ===== PUBLIC ROUTES (untuk website visitor) =====
+// Public routes
 Route::prefix('v1')->group(function () {
-    // Get berita for TJSL Page
     Route::get('/berita', [BeritaController::class, 'index']);
-    
-    // Get berita for Media Informasi Page
     Route::get('/berita/media-informasi', [BeritaController::class, 'forMediaInformasi']);
-    
-    // Get pinned berita for Homepage
     Route::get('/berita/homepage', [BeritaController::class, 'forHomepage']);
-    
-    // ✅ FIXED: Add route constraint untuk slug (hanya lowercase, numbers, dan hyphens)
     Route::get('/berita/{slug}', [BeritaController::class, 'show'])
          ->where('slug', '[a-z0-9\-]+');
-    
-    // Get recent berita (for sidebar)
     Route::get('/berita-recent', [BeritaController::class, 'recent']);
-    
-    // Get categories
     Route::get('/berita-categories', [BeritaController::class, 'categories']);
 });
 
-// ===== ADMIN ROUTES (TEMPORARY WITHOUT AUTH) =====
+// Admin routes
 Route::prefix('v1/admin')->group(function () {
 // Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin.auth'])->group(function () {
-    // CRUD Operations
     Route::get('/berita', [BeritaController::class, 'adminIndex']);
     Route::post('/berita', [BeritaController::class, 'store']);
-    
-    // ✅ FIXED: Add route constraint untuk ID (hanya numbers)
     Route::get('/berita/{id}', [BeritaController::class, 'show'])
          ->where('id', '[0-9]+');
-         
     Route::post('/berita/{id}', [BeritaController::class, 'update'])
-         ->where('id', '[0-9]+'); // POST untuk support form-data dengan image
-         
+         ->where('id', '[0-9]+');
     Route::delete('/berita/{id}', [BeritaController::class, 'destroy'])
          ->where('id', '[0-9]+');
-    
-    // Statistics
     Route::get('/berita-statistics', [BeritaController::class, 'getStatistics']);
+});
+
+/*
+|--------------------------------------------------------------------------
+| ✅ API Routes - TESTIMONIALS (NEW!)
+|--------------------------------------------------------------------------
+*/
+
+// ===== PUBLIC ROUTES (untuk AllProgramsPage. jsx) =====
+Route::prefix('v1')->group(function () {
+    // Get testimonials with pagination & filters
+    Route::get('/testimonials', [TestimonialController::class, 'index']);
+    
+    // Get featured testimonials (for homepage highlights)
+    Route::get('/testimonials/featured', [TestimonialController::class, 'getFeatured']);
+    
+    // Get testimonials by specific program
+    Route::get('/testimonials/program/{program}', [TestimonialController::class, 'getByProgram']);
+    
+    // Get single testimonial detail
+    Route::get('/testimonials/{id}', [TestimonialController::class, 'show'])
+         ->where('id', '[0-9]+');
+    
+    // Get list of all programs (for filter dropdown)
+    Route::get('/testimonial-programs', [TestimonialController::class, 'getPrograms']);
+});
+
+// ===== ADMIN ROUTES (untuk ManageTestimonial.jsx) =====
+Route::prefix('v1/admin')->group(function () {
+// Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin. auth'])->group(function () {
+    
+    // CRUD Operations
+    Route::get('/testimonials', [TestimonialController::class, 'adminIndex']);
+    
+    Route::post('/testimonials', [TestimonialController::class, 'store']);
+    
+    Route::get('/testimonials/{id}', [TestimonialController::class, 'show'])
+         ->where('id', '[0-9]+');
+    
+    Route::post('/testimonials/{id}', [TestimonialController::class, 'update'])
+         ->where('id', '[0-9]+'); // POST untuk support form-data dengan avatar
+    
+    Route::delete('/testimonials/{id}', [TestimonialController::class, 'destroy'])
+         ->where('id', '[0-9]+');
+    
+    // Bulk Operations
+    Route::post('/testimonials/bulk-delete', [TestimonialController::class, 'bulkDelete']);
+    
+    // Toggle Featured Status
+    Route::post('/testimonials/{id}/toggle-featured', [TestimonialController::class, 'toggleFeatured'])
+         ->where('id', '[0-9]+');
+    
+    // Statistics for Dashboard
+    Route::get('/testimonial-statistics', [TestimonialController::class, 'getStatistics']);
 });

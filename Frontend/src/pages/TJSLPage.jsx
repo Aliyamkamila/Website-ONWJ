@@ -9,7 +9,8 @@ import carouselImg3 from '../assets/contoh4.png';
 import logo from '../assets/logo.webp';
 import { FaHome, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+// ✅ UPDATED: Use correct API URL from env
+const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
 
 // ✅ DUMMY DATA sebagai fallback
 const dummyStatistik = {
@@ -23,7 +24,7 @@ const dummyStatistik = {
 const dummyPrograms = [
   { 
     title: 'Program Kesehatan', 
-    content: 'Menyediakan layanan kesehatan gratis dan perbaikan fasilitas sanitasi untuk masyarakat sekitar wilayah operasi.', 
+    content: 'Menyediakan layanan kesehatan gratis dan perbaikan fasilitas sanitasi untuk masyarakat sekitar wilayah operasi. ', 
     image: carouselImg1, 
     link: '#kesehatan' 
   },
@@ -54,7 +55,7 @@ const dummyNews = [
     category: 'TJSL Update', 
     date: '15 Jan 2025', 
     title: 'Penanaman 5.000 Bibit Mangrove di Kepulauan Seribu', 
-    description: 'Program konservasi mangrove berhasil menanam 5.000 bibit di kawasan pesisir Kepulauan Seribu untuk melindungi ekosistem laut...', 
+    description: 'Program konservasi mangrove berhasil menanam 5.000 bibit di kawasan pesisir Kepulauan Seribu untuk melindungi ekosistem laut... ', 
     image: programImage 
   },
   { 
@@ -62,7 +63,7 @@ const dummyNews = [
     slug: 'beasiswa-pendidikan-2025', 
     category: 'Pendidikan', 
     date: '10 Jan 2025', 
-    title: 'Program Beasiswa Mencapai 1.500 Siswa Berprestasi', 
+    title: 'Program Beasiswa Mencapai 1. 500 Siswa Berprestasi', 
     description: 'Tahun ini program beasiswa kami berhasil menjangkau 1.500 siswa dari keluarga kurang mampu di wilayah operasi...', 
     image: programImage 
   },
@@ -99,30 +100,30 @@ const dummyTestimonials = [
   { 
     id: 1, 
     name: 'Budi Santoso', 
-    role: 'Warga Kepulauan Seribu', 
-    text: 'Program beasiswa ini sangat membantu anak saya untuk terus bersekolah hingga perguruan tinggi. Terima kasih atas perhatian terhadap pendidikan generasi muda!', 
-    avatar: 'https://ui-avatars.com/api/?name=Budi+Santoso&background=2563eb&color=fff&size=80' 
+    location: 'Kepulauan Seribu',
+    testimonial: 'Program beasiswa ini sangat membantu anak saya untuk terus bersekolah hingga perguruan tinggi. Terima kasih atas perhatian terhadap pendidikan generasi muda! ', 
+    full_avatar_url: 'https://ui-avatars.com/api/? name=Budi+Santoso&background=2563eb&color=fff&size=80' 
   },
   { 
     id: 2, 
     name: 'Siti Aminah', 
-    role: 'Nelayan Muara Gembong', 
-    text: 'Penanaman mangrove membuat pantai kami lebih aman dari abrasi dan hasil tangkapan ikan juga meningkat. Program ini benar-benar membawa dampak positif!', 
-    avatar: 'https://ui-avatars.com/api/?name=Siti+Aminah&background=059669&color=fff&size=80' 
+    location: 'Muara Gembong',
+    testimonial: 'Penanaman mangrove membuat pantai kami lebih aman dari abrasi dan hasil tangkapan ikan juga meningkat. Program ini benar-benar membawa dampak positif! ', 
+    full_avatar_url: 'https://ui-avatars.com/api/?name=Siti+Aminah&background=059669&color=fff&size=80' 
   },
   { 
     id: 3, 
     name: 'Joko Susilo', 
-    role: 'Ketua RT Desa Binaan', 
-    text: 'Akses air bersih sekarang jauh lebih mudah berkat program sanitasi. Kesehatan warga meningkat pesat dan tidak ada lagi kasus diare di kampung kami.', 
-    avatar: 'https://ui-avatars.com/api/?name=Joko+Susilo&background=7c3aed&color=fff&size=80' 
+    location: 'Desa Binaan',
+    testimonial: 'Akses air bersih sekarang jauh lebih mudah berkat program sanitasi.  Kesehatan warga meningkat pesat dan tidak ada lagi kasus diare di kampung kami.', 
+    full_avatar_url: 'https://ui-avatars.com/api/?name=Joko+Susilo&background=7c3aed&color=fff&size=80' 
   },
   { 
     id: 4, 
     name: 'Dewi Lestari', 
-    role: 'Pelaku UMKM Lokal', 
-    text: 'Pelatihan kewirausahaan dan bantuan modal usaha sangat membantu mengembangkan usaha keluarga kami. Pendapatan meningkat 200% dalam 6 bulan!', 
-    avatar: 'https://ui-avatars.com/api/?name=Dewi+Lestari&background=ea580c&color=fff&size=80' 
+    location: 'UMKM Lokal',
+    testimonial: 'Pelatihan kewirausahaan dan bantuan modal usaha sangat membantu mengembangkan usaha keluarga kami. Pendapatan meningkat 200% dalam 6 bulan! ', 
+    full_avatar_url: 'https://ui-avatars.com/api/?name=Dewi+Lestari&background=ea580c&color=fff&size=80' 
   },
 ];
 
@@ -139,7 +140,7 @@ const TJSLHero = () => (
           <span>/</span><span className="font-semibold text-white">TJSL</span>
         </div>
         <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">Tanggung Jawab Sosial & Lingkungan</h1>
-        <p className="text-lg text-gray-200 leading-relaxed">Komitmen PT Migas Hulu Jabar ONWJ untuk tumbuh bersama masyarakat dan menjaga kelestarian lingkungan demi masa depan yang berkelanjutan.</p>
+        <p className="text-lg text-gray-200 leading-relaxed">Komitmen PT Migas Hulu Jabar ONWJ untuk tumbuh bersama masyarakat dan menjaga kelestarian lingkungan demi masa depan yang berkelanjutan. </p>
       </div>
     </div>
   </div>
@@ -179,7 +180,7 @@ const TJSLProfile = ({ quickFacts }) => (
               <div className="p-3 bg-white shadow-md rounded-lg mb-3">
                 {fact.icon}
               </div>
-              <h4 className="font-semibold text-gray-800 text-sm mb-1">{fact.title}</h4>
+              <h4 className="font-semibold text-gray-800 text-sm mb-1">{fact. title}</h4>
               {fact.subtitle && (
                 <p className="text-xs text-gray-600 mb-2">{fact.subtitle}</p>
               )}
@@ -229,7 +230,7 @@ const ProgramUnggulan = ({ slides }) => {
                 </div>
                 <div className="relative h-full hidden lg:block">
                   <div className="absolute inset-0 rounded-3xl overflow-hidden shadow-xl">
-                    <img src={item.image} alt={item.title} className="w-full h-full object-cover"/>
+                    <img src={item.image} alt={item. title} className="w-full h-full object-cover"/>
                   </div>
                 </div>
               </div>
@@ -256,7 +257,7 @@ const NewsCard = ({ news, delay }) => {
     const observer = new IntersectionObserver(([entry]) => {
       if (entry.isIntersecting) entry.target.classList.add('opacity-100', 'translate-y-0');
     }, { threshold: 0.1 });
-    if (cardRef.current) observer.observe(cardRef.current);
+    if (cardRef.current) observer. observe(cardRef.current);
     return () => { if (cardRef.current) observer.unobserve(cardRef.current) };
   }, []);
 
@@ -303,7 +304,7 @@ const TJSLBeritaSection = ({ featuredNews, latestNews }) => (
               <div className="flex items-center gap-4">
                 <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center">
                   <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9.5a2 2 0 00-2-2h-2"/>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9. 5a2 2 0 00-2-2h-2"/>
                   </svg>
                 </div>
                 <div>
@@ -338,7 +339,7 @@ const TJSLBeritaSection = ({ featuredNews, latestNews }) => (
         </Link>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-        {latestNews.length > 0 ? (
+        {latestNews. length > 0 ? (
           latestNews.map((item, index) => (<NewsCard key={item.id} news={item} delay={index * 100} />))
         ) : (
           <div className="col-span-4 text-center py-12 text-gray-500">
@@ -350,6 +351,7 @@ const TJSLBeritaSection = ({ featuredNews, latestNews }) => (
   </section>
 );
 
+// ✅ UPDATED: TJSLVoicesSection with better data structure handling
 const TJSLVoicesSection = ({ testimonials }) => {
   const [activeTestimonial, setActiveTestimonial] = useState(0);
 
@@ -411,24 +413,37 @@ const TJSLVoicesSection = ({ testimonials }) => {
                 <div className="bg-white rounded-xl shadow-2xl p-6 md:p-8 h-full flex flex-col justify-between">
                   <div className="mb-4">
                     <svg className="w-10 h-10 text-blue-200" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/>
+                      <path d="M14. 017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432. 917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433. 917-3.996 3. 638-3.996 5. 849h3.983v10h-9.983z"/>
                     </svg>
                   </div>
                   <blockquote className="text-gray-700 text-base md:text-lg leading-relaxed mb-6 flex-grow">
-                    "{testimonial.text}"
+                    "{testimonial.testimonial}"
                   </blockquote>
                   <div className="flex items-center gap-3">
-                    <img 
-                      src={testimonial.avatar} 
-                      alt={testimonial.name} 
-                      className="w-12 h-12 rounded-full border-4 border-blue-100 shadow-md"
-                    />
+                    {testimonial.full_avatar_url ?  (
+                      <img 
+                        src={testimonial. full_avatar_url} 
+                        alt={testimonial.name} 
+                        className="w-12 h-12 rounded-full border-4 border-blue-100 shadow-md object-cover"
+                        onError={(e) => {
+                          // Fallback to initials if image fails to load
+                          e.target.style.display = 'none';
+                          e. target.nextSibling.style.display = 'flex';
+                        }}
+                      />
+                    ) : null}
+                    <div 
+                      className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold text-lg shadow-md"
+                      style={{ display: testimonial.full_avatar_url ?  'none' : 'flex' }}
+                    >
+                      {testimonial.name.charAt(0)}
+                    </div>
                     <div>
                       <cite className="font-bold text-gray-900 text-base not-italic block">
-                        {testimonial.name}
+                        {testimonial. name}
                       </cite>
                       <p className="text-blue-600 text-xs font-medium">
-                        {testimonial.role}
+                        {testimonial.location}
                       </p>
                     </div>
                   </div>
@@ -490,10 +505,11 @@ const TJSLPage = () => {
       setLoading(true);
       try {
         const [statsRes, programsRes, newsRes, testimonialsRes] = await Promise.all([
-          axios.get(`${API_URL}/v1/tjsl/statistik`).catch(() => ({ data: { success: true, data: dummyStatistik } })),
-          axios.get(`${API_URL}/v1/tjsl/programs`).catch(() => ({ data: { success: true, data: dummyPrograms } })),
-          axios.get(`${API_URL}/v1/tjsl/berita?limit=5`).catch(() => ({ data: { success: true, data: dummyNews } })),
-          axios.get(`${API_URL}/v1/tjsl/testimonials`).catch(() => ({ data: { success: true, data: dummyTestimonials } })),
+          axios.get(`${API_URL}/v1/tjsl/statistik`). catch(() => ({ data: { success: true, data: dummyStatistik } })),
+          axios. get(`${API_URL}/v1/tjsl/programs`).catch(() => ({ data: { success: true, data: dummyPrograms } })),
+          axios.get(`${API_URL}/v1/tjsl/berita? limit=5`).catch(() => ({ data: { success: true, data: dummyNews } })),
+          // ✅ FIXED: Update ke endpoint testimonials yang benar
+          axios.get(`${API_URL}/v1/testimonials/featured? limit=4`).catch(() => ({ data: { success: true, data: dummyTestimonials } })),
         ]);
 
         if (statsRes.data.success) {
@@ -505,6 +521,7 @@ const TJSLPage = () => {
         if (newsRes.data.success) {
           setNewsItems(newsRes.data.data);
         }
+        // ✅ FIXED: Handle testimonials data structure correctly
         if (testimonialsRes.data.success) {
           setTestimonials(testimonialsRes.data.data);
         }
@@ -525,11 +542,11 @@ const TJSLPage = () => {
 
   const transformStatistik = (data) => {
     const iconMap = {
-      penerimaan_manfaat: <svg className="w-6 h-6 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>,
+      penerimaan_manfaat: <svg className="w-6 h-6 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4. 354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>,
       infrastruktur: <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>,
       ebtke: <svg className="w-6 h-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>,
-      paket_pendidikan: <svg className="w-6 h-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.747 0-3.332.477-4.5 1.253" /></svg>,
-      kelompok_binaan: <svg className="w-6 h-6 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>,
+      paket_pendidikan: <svg className="w-6 h-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7. 5 5S4.168 5.477 3 6. 253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4. 5 1.253m0-13C13.168 5.477 14.754 5 16. 5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18. 477 18.246 18 16.5 18c-1.747 0-3.332.477-4.5 1.253" /></svg>,
+      kelompok_binaan: <svg className="w-6 h-6 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-. 656-.126-1.283-. 356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-. 656.126-1.283. 356-1.857m0 0a5.002 5. 002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>,
     };
 
     const bgColorMap = {
@@ -543,7 +560,7 @@ const TJSLPage = () => {
     return Object.entries(data).map(([key, item]) => ({
       title: item.label,
       subtitle: item.unit || '',
-      value: `${item.value.toLocaleString('id-ID')}+`,
+      value: `${item.value. toLocaleString('id-ID')}+`,
       bgColor: bgColorMap[key] || 'bg-gray-50',
       icon: iconMap[key] || null,
     }));
