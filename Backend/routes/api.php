@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\WkTjslController;
 use App\Http\Controllers\Api\PenghargaanController;
 use App\Http\Controllers\Api\BeritaController;
 use App\Http\Controllers\Api\TestimonialController; // ✅ ADDED
+use App\Http\Controllers\Api\TjslStatisticController;
 
 // Guest routes (public access)
 Route::middleware(['guest. only'])->group(function () {
@@ -292,4 +293,33 @@ Route::prefix('v1/admin')->group(function () {
     
     // Statistics for Dashboard
     Route::get('/testimonial-statistics', [TestimonialController::class, 'getStatistics']);
+});
+
+/*
+|--------------------------------------------------------------------------
+| API Routes - TJSL Statistics
+|--------------------------------------------------------------------------
+*/
+
+// ===== PUBLIC ROUTES (untuk TJSLPage.jsx) =====
+Route::prefix('v1')->group(function () {
+    // Get TJSL statistics
+    Route::get('/tjsl/statistik', [TjslStatisticController::class, 'index']);
+});
+
+// ===== ADMIN ROUTES (untuk ManageAngkaStatistikTJSL.jsx) =====
+Route::prefix('v1/admin')->group(function () {
+// Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin. auth'])->group(function () {
+    
+    // Get all statistics for admin
+    Route::get('/tjsl/statistik', [TjslStatisticController::class, 'adminIndex']);
+    
+    // Update single statistic
+    Route::put('/tjsl/statistik/{id}', [TjslStatisticController::class, 'update']);
+    
+    // Bulk update statistics (save semua sekaligus)
+    Route::post('/tjsl/statistik/bulk-update', [TjslStatisticController::class, 'bulkUpdate']);
+    
+    // Reset to default values
+    Route::post('/tjsl/statistik/reset', [TjslStatisticController::class, 'reset']);
 });
