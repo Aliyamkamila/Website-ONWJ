@@ -3,9 +3,55 @@ import { Link } from 'react-router-dom';
 import bannerImage from '../assets/hero-bg.png';
 import programImage from '../assets/rectangle.png';
 import logo from '../assets/logo.webp';
-import { FaRegCalendarAlt, FaChartBar, FaUsers } from 'react-icons/fa';
+import { FaRegCalendarAlt, FaChartBar, FaUsers, FaStar } from 'react-icons/fa';
 import programService from '../services/programService';
+import testimonialService from '../services/testimonialService';
 import toast from 'react-hot-toast';
+
+
+// ✅ Avatar Component with Fallback
+const Avatar = ({ name, imageUrl, size = 48 }) => {
+  const [imageError, setImageError] = useState(false);
+  
+  const getInitials = (name) => {
+    if (!name) return '?';
+    const parts = name.split(' ');
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  };
+
+  const getColor = (name) => {
+    const colors = [
+      'bg-blue-500', 'bg-green-500', 'bg-yellow-500', 
+      'bg-red-500', 'bg-purple-500', 'bg-pink-500', 'bg-indigo-500'
+    ];
+    const index = name ? name. charCodeAt(0) % colors.length : 0;
+    return colors[index];
+  };
+
+  if (imageUrl && ! imageError) {
+    return (
+      <img 
+        src={imageUrl}
+        alt={name}
+        className="rounded-full object-cover flex-shrink-0"
+        style={{ width: `${size}px`, height: `${size}px` }}
+        onError={() => setImageError(true)}
+      />
+    );
+  }
+
+  return (
+    <div 
+      className={`rounded-full ${getColor(name)} flex items-center justify-center text-white font-bold flex-shrink-0`}
+      style={{ width: `${size}px`, height: `${size}px`, fontSize: `${size / 2.5}px` }}
+    >
+      {getInitials(name)}
+    </div>
+  );
+};
 
 const HorizontalProgramCard = ({ program }) => (
   <article className="group bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden transition-all duration-300 hover:shadow-lg flex flex-col md:flex-row">
@@ -105,7 +151,7 @@ const QuickStats = ({ stats }) => (
 const EventItem = ({ event }) => (
   <li className="flex items-start space-x-4">
     <strong className="text-blue-600 text-3xl font-black flex-shrink-0 w-12 text-center">
-      {event.day}
+      {event. day}
       <span className="block text-sm font-normal text-gray-500">{event.month}</span>
     </strong>
     <div className="flex-1 min-w-0">
@@ -187,21 +233,63 @@ const Pagination = ({ currentPage, lastPage, onPageChange }) => {
   );
 };
 
+// ✅ Testimonial Card with Avatar Component
 const TestimonialCard = ({ testimonial }) => (
-  <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-    <blockquote className="text-gray-600 italic mb-4">"{testimonial.text}"</blockquote>
-    <div className="flex items-center gap-3">
-      <div className="w-10 h-10 rounded-full bg-gray-200 flex-shrink-0" aria-hidden="true"></div>
-      <cite className="font-bold text-gray-800 not-italic">- {testimonial.name}</cite>
+  <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100 hover:shadow-lg transition-all duration-300">
+    {/* Rating Stars */}
+    <div className="flex items-center gap-1 mb-4">
+      {[...Array(5)].map((_, index) => (
+        <FaStar 
+          key={index} 
+          className={index < (testimonial.rating || 5) ? 'text-yellow-400' : 'text-gray-300'} 
+        />
+      ))}
     </div>
+
+    {/* Testimonial Text */}
+    <blockquote className="text-gray-600 italic mb-6 line-clamp-4">
+      "{testimonial.testimonial_text}"
+    </blockquote>
+
+    {/* Author Info with Avatar Component */}
+    <div className="flex items-center gap-4">
+      <Avatar 
+        name={testimonial.name} 
+        imageUrl={testimonial.avatar_url} 
+        size={48} 
+      />
+      <div>
+        <cite className="font-bold text-gray-800 not-italic block">
+          {testimonial.name}
+        </cite>
+        {testimonial.location && (
+          <p className="text-sm text-gray-500">{testimonial.location}</p>
+        )}
+        {testimonial.program && (
+          <p className="text-xs text-blue-600 mt-1">Program: {testimonial.program}</p>
+        )}
+      </div>
+    </div>
+
+    {/* Featured Badge */}
+    {testimonial.is_featured && (
+      <div className="mt-4 pt-4 border-t border-gray-100">
+        <span className="inline-flex items-center gap-1 px-3 py-1 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded-full">
+          <FaStar className="w-3 h-3" />
+          Featured Testimonial
+        </span>
+      </div>
+    )}
   </div>
 );
 
 const AllProgramsPage = () => {
   const [programs, setPrograms] = useState([]);
   const [recentPrograms, setRecentPrograms] = useState([]);
+  const [testimonials, setTestimonials] = useState([]);
   const [statistics, setStatistics] = useState({ totalPrograms: 0, activePrograms: 0 });
   const [loading, setLoading] = useState(true);
+  const [testimonialsLoading, setTestimonialsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pagination, setPagination] = useState({
@@ -210,13 +298,6 @@ const AllProgramsPage = () => {
     per_page: 6,
     total: 0
   });
-
-  // Static data for testimonials and events
-  const testimonials = [
-    { id: 1, name: 'Budi Santoso', text: 'Programnya sangat membantu desa kami, terima kasih!' },
-    { id: 2, name: 'Siti Aminah', text: 'Dukungan pendidikan ini sangat berarti bagi anak-anak kami.' },
-    { id: 3, name: 'Joko Susilo', text: 'Semoga program seperti ini bisa terus berlanjut dan berkembang.' },
-  ];
 
   const events = [
     { id: 1, day: '15', month: 'Dec', title: 'Evaluasi Program Tahunan 2025', description: 'December 15, 2025' },
@@ -227,6 +308,7 @@ const AllProgramsPage = () => {
     fetchPrograms();
     fetchRecentPrograms();
     fetchStatistics();
+    fetchTestimonials();
   }, [currentPage, searchQuery]);
 
   const fetchPrograms = async () => {
@@ -241,15 +323,15 @@ const AllProgramsPage = () => {
         params.search = searchQuery;
       }
 
-      const response = await programService.getAllPrograms(params);
+      const response = await programService. getAllPrograms(params);
       
       if (response.success) {
         setPrograms(response.data.data || []);
         setPagination({
-          current_page: response.data.current_page,
-          last_page: response.data.last_page,
+          current_page: response. data.current_page,
+          last_page: response.data. last_page,
           per_page: response.data.per_page,
-          total: response.data.total
+          total: response. data.total
         });
       }
     } catch (error) {
@@ -264,7 +346,7 @@ const AllProgramsPage = () => {
     try {
       const response = await programService.getRecentPrograms(3);
       if (response.success) {
-        setRecentPrograms(response.data || []);
+        setRecentPrograms(response. data || []);
       }
     } catch (error) {
       console.error('Error fetching recent programs:', error);
@@ -276,12 +358,51 @@ const AllProgramsPage = () => {
       const response = await programService.getStatistics();
       if (response.success) {
         setStatistics({
-          totalPrograms: response.data.total_programs || 0,
+          totalPrograms: response. data.total_programs || 0,
           activePrograms: response.data.active_programs || 0
         });
       }
     } catch (error) {
       console.error('Error fetching statistics:', error);
+    }
+  };
+
+  const fetchTestimonials = async () => {
+    try {
+      setTestimonialsLoading(true);
+      const response = await testimonialService.getFeatured();
+      
+      if (response.data.success) {
+        const featuredTestimonials = response. data.data. slice(0, 3);
+        setTestimonials(featuredTestimonials);
+      }
+    } catch (error) {
+      console.error('Error fetching testimonials:', error);
+      setTestimonials([
+        { 
+          id: 1, 
+          name: 'Budi Santoso', 
+          testimonial_text: 'Programnya sangat membantu desa kami, terima kasih! ',
+          rating: 5,
+          location: 'Jakarta'
+        },
+        { 
+          id: 2, 
+          name: 'Siti Aminah', 
+          testimonial_text: 'Dukungan pendidikan ini sangat berarti bagi anak-anak kami.',
+          rating: 5,
+          location: 'Bandung'
+        },
+        { 
+          id:  3, 
+          name:  'Joko Susilo', 
+          testimonial_text: 'Semoga program seperti ini bisa terus berlanjut dan berkembang.',
+          rating: 5,
+          location: 'Surabaya'
+        },
+      ]);
+    } finally {
+      setTestimonialsLoading(false);
     }
   };
 
@@ -336,14 +457,24 @@ const AllProgramsPage = () => {
               </>
             ) : (
               <div className="text-center py-12">
-                <p className="text-gray-600 text-lg">No programs found.</p>
+                <p className="text-gray-600 text-lg">No programs found. </p>
+                {searchQuery && (
+                  <button
+                    onClick={() => {
+                      setSearchQuery('');
+                      fetchPrograms();
+                    }}
+                    className="mt-4 text-blue-600 hover:text-blue-700 font-semibold"
+                  >
+                    Clear Search
+                  </button>
+                )}
               </div>
             )}
           </main>
 
           {/* Sidebar */}
           <aside className="space-y-8">
-            {/* Search */}
             <SidebarCard ariaId="search-programs">
               <SearchInput
                 value={searchQuery}
@@ -352,7 +483,6 @@ const AllProgramsPage = () => {
               />
             </SidebarCard>
 
-            {/* Recent Programs */}
             {recentPrograms.length > 0 && (
               <SidebarCard title="Recently Added" ariaId="recent-programs">
                 <div className="space-y-5">
@@ -363,12 +493,10 @@ const AllProgramsPage = () => {
               </SidebarCard>
             )}
 
-            {/* Quick Stats */}
             <SidebarCard ariaId="quick-stats-programs">
               <QuickStats stats={statistics} />
             </SidebarCard>
 
-            {/* Upcoming Events */}
             <SidebarCard title="Upcoming Events" ariaId="program-events">
               <ul className="space-y-6" role="list">
                 {events.map((event) => (
@@ -383,14 +511,43 @@ const AllProgramsPage = () => {
       {/* Testimonials Section */}
       <section className="bg-white py-20" aria-labelledby="testimonials-heading">
         <div className="container mx-auto px-8 lg:px-16">
-          <h2 id="testimonials-heading" className="text-3xl font-bold text-center mb-12 text-gray-900">
-            Voices From The Community
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {testimonials.map((testimonial) => (
-              <TestimonialCard key={testimonial.id} testimonial={testimonial} />
-            ))}
+          <div className="text-center mb-12">
+            <h2 id="testimonials-heading" className="text-3xl font-bold text-gray-900 mb-3">
+              Voices From The Community
+            </h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              Testimoni dari masyarakat yang merasakan manfaat langsung dari program-program kami
+            </p>
           </div>
+
+          {testimonialsLoading ? (
+            <div className="text-center py-12">
+              <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+              <p className="mt-4 text-gray-600">Loading testimonials...</p>
+            </div>
+          ) : testimonials.length > 0 ?  (
+            <div className="grid grid-cols-1 md: grid-cols-2 lg: grid-cols-3 gap-8">
+              {testimonials. map((testimonial) => (
+                <TestimonialCard key={testimonial.id} testimonial={testimonial} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-gray-500">Belum ada testimoni tersedia.</p>
+            </div>
+          )}
+
+          {testimonials.length > 0 && (
+            <div className="text-center mt-12">
+              <Link 
+                to="/testimonials" 
+                className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                View All Testimonials
+                <span className="transform transition-transform group-hover:translate-x-1">→</span>
+              </Link>
+            </div>
+          )}
         </div>
       </section>
     </div>

@@ -20,7 +20,7 @@ const ManageWkTekkom = () => {
   const [filterActive, setFilterActive] = useState('');
 
   const [formData, setFormData] = useState({
-    area_id: '',
+    area_id:  '',
     name: '',
     position_x: '',
     position_y: '',
@@ -39,18 +39,25 @@ const ManageWkTekkom = () => {
 
   const [facilityInput, setFacilityInput] = useState('');
 
+  // ✅ Get Auth Token
+  const getAuthToken = () => {
+    return localStorage.getItem('token') || 
+           sessionStorage.getItem('token') || 
+           document.cookie. split('; ').find(row => row.startsWith('token='))?.split('=')[1];
+  };
+
   useEffect(() => {
     fetchAreas();
   }, []);
 
   // Filter Logic
   useEffect(() => {
-    let result = [...areas];
+    let result = [... areas];
 
     // Search
     if (searchTerm) {
       result = result.filter(item =>
-        item.area_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.area_id. toLowerCase().includes(searchTerm. toLowerCase()) ||
         item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.description.toLowerCase().includes(searchTerm.toLowerCase())
       );
@@ -63,7 +70,7 @@ const ManageWkTekkom = () => {
 
     // Filter by active
     if (filterActive === 'true') {
-      result = result.filter(item => item.is_active === true);
+      result = result. filter(item => item.is_active === true);
     } else if (filterActive === 'false') {
       result = result.filter(item => item.is_active === false);
     }
@@ -78,21 +85,39 @@ const ManageWkTekkom = () => {
     setFilterActive('');
   };
 
+  // ✅ UPDATED:  Fetch TEKKOM areas
   const fetchAreas = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`${API_URL}/v1/admin/wk-tekkom`, {
-        params: { per_page: 999 },
+      const token = getAuthToken();
+      
+      const response = await axios.get(`${API_URL}/v1/admin/wilayah-kerja`, {
+        params: {
+          category: 'TEKKOM',  // ✅ Filter by TEKKOM
+          per_page: 999
+        },
+        headers: {
+          'Authorization': token ?  `Bearer ${token}` : ''
+        }
       });
 
       if (response.data.success) {
         const data = response.data.data || [];
         setAreas(data);
         setFilteredAreas(data);
+        console.log('✅ TEKKOM areas loaded:', data. length);
       }
     } catch (error) {
-      console.error('Error fetching TEKKOM areas:', error);
-      toast.error('Gagal memuat data area TEKKOM');
+      console.error('❌ Error fetching TEKKOM areas:', error);
+      const errorMsg = error.response?.data?.message || 'Gagal memuat data area TEKKOM';
+      toast. error(errorMsg);
+      
+      // Check if unauthorized
+      if (error.response?. status === 401) {
+        toast.error('Session expired. Please login again.');
+        // Redirect to login if needed
+        // window.location.href = '/login';
+      }
     } finally {
       setLoading(false);
     }
@@ -102,7 +127,7 @@ const ManageWkTekkom = () => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]:  type === 'checkbox' ? checked : value
     }));
   };
 
@@ -118,7 +143,7 @@ const ManageWkTekkom = () => {
     if (facilityInput.trim()) {
       setFormData(prev => ({
         ...prev,
-        facilities: [...prev.facilities, facilityInput.trim()]
+        facilities: [...prev.facilities, facilityInput. trim()]
       }));
       setFacilityInput('');
     }
@@ -131,6 +156,7 @@ const ManageWkTekkom = () => {
     }));
   };
 
+  // ✅ UPDATED: Handle Submit
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -143,28 +169,46 @@ const ManageWkTekkom = () => {
     setLoading(true);
 
     try {
+      const token = getAuthToken();
+      
+      if (! token) {
+        toast.error('Unauthorized. Please login first.');
+        return;
+      }
+
+      // ✅ Add category to formData
+      const dataWithCategory = {
+        ...formData,
+        category: 'TEKKOM'
+      };
+
       const endpoint = editingArea
-        ? `${API_URL}/v1/admin/wk-tekkom/${editingArea.id}`
-        : `${API_URL}/v1/admin/wk-tekkom`;
+        ? `${API_URL}/v1/admin/wilayah-kerja/${editingArea. id}? category=TEKKOM`
+        : `${API_URL}/v1/admin/wilayah-kerja`;
 
       const method = editingArea ? 'put' : 'post';
 
-      const response = await axios[method](endpoint, formData);
+      const response = await axios[method](endpoint, dataWithCategory, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
 
-      if (response.data.success) {
+      if (response.data. success) {
         toast.success(editingArea ? 'Area TEKKOM berhasil diperbarui!' : 'Area TEKKOM berhasil ditambahkan!');
         setShowForm(false);
         resetForm();
         fetchAreas();
       }
     } catch (error) {
-      console.error('Error saving TEKKOM area:', error);
+      console.error('❌ Error saving TEKKOM area:', error);
       const errorMessage = error.response?.data?.message || 'Gagal menyimpan data area TEKKOM';
       toast.error(errorMessage);
 
       if (error.response?.data?.errors) {
         Object.values(error.response.data.errors).forEach(err => {
-          toast.error(err[0]);
+          toast.error(Array.isArray(err) ? err[0] : err);
         });
       }
     } finally {
@@ -172,13 +216,14 @@ const ManageWkTekkom = () => {
     }
   };
 
+  // ✅ UPDATED: Handle Edit
   const handleEdit = (area) => {
     setEditingArea(area);
     setFormData({
-      area_id: area.area_id,
+      area_id: area. area_id,
       name: area.name,
-      position_x: area.position_x,
-      position_y: area.position_y,
+      position_x: parseFloat(area.position_x),
+      position_y: parseFloat(area.position_y),
       color: area.color,
       description: area.description,
       facilities: area.facilities || [],
@@ -186,7 +231,7 @@ const ManageWkTekkom = () => {
       status: area.status,
       wells: area.wells || '',
       depth: area.depth || '',
-      pressure: area.pressure || '',
+      pressure: area. pressure || '',
       temperature: area.temperature || '',
       order: area.order || 0,
       is_active: area.is_active,
@@ -195,21 +240,36 @@ const ManageWkTekkom = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  // ✅ UPDATED: Handle Delete
   const handleDelete = async (id) => {
-    if (! window.confirm('Apakah Anda yakin ingin menghapus area TEKKOM ini?')) {
+    if (!window.confirm('Apakah Anda yakin ingin menghapus area TEKKOM ini?')) {
       return;
     }
 
     try {
-      const response = await axios.delete(`${API_URL}/v1/admin/wk-tekkom/${id}`);
+      const token = getAuthToken();
+      
+      if (! token) {
+        toast.error('Unauthorized. Please login first.');
+        return;
+      }
+
+      const response = await axios.delete(
+        `${API_URL}/v1/admin/wilayah-kerja/${id}? category=TEKKOM`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
 
       if (response.data.success) {
         toast.success('Area TEKKOM berhasil dihapus!');
         fetchAreas();
       }
     } catch (error) {
-      console.error('Error deleting TEKKOM area:', error);
-      toast.error('Gagal menghapus area TEKKOM');
+      console.error('❌ Error deleting TEKKOM area:', error);
+      toast.error(error.response?.data?.message || 'Gagal menghapus area TEKKOM');
     }
   };
 
@@ -222,7 +282,7 @@ const ManageWkTekkom = () => {
       position_y: '',
       color: '#EF4444',
       description: '',
-      facilities: [],
+      facilities:  [],
       production: '',
       status: 'Operasional',
       wells: '',
@@ -244,7 +304,7 @@ const ManageWkTekkom = () => {
 
   // Stats Calculation
   const stats = {
-    total: areas.length,
+    total:  areas.length,
     operasional: areas.filter(a => a.status === 'Operasional').length,
     nonOperasional: areas.filter(a => a.status === 'Non-Operasional').length,
     aktif: areas.filter(a => a.is_active).length,
@@ -431,7 +491,7 @@ const ManageWkTekkom = () => {
                     onChange={handleInputChange}
                     required
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                    placeholder="Contoh: BRAVO, UNIFORM"
+                    placeholder="Contoh:  BRAVO, UNIFORM"
                   />
                 </div>
 
@@ -456,7 +516,7 @@ const ManageWkTekkom = () => {
                   </label>
                   <select
                     name="status"
-                    value={formData.status}
+                    value={formData. status}
                     onChange={handleInputChange}
                     required
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
@@ -473,7 +533,7 @@ const ManageWkTekkom = () => {
                   <input
                     type="number"
                     name="order"
-                    value={formData.order}
+                    value={formData. order}
                     onChange={handleInputChange}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     placeholder="0"
@@ -590,7 +650,7 @@ const ManageWkTekkom = () => {
                 </div>
                 Data Teknis
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md: grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
                     Produksi
@@ -598,7 +658,7 @@ const ManageWkTekkom = () => {
                   <input
                     type="text"
                     name="production"
-                    value={formData.production}
+                    value={formData. production}
                     onChange={handleInputChange}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     placeholder="Contoh: 5,200 BOPD"
@@ -627,7 +687,7 @@ const ManageWkTekkom = () => {
                   <input
                     type="text"
                     name="depth"
-                    value={formData.depth}
+                    value={formData. depth}
                     onChange={handleInputChange}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     placeholder="Contoh: 3,450 m"
@@ -641,7 +701,7 @@ const ManageWkTekkom = () => {
                   <input
                     type="text"
                     name="pressure"
-                    value={formData.pressure}
+                    value={formData. pressure}
                     onChange={handleInputChange}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     placeholder="Contoh: 2,850 psi"
@@ -680,7 +740,7 @@ const ManageWkTekkom = () => {
                   value={facilityInput}
                   onChange={(e) => setFacilityInput(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addFacility())}
-                  className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus: ring-blue-500 focus: border-transparent transition-all"
                   placeholder="Nama fasilitas (tekan Enter)"
                 />
                 <button
@@ -745,7 +805,7 @@ const ManageWkTekkom = () => {
                 disabled={loading}
                 className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ?  'Menyimpan...' : editingArea ? 'Update Area TEKKOM' : 'Simpan Area TEKKOM'}
+                {loading ?  'Menyimpan.. .' : editingArea ? 'Update Area TEKKOM' : 'Simpan Area TEKKOM'}
               </button>
             </div>
           </form>
@@ -789,6 +849,7 @@ const ManageWkTekkom = () => {
                       <div className="flex justify-center items-center">
                         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
                       </div>
+                      <p className="mt-4 text-gray-600">Memuat data...</p>
                     </td>
                   </tr>
                 ) : filteredAreas.length === 0 ? (
@@ -823,11 +884,11 @@ const ManageWkTekkom = () => {
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div 
-                            className="w-4 h-4 rounded-full" 
-                            style={{ backgroundColor: area.color }}
+                            className="w-4 h-4 rounded-full flex-shrink-0" 
+                            style={{ backgroundColor:  area.color }}
                           />
                           <div>
-                            <div className="text-sm font-semibold text-gray-900">{area.area_id}</div>
+                            <div className="text-sm font-semibold text-gray-900">{area. area_id}</div>
                             <div className="text-sm text-gray-500">{area.name}</div>
                           </div>
                         </div>
@@ -848,8 +909,8 @@ const ManageWkTekkom = () => {
                         {area.wells || '-'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-500">
-                        <div>X: {area.position_x}%</div>
-                        <div>Y: {area.position_y}%</div>
+                        <div>X:  {parseFloat(area.position_x).toFixed(2)}%</div>
+                        <div>Y: {parseFloat(area.position_y).toFixed(2)}%</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
                         {area.is_active ? (
@@ -868,7 +929,7 @@ const ManageWkTekkom = () => {
                             <FaEdit className="w-5 h-5" />
                           </button>
                           <button
-                            onClick={() => handleDelete(area.id)}
+                            onClick={() => handleDelete(area. id)}
                             className="text-red-600 hover:text-red-900 transition-colors p-2 hover:bg-red-50 rounded-lg"
                             title="Hapus"
                           >
