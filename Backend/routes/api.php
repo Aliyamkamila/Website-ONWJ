@@ -239,7 +239,7 @@ Route::prefix('v1/admin')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| Site Settings Routes  ← tambahan baru
+| Site Settings Routes
 |--------------------------------------------------------------------------
 */
 
@@ -281,6 +281,6 @@ Route::prefix('v1/admin')->group(function () {
     // Gallery (Admin)
     Route::get('/gallery', [GalleryController::class, 'adminIndex']);
     Route::post('/gallery', [GalleryController::class, 'store']);
-    Route::post('/gallery/{id}', [GalleryController::class, 'update']); // POST untuk support file upload
+    Route::post('/gallery/{id}', [GalleryController::class, 'update']); // POST to support file upload
     Route::delete('/gallery/{id}', [GalleryController::class, 'destroy']);
 });
