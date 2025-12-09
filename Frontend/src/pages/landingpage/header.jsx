@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import logo from '../../assets/LOGO-HD.webp';
+import { useSettings } from '../../hooks/useSettings';
+import logoDefault from '../../assets/LOGO-HD.webp';
 
 const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -8,11 +9,16 @@ const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isInHero, setIsInHero] = useState(true);
   const location = useLocation();
+  const { settings, loading } = useSettings();
+
+  const logoUrl = settings.logo?.main
+    ? `http://localhost:8000${settings.logo.main}`
+    : logoDefault;
 
   const handleScroll = useCallback(() => {
     const currentScrollPos = window.scrollY;
     const heroSection = document.getElementById('hero-section');
-    const heroHeight = heroSection ?  heroSection.offsetHeight : 600;
+    const heroHeight = heroSection ? heroSection.offsetHeight : 600;
     
     setIsScrolled(currentScrollPos > 20);
     setIsInHero(currentScrollPos < heroHeight - 100);
@@ -41,7 +47,6 @@ const Header = () => {
 
   const isActivePath = (path) => location.pathname === path;
 
-  // Menu Data
   const menuData = {
     tentang: {
       label: 'Tentang Kami',
@@ -78,15 +83,18 @@ const Header = () => {
   };
 
   const getHeaderStyle = () => {
-    if (isInHero && ! isScrolled) {
-      return 'bg-transparent border-transparent';
-    }
+    if (isInHero && !isScrolled) return 'bg-transparent border-transparent';
     return 'bg-white border-b border-secondary-200';
   };
 
-  const getTextColor = () => isInHero && !isScrolled ? 'text-white' : 'text-secondary-900';
-  const getHoverColor = () => isInHero && !isScrolled ? 'hover:text-white/80' : 'hover:text-primary-600';
-  const getActiveColor = () => isInHero && !isScrolled ? 'text-white' : 'text-primary-600';
+  const getTextColor = () =>
+    isInHero && !isScrolled ? 'text-white' : 'text-secondary-900';
+
+  const getHoverColor = () =>
+    isInHero && !isScrolled ? 'hover:text-white/80' : 'hover:text-primary-600';
+
+  const getActiveColor = () =>
+    isInHero && !isScrolled ? 'text-white' : 'text-primary-600';
 
   const NavLink = ({ to, children, onClick }) => {
     const isActive = isActivePath(to);
@@ -97,8 +105,8 @@ const Header = () => {
         className={`
           relative font-heading font-medium text-body-md transition-all duration-300 ease-out
           ${isActive ? getActiveColor() : `${getTextColor()} ${getHoverColor()}`}
-          after:content-[''] after:absolute after:bottom-[-4px] after:left-0 after:h-[2px] 
-          after:bg-current after:transition-all after:duration-300 after:ease-out
+          after:content-[''] after:absolute after:bottom-[-4px] after:left-0 after:h-[2px]
+          after:bg-current after:transition-all after:duration-300
           ${isActive ? 'after:w-full' : 'after:w-0 hover:after:w-full'}
         `}
       >
@@ -112,26 +120,26 @@ const Header = () => {
     const isActive = menu?.items.some(item => isActivePath(item.path));
 
     return (
-      <div 
+      <div
         className="relative group"
         onMouseEnter={() => setActiveDropdown(menuKey)}
         onMouseLeave={() => setActiveDropdown(null)}
       >
         <button
           className={`
-            relative flex items-center gap-1 font-heading font-medium text-body-md 
-            transition-all duration-300 ease-out
+            relative flex items-center gap-1 font-heading font-medium text-body-md
+            transition-all duration-300
             ${isActive ? getActiveColor() : `${getTextColor()} ${getHoverColor()}`}
-            after:content-[''] after:absolute after:bottom-[-4px] after:left-0 after:h-[2px] 
-            after:bg-current after:transition-all after:duration-300 after:ease-out
+            after:content-[''] after:absolute after:bottom-[-4px] after:left-0 after:h-[2px]
+            after:bg-current after:transition-all
             ${isActive ? 'after:w-full' : 'after:w-0 group-hover:after:w-full'}
           `}
         >
-          <span>{menu.label}</span>
-          <svg 
-            className={`w-3.5 h-3.5 transition-all duration-300 ease-out ${activeDropdown === menuKey ? 'rotate-180' : 'rotate-0'}`}
-            fill="none" 
-            viewBox="0 0 24 24" 
+          {menu.label}
+          <svg
+            className={`w-3.5 h-3.5 transition-all ${activeDropdown === menuKey ? 'rotate-180' : ''}`}
+            fill="none"
+            viewBox="0 0 24 24"
             stroke="currentColor"
             strokeWidth={2}
           >
@@ -139,29 +147,18 @@ const Header = () => {
           </svg>
         </button>
 
-        {/* Smooth Fade Dropdown */}
         <div
           className={`
             absolute top-full left-0 pt-6 min-w-[240px] z-50
-            transition-all duration-300 ease-out
+            transition-all duration-300
             ${activeDropdown === menuKey 
               ? 'opacity-100 visible translate-y-0' 
-              : 'opacity-0 invisible -translate-y-2 pointer-events-none'
-            }
+              : 'opacity-0 invisible -translate-y-2'}
           `}
-          onMouseEnter={() => setActiveDropdown(menuKey)}
-          onMouseLeave={() => setActiveDropdown(null)}
-          style={{
-            transitionProperty: 'opacity, visibility, transform',
-            transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)'
-          }}
         >
-          {/* Dropdown Container with Fade */}
-          <div 
+          <div
             className="bg-white rounded border border-secondary-200 shadow-lg overflow-hidden"
-            style={{
-              animation: activeDropdown === menuKey ?  'fadeInScale 0.3s ease-out forwards' : 'none'
-            }}
+            style={{ animation: activeDropdown === menuKey ? 'fadeInScale 0.3s ease-out forwards' : 'none' }}
           >
             <div className="py-2">
               {menu.items.map((item, index) => (
@@ -170,23 +167,15 @@ const Header = () => {
                   to={item.path}
                   onClick={() => setActiveDropdown(null)}
                   className={`
-                    block px-4 py-2.5 transition-all duration-200 ease-out
+                    block px-4 py-2.5 transition-all
                     ${isActivePath(item.path)
                       ? 'text-primary-600 bg-primary-50'
-                      : 'text-secondary-700 hover:text-primary-600 hover:bg-secondary-50 hover:translate-x-1'
-                    }
+                      : 'text-secondary-700 hover:text-primary-600 hover:bg-secondary-50 hover:translate-x-1'}
                   `}
-                  style={{
-                    transitionProperty: 'color, background-color, transform',
-                    transitionDelay: `${index * 30}ms`
-                  }}
+                  style={{ transitionDelay: `${index * 30}ms` }}
                 >
-                  <div className="font-heading font-semibold text-sm mb-0.5 transition-colors duration-200">
-                    {item.label}
-                  </div>
-                  <div className="text-xs text-secondary-500 leading-tight transition-colors duration-200">
-                    {item.desc}
-                  </div>
+                  <div className="font-heading font-semibold text-sm mb-0.5">{item.label}</div>
+                  <div className="text-xs text-secondary-500">{item.desc}</div>
                 </Link>
               ))}
             </div>
@@ -196,38 +185,39 @@ const Header = () => {
     );
   };
 
+  if (loading) {
+    return (
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-secondary-200">
+        <div className="section-container">
+          <div className="flex justify-between items-center h-20">
+            <div className="w-32 h-11 bg-gray-200 animate-pulse rounded"></div>
+          </div>
+        </div>
+      </header>
+    );
+  }
+
   return (
     <>
-      {/* Header */}
       <header
-        className={`
-          fixed top-0 left-0 right-0 z-50 transition-all duration-500 ease-out
-          ${getHeaderStyle()}
-        `}
-        style={{
-          transitionProperty: 'background-color, border-color'
-        }}
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${getHeaderStyle()}`}
       >
         <div className="section-container">
           <div className="flex justify-between items-center h-20">
-            
-            {/* Logo */}
             <div className="flex-shrink-0">
-              <Link 
-                to="/" 
+              <Link
+                to="/"
                 onClick={closeMobileMenu}
-                className="block transition-all duration-300 ease-out hover:scale-105"
+                className="block transition-all hover:scale-105"
               >
-                <img 
+                <img
                   className="h-11 w-auto"
-                  src={logo} 
-                  alt="Migas Hulu Jabar ONWJ"
-                  loading="eager"
+                  src={logoUrl}
+                  alt={settings.company?.name || 'Migas Hulu Jabar ONWJ'}
                 />
               </Link>
             </div>
 
-            {/* Desktop Navigation */}
             <nav className="hidden lg:flex items-center gap-8">
               <NavLink to="/">Beranda</NavLink>
               <DropdownButton menuKey="tentang" />
@@ -237,95 +227,77 @@ const Header = () => {
               <NavLink to="/kontak">Kontak</NavLink>
             </nav>
 
-            {/* Mobile Menu Button */}
-            <button 
-              onClick={() => setIsOpen(!isOpen)} 
+            <button
+              onClick={() => setIsOpen(!isOpen)}
               className={`
-                lg:hidden flex items-center justify-center w-10 h-10 rounded 
-                transition-all duration-300 ease-out
-                ${isInHero && !isScrolled ?  'text-white hover:bg-white/10' : 'text-secondary-700 hover:bg-secondary-100'}
+                lg:hidden flex items-center justify-center w-10 h-10 rounded
+                ${isInHero && !isScrolled ? 'text-white hover:bg-white/10' : 'text-secondary-700 hover:bg-secondary-100'}
               `}
-              aria-label="Toggle menu"
             >
               <div className="w-6 h-5 relative flex flex-col justify-center">
-                <span className={`w-6 h-0.5 bg-current rounded-full transition-all duration-300 ease-out absolute ${isOpen ? 'rotate-45' : '-translate-y-2'}`} />
-                <span className={`w-6 h-0.5 bg-current rounded-full transition-all duration-300 ease-out ${isOpen ? 'opacity-0 scale-0' : 'opacity-100 scale-100'}`} />
-                <span className={`w-6 h-0.5 bg-current rounded-full transition-all duration-300 ease-out absolute ${isOpen ? '-rotate-45' : 'translate-y-2'}`} />
+                <span className={`w-6 h-0.5 bg-current rounded-full absolute transition-all ${isOpen ? 'rotate-45' : '-translate-y-2'}`} />
+                <span className={`w-6 h-0.5 bg-current rounded-full transition-all ${isOpen ? 'opacity-0' : 'opacity-100'}`} />
+                <span className={`w-6 h-0.5 bg-current rounded-full absolute transition-all ${isOpen ? '-rotate-45' : 'translate-y-2'}`} />
               </div>
             </button>
           </div>
         </div>
       </header>
 
-      {/* Mobile Overlay */}
+      {/* Overlay */}
       <div
         className={`
-          fixed inset-0 bg-secondary-900/50 backdrop-blur-sm z-40 lg:hidden 
-          transition-all duration-400 ease-out
-          ${isOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}
+          fixed inset-0 bg-secondary-900/50 backdrop-blur-sm z-40 lg:hidden
+          transition-all ${isOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}
         `}
         onClick={closeMobileMenu}
-        style={{
-          transitionProperty: 'opacity, visibility'
-        }}
       />
 
       {/* Mobile Menu */}
       <div
         className={`
-          fixed top-0 right-0 bottom-0 w-80 max-w-[85vw] bg-white z-40 lg:hidden overflow-y-auto
-          transition-all duration-400 ease-out shadow-2xl
+          fixed top-0 right-0 bottom-0 w-80 max-w-[85vw] bg-white z-40 lg:hidden
+          overflow-y-auto shadow-2xl transition-all
           ${isOpen ? 'translate-x-0' : 'translate-x-full'}
         `}
-        style={{
-          transitionProperty: 'transform',
-          transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)'
-        }}
       >
         <div className="pt-24 pb-8 px-6">
           <nav className="space-y-1">
-            
-            {/* Beranda */}
-            <Link 
-              to="/" 
+
+            <Link
+              to="/"
               onClick={closeMobileMenu}
               className={`
-                block px-4 py-3 rounded font-heading font-medium 
-                transition-all duration-300 ease-out
-                ${isActivePath('/') ? 'text-primary-600 bg-primary-50' : 'text-secondary-700 hover:bg-secondary-50 hover:translate-x-1'}
+                block px-4 py-3 rounded font-heading
+                ${isActivePath('/') ? 'text-primary-600 bg-primary-50' : 'text-secondary-700 hover:bg-secondary-50'}
               `}
             >
               Beranda
             </Link>
 
-            {/* Dropdown Sections */}
             {Object.entries(menuData).map(([key, menu]) => (
               <div key={key} className="py-1">
                 <button
                   onClick={() => setActiveDropdown(activeDropdown === key ? null : key)}
-                  className="w-full flex items-center justify-between px-4 py-3 rounded font-heading font-medium text-secondary-700 hover:bg-secondary-50 transition-all duration-300 ease-out"
+                  className="w-full flex items-center justify-between px-4 py-3 rounded text-secondary-700 hover:bg-secondary-50"
                 >
-                  <span>{menu.label}</span>
-                  <svg 
-                    className={`w-4 h-4 transition-all duration-300 ease-out ${activeDropdown === key ? 'rotate-180' : 'rotate-0'}`} 
-                    fill="none" 
-                    viewBox="0 0 24 24" 
-                    stroke="currentColor" 
+                  {menu.label}
+                  <svg
+                    className={`w-4 h-4 transition-all ${activeDropdown === key ? 'rotate-180' : ''}`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
                     strokeWidth={2}
                   >
                     <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
-                
-                <div 
+
+                <div
                   className={`
-                    overflow-hidden transition-all duration-400 ease-out
-                    ${activeDropdown === key ?  'max-h-96 opacity-100' : 'max-h-0 opacity-0'}
+                    overflow-hidden transition-all
+                    ${activeDropdown === key ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}
                   `}
-                  style={{
-                    transitionProperty: 'max-height, opacity',
-                    transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)'
-                  }}
                 >
                   <div className="mt-1 ml-4 pl-4 border-l border-secondary-200 space-y-1">
                     {menu.items.map((item, idx) => (
@@ -334,16 +306,12 @@ const Header = () => {
                         to={item.path}
                         onClick={closeMobileMenu}
                         className={`
-                          block px-3 py-2 rounded text-sm 
-                          transition-all duration-300 ease-out
-                          ${isActivePath(item.path) 
-                            ?  'text-primary-600 bg-primary-50 font-medium' 
-                            : 'text-secondary-600 hover:bg-secondary-50 hover:translate-x-1'
-                          }
+                          block px-3 py-2 rounded text-sm
+                          ${isActivePath(item.path)
+                            ? 'text-primary-600 bg-primary-50'
+                            : 'text-secondary-600 hover:bg-secondary-50'}
                         `}
-                        style={{
-                          transitionDelay: activeDropdown === key ? `${idx * 40}ms` : '0ms'
-                        }}
+                        style={{ transitionDelay: activeDropdown === key ? `${idx * 40}ms` : '0ms' }}
                       >
                         <div className="font-medium mb-0.5">{item.label}</div>
                         <div className="text-xs text-secondary-500">{item.desc}</div>
@@ -354,14 +322,12 @@ const Header = () => {
               </div>
             ))}
 
-            {/* Kontak */}
-            <Link 
-              to="/kontak" 
+            <Link
+              to="/kontak"
               onClick={closeMobileMenu}
               className={`
-                block px-4 py-3 rounded font-heading font-medium 
-                transition-all duration-300 ease-out
-                ${isActivePath('/kontak') ? 'text-primary-600 bg-primary-50' : 'text-secondary-700 hover:bg-secondary-50 hover:translate-x-1'}
+                block px-4 py-3 rounded font-heading
+                ${isActivePath('/kontak') ? 'text-primary-600 bg-primary-50' : 'text-secondary-700 hover:bg-secondary-50'}
               `}
             >
               Kontak
@@ -371,28 +337,10 @@ const Header = () => {
         </div>
       </div>
 
-      {/* CSS Keyframe Animations */}
       <style>{`
         @keyframes fadeInScale {
-          from {
-            opacity: 0;
-            transform: scale(0.95);
-          }
-          to {
-            opacity: 1;
-            transform: scale(1);
-          }
-        }
-
-        @keyframes slideInRight {
-          from {
-            opacity: 0;
-            transform: translateX(-10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
+          from { opacity: 0; transform: scale(0.95); }
+          to { opacity: 1; transform: scale(1); }
         }
       `}</style>
     </>
