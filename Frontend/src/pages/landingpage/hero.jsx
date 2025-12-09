@@ -25,18 +25,18 @@ const Hero = () => {
       <div className="relative z-10 h-screen w-full">
         <div className="centered-content h-full flex flex-col justify-center">
           <div className="max-w-3xl space-y-grid-4">
-            {/* Label - 10px → 11px → 12px */}
-            <p className="font-heading text-label-xs sm:text-label-sm lg:text-label-md text-white/90 uppercase tracking-wider animate-fade-in">
+            {/* Label */}
+            <p className="font-heading text-label-xs sm:text-label-sm lg: text-label-md text-white/90 uppercase tracking-wider animate-fade-in">
               PT Migas Hulu Jabar ONWJ
             </p>
             
-            {/* Heading - 20px → 30px → 36px (COMPACT!) */}
+            {/* Heading */}
             <h1 className="font-heading text-display-sm sm:text-display-lg lg:text-display-xl text-white text-balance animate-slide-up">
               Energi Untuk<br />
               Kemakmuran Daerah
             </h1>
             
-            {/* Description - 14px → 15px → 16px */}
+            {/* Description */}
             <p className="text-body-md sm:text-body-lg lg:text-body-xl text-white/90 max-w-2xl leading-relaxed animate-slide-up animate-stagger-1">
               Berkomitmen menghadirkan solusi energi berkelanjutan 
               untuk kemajuan Indonesia.
@@ -58,12 +58,42 @@ const Hero = () => {
         </div>
       </div>
 
-      {/* Scroll Indicator */}
-      <div className="absolute bottom-grid-8 left-1/2 -translate-x-1/2 animate-bounce z-10">
-        <div className="w-5 h-9 rounded-full border-2 border-white/50 flex justify-center pt-1.5">
-          <div className="w-1 h-2.5 bg-white/80 rounded-full" />
+      {/* ✅ OPSI 1:  Animated Arrow Scroll Indicator */}
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2 cursor-pointer group">
+        <span className="text-white/70 text-sm font-medium uppercase tracking-wider group-hover:text-white transition-colors">
+          Scroll
+        </span>
+        <div className="flex flex-col gap-1 animate-bounce">
+          <svg 
+            className="w-6 h-6 text-white/70 group-hover:text-white transition-colors" 
+            fill="none" 
+            viewBox="0 0 24 24" 
+            stroke="currentColor"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+          <svg 
+            className="w-6 h-6 text-white/70 group-hover:text-white transition-colors -mt-3" 
+            fill="none" 
+            viewBox="0 0 24 24" 
+            stroke="currentColor"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
         </div>
       </div>
+
+      {/* Add Custom Animation */}
+      <style>{`
+        @keyframes bounce {
+          0%, 100% {
+            transform: translateY(0);
+          }
+          50% {
+            transform: translateY(-10px);
+          }
+        }
+      `}</style>
     </section>
   );
 };

@@ -1,7 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, RouterProvider, ScrollRestoration } from 'react-router-dom';
-import { Toaster } from 'react-hot-toast'; // ← HANYA 1x IMPORT
+import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './utils/ProtectedRoute';
 import './index.css';
@@ -53,6 +53,9 @@ import ManageKeuangan from './pages/admin/ManageKeuangan';
 import ManageWkTekkom from './pages/admin/ManageWkTekkom';
 import ManageWkTjsl from './pages/admin/ManageWkTjsl';
 
+// Admin - Contact Management ✅ NEW
+import ManageContacts from './pages/admin/ManageContacts';
+
 // ==== DEFINISI RUTE ====
 const router = createBrowserRouter([
   
@@ -70,18 +73,18 @@ const router = createBrowserRouter([
       { index: true, element: <HomePage /> },
       { path: 'tjsl', element: <TJSLPage /> },
       { path: 'berita-tjsl', element: <BeritaTJSLPage /> },
-      { path: 'artikel/:slug', element: <ArtikelPage /> },
-      { path: 'program-berkelanjutan', element: <AllProgramsPage /> },
+      { path: 'artikel/: slug', element: <ArtikelPage /> },
+      { path:  'program-berkelanjutan', element: <AllProgramsPage /> },
       { path: 'tentang', element: <Tentang /> },
-      { path: 'kelola', element: <TataKelola /> },
+      { path: 'kelola', element:  <TataKelola /> },
       { path: 'media-informasi', element: <MediaInformasiPage /> },
       { path: 'penghargaan', element: <PenghargaanPage /> },
       { path: 'laporan-tahunan', element: <LaporanTahunanPage /> },
       { path: 'bisnis', element: <Mainbisnis /> },
       { path: 'manajemen', element: <Mmanajemen /> },
-      { path: 'umkm-binaan', element: <UmkmPage /> },
+      { path:  'umkm-binaan', element: <UmkmPage /> },
       { path: 'kontak', element: <KontakPage /> },
-      { path: 'profile', element: <Profile /> },
+      { path: 'profile', element:  <Profile /> },
     ],
   },
 
@@ -99,7 +102,7 @@ const router = createBrowserRouter([
 
   {
     // --- LOGIN ADMIN ---
-    path: '/tukang-minyak-dan-gas/login',
+    path:  '/tukang-minyak-dan-gas/login',
     element: <LoginPage />,
   },
 
@@ -129,11 +132,14 @@ const router = createBrowserRouter([
       { path: 'manage-statistik-landing', element: <ManageStatistikLanding /> },
       
       // Divisi Keuangan
-      { path: 'manage-keuangan', element: <ManageKeuangan /> },
+      { path:  'manage-keuangan', element: <ManageKeuangan /> },
       
       // Wilayah Kerja (TEKKOM & TJSL)
-      { path: 'manage-wk-tekkom', element: <ManageWkTekkom /> },
+      { path: 'manage-wk-tekkom', element:  <ManageWkTekkom /> },
       { path: 'manage-wk-tjsl', element: <ManageWkTjsl /> },
+      
+      // ✅ Contact Management (NEW)
+      { path: 'manage-contacts', element: <ManageContacts /> },
     ],
   },
 ]);
@@ -158,7 +164,7 @@ createRoot(document.getElementById('root')).render(
               secondary: '#fff',
             },
           },
-          error: {
+          error:  {
             duration: 4000,
             iconTheme: {
               primary: '#ef4444',

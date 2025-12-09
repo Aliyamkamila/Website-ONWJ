@@ -5,11 +5,12 @@ import { useToast } from '../../hooks/useToast';
 import logo from '../../assets/LOGO-HD.webp';
 import { 
     FaTachometerAlt, FaSignOutAlt, FaChevronDown, 
-    FaUsers, FaHardHat, FaWallet, FaBuilding, FaFileExcel
+    FaUsers, FaHardHat, FaWallet, FaBuilding, FaFileExcel,
+    FaEnvelope // ✅ NEW ICON
 } from 'react-icons/fa';
 
 // Link normal
-const SidebarLink = ({ to, icon, label }) => {
+const SidebarLink = ({ to, icon, label, badge }) => {
     const navLinkClasses = ({ isActive }) =>
         `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
             isActive
@@ -19,33 +20,40 @@ const SidebarLink = ({ to, icon, label }) => {
 
     return (
         <NavLink to={to} className={navLinkClasses} end>
-            {icon}
-            <span>{label}</span>
+            <div className="flex items-center gap-3 flex-1">
+                {icon}
+                <span>{label}</span>
+            </div>
+            {badge && (
+                <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                    {badge}
+                </span>
+            )}
         </NavLink>
     );
 };
 
-const SidebarDropdown = ({ title, icon, children }) => {
+const SidebarDropdown = ({ title, children }) => {  // ✅ Hapus parameter 'icon'
     const [isOpen, setIsOpen] = useState(false);
 
     return (
         <div>
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center w-fit px-4 py-3 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors"
+                className="flex items-center gap-2 px-4 py-3 rounded-lg text-gray-600 hover: bg-gray-100 hover: text-gray-900 transition-colors w-full"
             >
-                <div className="flex items-center gap-2">
-                    {icon}
-                    <span className="font-medium">{title}</span>
-                    <FaChevronDown
-                        className={`w-3 h-3 transition-transform ${isOpen ? 'rotate-180' : ''}`}
-                    />
-                </div>
+                {/* ✅ Title aja */}
+                <span className="font-medium">{title}</span>
+                
+                {/* ✅ Chevron langsung setelah title */}
+                <FaChevronDown
+                    className={`w-3 h-3 transition-transform ${isOpen ?  'rotate-180' : ''}`}
+                />
             </button>
 
             <div
                 className={`overflow-hidden transition-all ${
-                    isOpen ? 'max-h-[500px] mt-2' : 'max-h-0'
+                    isOpen ?  'max-h-[500px] mt-2' : 'max-h-0'
                 }`}
             >
                 <div className="pl-8 space-y-2">
@@ -62,7 +70,7 @@ const AdminLayout = () => {
     const { showSuccess, showError } = useToast();
 
     const handleLogout = async () => {
-        if (window.confirm('Apakah Anda yakin ingin logout?')) {
+        if (window. confirm('Apakah Anda yakin ingin logout?')) {
             try {
                 await logout();
                 showSuccess('Logout berhasil!');
@@ -109,11 +117,11 @@ const AdminLayout = () => {
                     <div className="p-4 border-b border-gray-200">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
-                                {user.name?.charAt(0).toUpperCase()}
+                                {user. name?.charAt(0).toUpperCase()}
                             </div>
                             <div className="flex-1 min-w-0">
                                 <p className="text-sm font-semibold text-gray-900 truncate">
-                                    {user.name}
+                                    {user. name}
                                 </p>
                                 <p className="text-xs text-gray-500 truncate">
                                     {user.email}
@@ -154,13 +162,13 @@ const AdminLayout = () => {
                             Kelola WK TJSL
                         </NavLink>
 
-                        {/* ✅ TAMBAHAN BARU - Unified Import/Export */}
+                        {/* Unified Import/Export */}
                         <NavLink 
                             to="/tukang-minyak-dan-gas/unified-import-export" 
                             className={({ isActive }) =>
                                 `flex items-center gap-2 px-4 py-2 rounded-lg text-sm transition-colors ${
                                     isActive
-                                        ? 'bg-green-100 text-green-700 font-semibold'
+                                        ?  'bg-green-100 text-green-700 font-semibold'
                                         : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                                 }`
                             }
@@ -196,6 +204,22 @@ const AdminLayout = () => {
 
                         <NavLink to="/tukang-minyak-dan-gas/manage-statistik-landing" className={subLinkClasses}>
                             Kelola Statistik Landing
+                        </NavLink>
+
+                        {/* ✅ NEW - Manage Contacts */}
+                        <NavLink 
+                            to="/tukang-minyak-dan-gas/manage-contacts" 
+                            className={({ isActive }) =>
+                                `flex items-center gap-2 px-4 py-2 rounded-lg text-sm transition-colors ${
+                                    isActive
+                                        ? 'bg-blue-100 text-blue-700 font-semibold'
+                                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                                }`
+                            }
+                        >
+                            <span>Kelola Kontak Masuk</span>
+                            {/* Optional:  Badge untuk pesan baru */}
+                            {/* <span className="ml-auto bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">5</span> */}
                         </NavLink>
                     </SidebarDropdown>
                 </nav>
