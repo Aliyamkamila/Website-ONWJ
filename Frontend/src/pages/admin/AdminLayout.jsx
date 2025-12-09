@@ -5,11 +5,10 @@ import { useToast } from '../../hooks/useToast';
 import logo from '../../assets/LOGO-HD.webp';
 import { 
     FaTachometerAlt, FaSignOutAlt, FaChevronDown, 
-    FaUsers, FaHardHat, FaWallet, FaBuilding, FaFileExcel,
-    FaEnvelope // ✅ NEW ICON
+    FaUsers, FaHardHat, FaWallet, FaBuilding, FaFileExcel
 } from 'react-icons/fa';
 
-// Link normal
+// Sidebar Link
 const SidebarLink = ({ to, icon, label, badge }) => {
     const navLinkClasses = ({ isActive }) =>
         `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
@@ -33,27 +32,25 @@ const SidebarLink = ({ to, icon, label, badge }) => {
     );
 };
 
-const SidebarDropdown = ({ title, children }) => {  // ✅ Hapus parameter 'icon'
+// Sidebar Dropdown
+const SidebarDropdown = ({ title, children }) => {
     const [isOpen, setIsOpen] = useState(false);
 
     return (
         <div>
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center gap-2 px-4 py-3 rounded-lg text-gray-600 hover: bg-gray-100 hover: text-gray-900 transition-colors w-full"
+                className="flex items-center justify-between px-4 py-3 w-full rounded-lg text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors"
             >
-                {/* ✅ Title aja */}
                 <span className="font-medium">{title}</span>
-                
-                {/* ✅ Chevron langsung setelah title */}
                 <FaChevronDown
-                    className={`w-3 h-3 transition-transform ${isOpen ?  'rotate-180' : ''}`}
+                    className={`w-3 h-3 transition-transform ${isOpen ? 'rotate-180' : ''}`}
                 />
             </button>
 
             <div
                 className={`overflow-hidden transition-all ${
-                    isOpen ?  'max-h-[500px] mt-2' : 'max-h-0'
+                    isOpen ? 'max-h-[500px] mt-2' : 'max-h-0'
                 }`}
             >
                 <div className="pl-8 space-y-2">
@@ -70,7 +67,7 @@ const AdminLayout = () => {
     const { showSuccess, showError } = useToast();
 
     const handleLogout = async () => {
-        if (window. confirm('Apakah Anda yakin ingin logout?')) {
+        if (window.confirm('Apakah Anda yakin ingin logout?')) {
             try {
                 await logout();
                 showSuccess('Logout berhasil!');
@@ -100,7 +97,7 @@ const AdminLayout = () => {
         <div className="flex min-h-screen bg-gray-50">
             {/* SIDEBAR */}
             <aside className="w-74 bg-white shadow-lg flex flex-col border-r border-gray-200">
-                
+
                 {/* Logo */}
                 <div className="p-6 border-b border-gray-200">
                     <Link to="/tukang-minyak-dan-gas/dashboard" className="flex items-center gap-3">
@@ -117,11 +114,11 @@ const AdminLayout = () => {
                     <div className="p-4 border-b border-gray-200">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
-                                {user. name?.charAt(0).toUpperCase()}
+                                {user.name?.charAt(0).toUpperCase()}
                             </div>
                             <div className="flex-1 min-w-0">
                                 <p className="text-sm font-semibold text-gray-900 truncate">
-                                    {user. name}
+                                    {user.name}
                                 </p>
                                 <p className="text-xs text-gray-500 truncate">
                                     {user.email}
@@ -132,16 +129,16 @@ const AdminLayout = () => {
                 )}
 
                 {/* NAVIGATION */}
-                <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+                <nav className="flex-1 p-4 space-y-2 overflow-y-auto overflow-x-hidden">
 
                     <SidebarLink 
-                        to="/tukang-minyak-dan-gas/dashboard" 
-                        icon={<FaTachometerAlt />} 
+                        to="/tukang-minyak-dan-gas/dashboard"
+                        icon={<FaTachometerAlt />}
                         label="Dashboard"
                     />
 
                     {/* Divisi TJSL */}
-                    <SidebarDropdown title="Divisi TJSL" icon={<FaUsers />}>
+                    <SidebarDropdown title="Divisi TJSL">
                         <NavLink to="/tukang-minyak-dan-gas/manage-berita" className={subLinkClasses}>
                             Kelola Berita
                         </NavLink>
@@ -162,13 +159,12 @@ const AdminLayout = () => {
                             Kelola WK TJSL
                         </NavLink>
 
-                        {/* Unified Import/Export */}
-                        <NavLink 
-                            to="/tukang-minyak-dan-gas/unified-import-export" 
+                        <NavLink
+                            to="/tukang-minyak-dan-gas/unified-import-export"
                             className={({ isActive }) =>
                                 `flex items-center gap-2 px-4 py-2 rounded-lg text-sm transition-colors ${
                                     isActive
-                                        ?  'bg-green-100 text-green-700 font-semibold'
+                                        ? 'bg-green-100 text-green-700 font-semibold'
                                         : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                                 }`
                             }
@@ -179,21 +175,21 @@ const AdminLayout = () => {
                     </SidebarDropdown>
 
                     {/* Divisi Tekkom */}
-                    <SidebarDropdown title="Divisi Tekkom & K3LL" icon={<FaHardHat />}>
+                    <SidebarDropdown title="Divisi Tekkom & K3LL">
                         <NavLink to="/tukang-minyak-dan-gas/manage-wk-tekkom" className={subLinkClasses}>
                             Kelola WK TEKKOM
                         </NavLink>
                     </SidebarDropdown>
 
                     {/* Divisi Keuangan */}
-                    <SidebarDropdown title="Divisi Keuangan" icon={<FaWallet />}>
+                    <SidebarDropdown title="Divisi Keuangan">
                         <NavLink to="/tukang-minyak-dan-gas/manage-keuangan" className={subLinkClasses}>
                             Lihat Anggaran
                         </NavLink>
                     </SidebarDropdown>
 
                     {/* Sekper */}
-                    <SidebarDropdown title="Sekretaris Perusahaan" icon={<FaBuilding />}>
+                    <SidebarDropdown title="Sekretaris Perusahaan">
                         <NavLink to="/tukang-minyak-dan-gas/manage-penghargaan" className={subLinkClasses}>
                             Kelola Penghargaan
                         </NavLink>
@@ -206,20 +202,13 @@ const AdminLayout = () => {
                             Kelola Statistik Landing
                         </NavLink>
 
-                        {/* ✅ NEW - Manage Contacts */}
-                        <NavLink 
-                            to="/tukang-minyak-dan-gas/manage-contacts" 
-                            className={({ isActive }) =>
-                                `flex items-center gap-2 px-4 py-2 rounded-lg text-sm transition-colors ${
-                                    isActive
-                                        ? 'bg-blue-100 text-blue-700 font-semibold'
-                                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                                }`
-                            }
-                        >
-                            <span>Kelola Kontak Masuk</span>
-                            {/* Optional:  Badge untuk pesan baru */}
-                            {/* <span className="ml-auto bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">5</span> */}
+                        <NavLink to="/tukang-minyak-dan-gas/manage-contacts" className={subLinkClasses}>
+                            Kelola Kontak Masuk
+                        </NavLink>
+
+                        {/* NEW — PENGATURAN WEBSITE */}
+                        <NavLink to="/tukang-minyak-dan-gas/manage-settings" className={subLinkClasses}>
+                            Pengaturan Website
                         </NavLink>
                     </SidebarDropdown>
                 </nav>

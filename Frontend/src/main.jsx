@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, RouterProvider, ScrollRestoration } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
+import { SettingsProvider } from './context/SettingsContext';
 import ProtectedRoute from './utils/ProtectedRoute';
 import './index.css';
 
@@ -33,7 +34,7 @@ import LoginPage from './pages/admin/LoginPage';
 import AdminLayout from './pages/admin/AdminLayout';
 import DashboardPage from './pages/admin/DashboardPage';
 
-// Admin - Divisi TJSL
+// Divisi TJSL
 import ManageBerita from './pages/admin/ManageBerita';
 import ManageProgram from './pages/admin/ManageProgram';
 import ManageUmkm from './pages/admin/ManageUmkm';
@@ -41,26 +42,27 @@ import ManageTestimonial from './pages/admin/ManageTestimonial';
 import ManageAngkaStatistikTJSL from './pages/admin/ManageAngkaStatistikTJSL';
 import UnifiedImportExport from './pages/admin/UnifiedImportExport';
 
-// Admin - Sekretaris Perusahaan
+// Sekretaris Perusahaan
 import ManagePenghargaan from './pages/admin/ManagePenghargaan';
 import ManageLaporan from './pages/admin/ManageLaporan';
 import ManageStatistikLanding from './pages/admin/ManageStatistikLanding';
 
-// Admin - Divisi Keuangan
+// Keuangan
 import ManageKeuangan from './pages/admin/ManageKeuangan';
 
-// Admin - Wilayah Kerja (TEKKOM & TJSL)
+// Wilayah Kerja
 import ManageWkTekkom from './pages/admin/ManageWkTekkom';
 import ManageWkTjsl from './pages/admin/ManageWkTjsl';
 
-// Admin - Contact Management ✅ NEW
+// Contacts
 import ManageContacts from './pages/admin/ManageContacts';
 
-// ==== DEFINISI RUTE ====
+// Settings (baru)
+import ManageSettings from './pages/admin/ManageSettings';
+
+// ==== ROUTER ====
 const router = createBrowserRouter([
-  
   {
-    // --- RUTE PENGUNJUNG UMUM ---
     path: '/',
     element: (
       <>
@@ -73,22 +75,21 @@ const router = createBrowserRouter([
       { index: true, element: <HomePage /> },
       { path: 'tjsl', element: <TJSLPage /> },
       { path: 'berita-tjsl', element: <BeritaTJSLPage /> },
-      { path: 'artikel/: slug', element: <ArtikelPage /> },
-      { path:  'program-berkelanjutan', element: <AllProgramsPage /> },
+      { path: 'artikel/:slug', element: <ArtikelPage /> },
+      { path: 'program-berkelanjutan', element: <AllProgramsPage /> },
       { path: 'tentang', element: <Tentang /> },
-      { path: 'kelola', element:  <TataKelola /> },
+      { path: 'kelola', element: <TataKelola /> },
       { path: 'media-informasi', element: <MediaInformasiPage /> },
       { path: 'penghargaan', element: <PenghargaanPage /> },
       { path: 'laporan-tahunan', element: <LaporanTahunanPage /> },
       { path: 'bisnis', element: <Mainbisnis /> },
       { path: 'manajemen', element: <Mmanajemen /> },
-      { path:  'umkm-binaan', element: <UmkmPage /> },
+      { path: 'umkm-binaan', element: <UmkmPage /> },
       { path: 'kontak', element: <KontakPage /> },
-      { path: 'profile', element:  <Profile /> },
+      { path: 'profile', element: <Profile /> },
     ],
   },
 
-  // ✅ WILAYAH KERJA - STANDALONE ROUTE (tidak nested dalam Layout)
   {
     path: '/wilayah-kerja/*',
     element: (
@@ -101,13 +102,11 @@ const router = createBrowserRouter([
   },
 
   {
-    // --- LOGIN ADMIN ---
-    path:  '/tukang-minyak-dan-gas/login',
+    path: '/tukang-minyak-dan-gas/login',
     element: <LoginPage />,
   },
 
   {
-    // --- RUTE ADMIN (PROTECTED) ---
     path: '/tukang-minyak-dan-gas',
     element: (
       <ProtectedRoute>
@@ -116,63 +115,68 @@ const router = createBrowserRouter([
     ),
     children: [
       { index: true, element: <DashboardPage /> },
-      { path: 'dashboard', element: <DashboardPage /> },
-      
-      // Divisi TJSL
+
+      // TJSL
       { path: 'manage-berita', element: <ManageBerita /> },
       { path: 'manage-program', element: <ManageProgram /> },
       { path: 'manage-umkm', element: <ManageUmkm /> },
       { path: 'manage-testimonial', element: <ManageTestimonial /> },
       { path: 'manage-angka-statistik-tjsl', element: <ManageAngkaStatistikTJSL /> },
       { path: 'unified-import-export', element: <UnifiedImportExport /> },
-      
-      // Sekretaris Perusahaan
+
+      // Sekper
       { path: 'manage-penghargaan', element: <ManagePenghargaan /> },
       { path: 'manage-laporan', element: <ManageLaporan /> },
       { path: 'manage-statistik-landing', element: <ManageStatistikLanding /> },
-      
-      // Divisi Keuangan
-      { path:  'manage-keuangan', element: <ManageKeuangan /> },
-      
-      // Wilayah Kerja (TEKKOM & TJSL)
-      { path: 'manage-wk-tekkom', element:  <ManageWkTekkom /> },
+
+      // Keuangan
+      { path: 'manage-keuangan', element: <ManageKeuangan /> },
+
+      // Wilayah Kerja
+      { path: 'manage-wk-tekkom', element: <ManageWkTekkom /> },
       { path: 'manage-wk-tjsl', element: <ManageWkTjsl /> },
-      
-      // ✅ Contact Management (NEW)
+
+      // Contacts
       { path: 'manage-contacts', element: <ManageContacts /> },
+
+      // Settings (baru)
+      { path: 'manage-settings', element: <ManageSettings /> },
     ],
   },
 ]);
 
-// ==== RENDER APLIKASI ====
+// ==== RENDER APP ====
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <AuthProvider>
-      <RouterProvider router={router} />
-      <Toaster 
-        position="top-right"
-        toastOptions={{
-          duration: 3000,
-          style: {
-            background: '#363636',
-            color: '#fff',
-          },
-          success: {
+      <SettingsProvider>
+        <RouterProvider router={router} />
+
+        <Toaster
+          position="top-right"
+          toastOptions={{
             duration: 3000,
-            iconTheme: {
-              primary: '#4ade80',
-              secondary: '#fff',
+            style: {
+              background: '#363636',
+              color: '#fff',
             },
-          },
-          error:  {
-            duration: 4000,
-            iconTheme: {
-              primary: '#ef4444',
-              secondary: '#fff',
+            success: {
+              duration: 3000,
+              iconTheme: {
+                primary: '#4ade80',
+                secondary: '#fff',
+              },
             },
-          },
-        }}
-      />
+            error: {
+              duration: 4000,
+              iconTheme: {
+                primary: '#ef4444',
+                secondary: '#fff',
+              },
+            },
+          }}
+        />
+      </SettingsProvider>
     </AuthProvider>
   </StrictMode>
 );
