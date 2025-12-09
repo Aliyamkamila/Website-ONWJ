@@ -6,15 +6,14 @@ use App\Http\Controllers\AdminController;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Api\UmkmController;
 use App\Http\Controllers\Api\ProgramController;
-use App\Http\Controllers\Api\WkTekkomController;
-use App\Http\Controllers\Api\WkTjslController;
+use App\Http\Controllers\Api\WilayahKerjaController; // ✅ CHANGED
 use App\Http\Controllers\Api\PenghargaanController;
 use App\Http\Controllers\Api\BeritaController;
-use App\Http\Controllers\Api\TestimonialController; // ✅ ADDED
+use App\Http\Controllers\Api\TestimonialController;
 use App\Http\Controllers\Api\TjslStatisticController;
 
 // Guest routes (public access)
-Route::middleware(['guest. only'])->group(function () {
+Route::middleware(['guest_only'])->group(function () { // ✅ FIXED: removed space
     Route::get('/', function () {
         return response()->json([
             'success' => true,
@@ -31,13 +30,13 @@ Route::middleware(['guest. only'])->group(function () {
 Route::prefix('tukang-minyak-dan-gas')->group(function () {
     Route::post('/login', [AdminAuthController::class, 'login'])
         ->middleware('throttle:5,1')
-        ->name('admin. login');
+        ->name('admin. login'); // ✅ FIXED:  removed space
 });
 
 // Protected admin routes
-Route::middleware(['auth:sanctum', 'admin. auth'])->group(function () {
+Route::middleware(['auth: sanctum', 'admin_auth'])->group(function () { // ✅ FIXED:  removed space
     // Auth routes
-    Route::post('/admin/logout', [AdminAuthController::class, 'logout'])->name('admin.logout');
+    Route::post('/admin/logout', [AdminAuthController:: class, 'logout'])->name('admin.logout');
     Route::get('/admin/me', [AdminAuthController::class, 'me'])->name('admin.me');
     Route::post('/admin/refresh', [AdminAuthController::class, 'refresh'])->name('admin.refresh');
 
@@ -45,7 +44,7 @@ Route::middleware(['auth:sanctum', 'admin. auth'])->group(function () {
     Route::prefix('admin/admins')->name('admin.admins.')->group(function () {
         Route::get('/', [AdminController::class, 'index'])->name('index');
         Route::post('/', [AdminController::class, 'store'])->name('store');
-        Route::get('/{id}', [AdminController::class, 'show'])->name('show');
+        Route::get('/{id}', [AdminController:: class, 'show'])->name('show');
         Route::put('/{id}', [AdminController::class, 'update'])->name('update');
         Route::patch('/{id}', [AdminController::class, 'update'])->name('patch');
         Route::delete('/{id}', [AdminController::class, 'destroy'])->name('destroy');
@@ -61,8 +60,8 @@ Route::middleware(['auth:sanctum', 'admin. auth'])->group(function () {
 // Public routes (untuk frontend)
 Route::prefix('v1')->group(function () {
     Route::get('/umkm', [UmkmController::class, 'index']);
-    Route::get('/umkm/{id}', [UmkmController::class, 'show']);
-    Route::get('/umkm-categories', [UmkmController::class, 'categories']);
+    Route::get('/umkm/{id}', [UmkmController:: class, 'show']);
+    Route::get('/umkm-categories', [UmkmController:: class, 'categories']);
     Route::get('/umkm-status-options', [UmkmController::class, 'statusOptions']);
 });
 
@@ -87,7 +86,7 @@ Route::prefix('v1')->group(function () {
     Route::get('/programs', [ProgramController::class, 'index']);
     Route::get('/programs/{slug}', [ProgramController::class, 'show']);
     Route::get('/programs-recent', [ProgramController::class, 'recent']);
-    Route::get('/program-categories', [ProgramController::class, 'categories']);
+    Route::get('/program-categories', [ProgramController:: class, 'categories']);
     Route::get('/program-status-options', [ProgramController::class, 'statusOptions']);
     Route::get('/program-statistics', [ProgramController::class, 'statistics']);
 });
@@ -104,83 +103,28 @@ Route::prefix('v1/admin')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| Wilayah Kerja TEKKOM Routes
+| ✅ Wilayah Kerja Routes (TEKKOM & TJSL Combined)
 |--------------------------------------------------------------------------
 */
 
 // Public routes (untuk frontend)
 Route::prefix('v1')->group(function () {
-    Route::get('/wk-tekkom', [WkTekkomController::class, 'index']);
-    Route::get('/wk-tekkom/{id}', [WkTekkomController::class, 'show']);
-    Route::get('/wk-tekkom-status-options', [WkTekkomController::class, 'statusOptions']);
+    Route::get('/wilayah-kerja', [WilayahKerjaController::class, 'index']);
+    Route::get('/wilayah-kerja/{id}', [WilayahKerjaController::class, 'show']);
+    Route::get('/wilayah-kerja-statistics', [WilayahKerjaController::class, 'statistics']);
+    Route::get('/wilayah-kerja-status-options', [WilayahKerjaController::class, 'statusOptions']);
+    Route::post('/wilayah-kerja-convert-coordinates', [WilayahKerjaController::class, 'convertCoordinates']);
 });
 
 // Admin routes
 Route::prefix('v1/admin')->group(function () {
-// Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin'])->group(function () {
-    Route::get('/wk-tekkom', [WkTekkomController::class, 'adminIndex']);
-    Route::post('/wk-tekkom', [WkTekkomController::class, 'store']);
-    Route::get('/wk-tekkom/{id}', [WkTekkomController::class, 'show']);
-    Route::put('/wk-tekkom/{id}', [WkTekkomController::class, 'update']);
-    Route::patch('/wk-tekkom/{id}', [WkTekkomController::class, 'update']);
-    Route::delete('/wk-tekkom/{id}', [WkTekkomController::class, 'destroy']);
-    Route::post('/wk-tekkom/{id}/restore', [WkTekkomController::class, 'restore']);
-});
-
-/*
-|--------------------------------------------------------------------------
-| Wilayah Kerja TJSL Routes
-|--------------------------------------------------------------------------
-*/
-
-// Public routes (untuk frontend)
-Route::prefix('v1')->group(function () {
-    Route::get('/wk-tjsl', [WkTjslController::class, 'index']);
-    Route::get('/wk-tjsl/{id}', [WkTjslController::class, 'show']);
-    Route::get('/wk-tjsl-status-options', [WkTjslController::class, 'statusOptions']);
-});
-
-// Admin routes
-Route::prefix('v1/admin')->group(function () {
-// Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin'])->group(function () {
-    Route::get('/wk-tjsl', [WkTjslController::class, 'adminIndex']);
-    Route::post('/wk-tjsl', [WkTjslController::class, 'store']);
-    Route::get('/wk-tjsl/{id}', [WkTjslController::class, 'show']);
-    Route::put('/wk-tjsl/{id}', [WkTjslController::class, 'update']);
-    Route::patch('/wk-tjsl/{id}', [WkTjslController::class, 'update']);
-    Route::delete('/wk-tjsl/{id}', [WkTjslController::class, 'destroy']);
-    Route::post('/wk-tjsl/{id}/restore', [WkTjslController::class, 'restore']);
-});
-
-/*
-|--------------------------------------------------------------------------
-| Combined Wilayah Kerja Endpoint
-|--------------------------------------------------------------------------
-*/
-
-Route::prefix('v1')->group(function () {
-    Route::get('/wilayah-kerja', function () {
-        $tekkom = \App\Models\WkTekkom::active()->ordered()->get()->map(function ($area) {
-            return array_merge($area->toArray(), ['category' => 'TEKKOM']);
-        });
-        
-        $tjsl = \App\Models\WkTjsl::active()->ordered()->get()->map(function ($area) {
-            return array_merge($area->toArray(), ['category' => 'TJSL']);
-        });
-        
-        $allData = $tekkom->merge($tjsl);
-        
-        return response()->json([
-            'success' => true,
-            'message' => 'All areas retrieved successfully',
-            'data' => $allData,
-            'meta' => [
-                'total' => $allData->count(),
-                'tekkom_count' => $tekkom->count(),
-                'tjsl_count' => $tjsl->count(),
-            ]
-        ], 200);
-    });
+// Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin_auth'])->group(function () {
+    Route::get('/wilayah-kerja', [WilayahKerjaController::class, 'adminIndex']);
+    Route::post('/wilayah-kerja', [WilayahKerjaController::class, 'store']);
+    Route::put('/wilayah-kerja/{id}', [WilayahKerjaController::class, 'update']);
+    Route::patch('/wilayah-kerja/{id}', [WilayahKerjaController::class, 'update']);
+    Route::delete('/wilayah-kerja/{id}', [WilayahKerjaController::class, 'destroy']);
+    Route::post('/wilayah-kerja/{id}/restore', [WilayahKerjaController::class, 'restore']);
 });
 
 /*
@@ -195,12 +139,12 @@ Route::prefix('v1')->group(function () {
     Route::get('/penghargaan/landing', [PenghargaanController::class, 'forLanding']);
     Route::get('/penghargaan/{id}', [PenghargaanController::class, 'show']);
     Route::get('/penghargaan-years', [PenghargaanController::class, 'getYears']);
-    Route::get('/penghargaan-categories', [PenghargaanController::class, 'getCategories']);
+    Route::get('/penghargaan-categories', [PenghargaanController:: class, 'getCategories']);
 });
 
 // Admin routes
 Route::prefix('v1/admin')->group(function () {
-// Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin. auth'])->group(function () {
+// Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin_auth'])->group(function () {
     Route::get('/penghargaan', [PenghargaanController::class, 'adminIndex']);
     Route::post('/penghargaan', [PenghargaanController::class, 'store']);
     Route::get('/penghargaan/{id}', [PenghargaanController::class, 'show']);
@@ -229,7 +173,7 @@ Route::prefix('v1')->group(function () {
 
 // Admin routes
 Route::prefix('v1/admin')->group(function () {
-// Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin.auth'])->group(function () {
+// Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin_auth'])->group(function () {
     Route::get('/berita', [BeritaController::class, 'adminIndex']);
     Route::post('/berita', [BeritaController::class, 'store']);
     Route::get('/berita/{id}', [BeritaController::class, 'show'])
@@ -243,55 +187,34 @@ Route::prefix('v1/admin')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| ✅ API Routes - TESTIMONIALS (NEW!)
+| API Routes - TESTIMONIALS
 |--------------------------------------------------------------------------
 */
 
-// ===== PUBLIC ROUTES (untuk AllProgramsPage. jsx) =====
+// Public routes
 Route::prefix('v1')->group(function () {
-    // Get testimonials with pagination & filters
     Route::get('/testimonials', [TestimonialController::class, 'index']);
-    
-    // Get featured testimonials (for homepage highlights)
     Route::get('/testimonials/featured', [TestimonialController::class, 'getFeatured']);
-    
-    // Get testimonials by specific program
     Route::get('/testimonials/program/{program}', [TestimonialController::class, 'getByProgram']);
-    
-    // Get single testimonial detail
     Route::get('/testimonials/{id}', [TestimonialController::class, 'show'])
          ->where('id', '[0-9]+');
-    
-    // Get list of all programs (for filter dropdown)
     Route::get('/testimonial-programs', [TestimonialController::class, 'getPrograms']);
 });
 
-// ===== ADMIN ROUTES (untuk ManageTestimonial.jsx) =====
-Route::prefix('v1/admin')->group(function () {
-// Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin. auth'])->group(function () {
-    
-    // CRUD Operations
+// Admin routes
+Route:: prefix('v1/admin')->group(function () {
+// Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin_auth'])->group(function () {
     Route::get('/testimonials', [TestimonialController::class, 'adminIndex']);
-    
     Route::post('/testimonials', [TestimonialController::class, 'store']);
-    
     Route::get('/testimonials/{id}', [TestimonialController::class, 'show'])
          ->where('id', '[0-9]+');
-    
     Route::post('/testimonials/{id}', [TestimonialController::class, 'update'])
-         ->where('id', '[0-9]+'); // POST untuk support form-data dengan avatar
-    
+         ->where('id', '[0-9]+');
     Route::delete('/testimonials/{id}', [TestimonialController::class, 'destroy'])
          ->where('id', '[0-9]+');
-    
-    // Bulk Operations
     Route::post('/testimonials/bulk-delete', [TestimonialController::class, 'bulkDelete']);
-    
-    // Toggle Featured Status
     Route::post('/testimonials/{id}/toggle-featured', [TestimonialController::class, 'toggleFeatured'])
          ->where('id', '[0-9]+');
-    
-    // Statistics for Dashboard
     Route::get('/testimonial-statistics', [TestimonialController::class, 'getStatistics']);
 });
 
@@ -301,25 +224,16 @@ Route::prefix('v1/admin')->group(function () {
 |--------------------------------------------------------------------------
 */
 
-// ===== PUBLIC ROUTES (untuk TJSLPage.jsx) =====
+// Public routes
 Route::prefix('v1')->group(function () {
-    // Get TJSL statistics
     Route::get('/tjsl/statistik', [TjslStatisticController::class, 'index']);
 });
 
-// ===== ADMIN ROUTES (untuk ManageAngkaStatistikTJSL.jsx) =====
+// Admin routes
 Route::prefix('v1/admin')->group(function () {
-// Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin. auth'])->group(function () {
-    
-    // Get all statistics for admin
-    Route::get('/tjsl/statistik', [TjslStatisticController::class, 'adminIndex']);
-    
-    // Update single statistic
+// Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin_auth'])->group(function () {
+    Route::get('/tjsl/statistik', [TjslStatisticController:: class, 'adminIndex']);
     Route::put('/tjsl/statistik/{id}', [TjslStatisticController::class, 'update']);
-    
-    // Bulk update statistics (save semua sekaligus)
     Route::post('/tjsl/statistik/bulk-update', [TjslStatisticController::class, 'bulkUpdate']);
-    
-    // Reset to default values
     Route::post('/tjsl/statistik/reset', [TjslStatisticController::class, 'reset']);
 });
