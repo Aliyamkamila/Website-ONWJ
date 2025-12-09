@@ -5,7 +5,6 @@ import toast from 'react-hot-toast';
 import MapClickSelector from '../../components/MapClickSelector';
 import PetaImage from '../wk/Peta.png';
 
-// ✅ FIXED: Use correct env variable
 const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
 
 const ManageWkTjsl = () => {
@@ -35,10 +34,17 @@ const ManageWkTjsl = () => {
     impact: '',
     order: 0,
     is_active: true,
-    related_news_id: '',
+    related_news_id:  '',
   });
 
   const [programInput, setProgramInput] = useState('');
+
+  // ✅ Get Auth Token
+  const getAuthToken = () => {
+    return localStorage.getItem('token') || 
+           sessionStorage.getItem('token') || 
+           document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
+  };
 
   useEffect(() => {
     fetchAreas();
@@ -51,7 +57,7 @@ const ManageWkTjsl = () => {
     if (searchTerm) {
       result = result.filter(item =>
         item.area_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.name. toLowerCase().includes(searchTerm. toLowerCase()) ||
+        item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.description.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
@@ -75,21 +81,36 @@ const ManageWkTjsl = () => {
     setFilterActive('');
   };
 
+  // ✅ UPDATED:  Fetch TJSL areas
   const fetchAreas = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`${API_URL}/v1/admin/wk-tjsl`, {
-        params: { per_page: 999 },
+      const token = getAuthToken();
+      
+      const response = await axios.get(`${API_URL}/v1/admin/wilayah-kerja`, {
+        params: {
+          category: 'TJSL',  // ✅ Filter by TJSL
+          per_page: 999
+        },
+        headers: {
+          'Authorization': token ?  `Bearer ${token}` : ''
+        }
       });
 
       if (response.data.success) {
         const data = response.data.data || [];
         setAreas(data);
         setFilteredAreas(data);
+        console.log('✅ TJSL areas loaded:', data. length);
       }
     } catch (error) {
-      console.error('Error fetching TJSL areas:', error);
-      toast.error('Gagal memuat data program TJSL');
+      console.error('❌ Error fetching TJSL areas:', error);
+      const errorMsg = error.response?.data?.message || 'Gagal memuat data program TJSL';
+      toast. error(errorMsg);
+      
+      if (error.response?.status === 401) {
+        toast.error('Session expired. Please login again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -97,8 +118,13 @@ const ManageWkTjsl = () => {
 
   const fetchBeritaList = async () => {
     try {
+      const token = getAuthToken();
+      
       const response = await axios.get(`${API_URL}/v1/admin/berita`, {
         params: { per_page: 999, status: 'published' },
+        headers: {
+          'Authorization': token ? `Bearer ${token}` : ''
+        }
       });
 
       if (response.data.success) {
@@ -121,7 +147,7 @@ const ManageWkTjsl = () => {
     setFormData(prev => ({
       ...prev,
       position_x: coordinates.position_x || '',
-      position_y: coordinates.position_y || ''
+      position_y: coordinates. position_y || ''
     }));
   };
 
@@ -129,7 +155,7 @@ const ManageWkTjsl = () => {
     if (programInput.trim()) {
       setFormData(prev => ({
         ...prev,
-        programs: [... prev.programs, programInput.trim()]
+        programs: [...prev.programs, programInput.trim()]
       }));
       setProgramInput('');
     }
@@ -142,39 +168,58 @@ const ManageWkTjsl = () => {
     }));
   };
 
+  // ✅ UPDATED: Handle Submit
   const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (!formData.position_x || !formData.position_y) {
-      toast. error('Silakan pilih posisi pada peta terlebih dahulu! ');
+      toast.error('Silakan pilih posisi pada peta terlebih dahulu! ');
       return;
     }
 
     setLoading(true);
 
     try {
+      const token = getAuthToken();
+      
+      if (!token) {
+        toast.error('Unauthorized.  Please login first.');
+        return;
+      }
+
+      // ✅ Add category to formData
+      const dataWithCategory = {
+        ...formData,
+        category: 'TJSL'
+      };
+
       const endpoint = editingArea
-        ? `${API_URL}/v1/admin/wk-tjsl/${editingArea.id}`
-        : `${API_URL}/v1/admin/wk-tjsl`;
+        ? `${API_URL}/v1/admin/wilayah-kerja/${editingArea. id}? category=TJSL`
+        : `${API_URL}/v1/admin/wilayah-kerja`;
 
       const method = editingArea ? 'put' : 'post';
 
-      const response = await axios[method](endpoint, formData);
+      const response = await axios[method](endpoint, dataWithCategory, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
 
-      if (response. data.success) {
+      if (response.data. success) {
         toast.success(editingArea ? 'Program TJSL berhasil diperbarui!' : 'Program TJSL berhasil ditambahkan!');
         setShowForm(false);
         resetForm();
         fetchAreas();
       }
     } catch (error) {
-      console.error('Error saving TJSL area:', error);
+      console.error('❌ Error saving TJSL area:', error);
       const errorMessage = error.response?.data?.message || 'Gagal menyimpan data program TJSL';
-      toast. error(errorMessage);
+      toast.error(errorMessage);
 
       if (error.response?.data?.errors) {
         Object.values(error.response.data.errors).forEach(err => {
-          toast.error(err[0]);
+          toast.error(Array.isArray(err) ? err[0] : err);
         });
       }
     } finally {
@@ -182,44 +227,60 @@ const ManageWkTjsl = () => {
     }
   };
 
+  // ✅ UPDATED: Handle Edit
   const handleEdit = (area) => {
     setEditingArea(area);
     setFormData({
       area_id: area. area_id,
       name: area.name,
-      position_x: area.position_x,
-      position_y: area.position_y,
+      position_x: parseFloat(area.position_x),
+      position_y: parseFloat(area.position_y),
       color: area.color,
       description: area.description,
       programs: area.programs || [],
       status: area.status,
       beneficiaries: area.beneficiaries || '',
       budget: area.budget || '',
-      duration: area. duration || '',
+      duration: area.duration || '',
       impact: area.impact || '',
       order: area.order || 0,
       is_active: area.is_active,
-      related_news_id: area.related_news_id || '',
+      related_news_id:  area.related_news_id || '',
     });
     setShowForm(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  // ✅ UPDATED: Handle Delete
   const handleDelete = async (id) => {
-    if (! window.confirm('Apakah Anda yakin ingin menghapus program TJSL ini?')) {
+    if (!window.confirm('Apakah Anda yakin ingin menghapus program TJSL ini?')) {
       return;
     }
 
     try {
-      const response = await axios.delete(`${API_URL}/v1/admin/wk-tjsl/${id}`);
+      const token = getAuthToken();
+      
+      if (! token) {
+        toast.error('Unauthorized. Please login first.');
+        return;
+      }
+
+      const response = await axios.delete(
+        `${API_URL}/v1/admin/wilayah-kerja/${id}? category=TJSL`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
 
       if (response.data.success) {
         toast.success('Program TJSL berhasil dihapus!');
         fetchAreas();
       }
     } catch (error) {
-      console.error('Error deleting TJSL area:', error);
-      toast.error('Gagal menghapus program TJSL');
+      console.error('❌ Error deleting TJSL area:', error);
+      toast.error(error.response?.data?.message || 'Gagal menghapus program TJSL');
     }
   };
 
@@ -253,7 +314,7 @@ const ManageWkTjsl = () => {
   };
 
   const stats = {
-    total: areas.length,
+    total:  areas.length,
     aktif: areas.filter(a => a.status === 'Aktif').length,
     nonAktif: areas.filter(a => a.status === 'Non-Aktif').length,
     tampil: areas.filter(a => a.is_active).length,
@@ -291,7 +352,7 @@ const ManageWkTjsl = () => {
       </div>
 
       {! showForm && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md: grid-cols-4 gap-6 mb-8">
           <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white">
             <div className="flex items-center justify-between mb-4">
               <div className="p-3 bg-white bg-opacity-20 rounded-lg">
@@ -327,7 +388,7 @@ const ManageWkTjsl = () => {
               <div className="p-3 bg-white bg-opacity-20 rounded-lg">
                 <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3. 732 7.943 7. 523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                 </svg>
               </div>
             </div>
@@ -337,14 +398,14 @@ const ManageWkTjsl = () => {
         </div>
       )}
 
-      {! showForm && (
+      {!showForm && (
         <div className="bg-white rounded-xl shadow-md p-6 mb-8">
           <div className="flex items-center gap-2 mb-4">
             <FaFilter className="text-gray-500" />
             <h3 className="text-lg font-semibold text-gray-900">Pencarian & Filter</h3>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md: grid-cols-3 gap-4">
             <div className="relative">
               <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
               <input
@@ -359,7 +420,7 @@ const ManageWkTjsl = () => {
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              className="px-4 py-3 border border-gray-300 rounded-lg focus: ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
             >
               <option value="">Semua Status</option>
               <option value="Aktif">Aktif</option>
@@ -368,8 +429,8 @@ const ManageWkTjsl = () => {
 
             <select
               value={filterActive}
-              onChange={(e) => setFilterActive(e.target.value)}
-              className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              onChange={(e) => setFilterActive(e.target. value)}
+              className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus: ring-blue-500 focus: border-transparent transition-all"
             >
               <option value="">Semua Tampilan</option>
               <option value="true">Tampil di Website</option>
@@ -430,11 +491,11 @@ const ManageWkTjsl = () => {
                   <input
                     type="text"
                     name="area_id"
-                    value={formData. area_id}
+                    value={formData.area_id}
                     onChange={handleInputChange}
                     required
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Contoh: KEPULAUAN_SERIBU"
+                    placeholder="Contoh:  KEPULAUAN_SERIBU"
                   />
                 </div>
 
@@ -445,7 +506,7 @@ const ManageWkTjsl = () => {
                   <input
                     type="text"
                     name="name"
-                    value={formData.name}
+                    value={formData. name}
                     onChange={handleInputChange}
                     required
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -592,7 +653,7 @@ const ManageWkTjsl = () => {
                 </div>
                 Data Program
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md: grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
                     Penerima Manfaat
@@ -617,7 +678,7 @@ const ManageWkTjsl = () => {
                     value={formData. budget}
                     onChange={handleInputChange}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Contoh: Rp 2.8 Miliar"
+                    placeholder="Contoh:  Rp 2.8 Miliar"
                   />
                 </div>
 
@@ -630,7 +691,7 @@ const ManageWkTjsl = () => {
                     name="duration"
                     value={formData.duration}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus: ring-blue-500 focus: border-transparent"
                     placeholder="Contoh: 2023-2025"
                   />
                 </div>
@@ -644,7 +705,7 @@ const ManageWkTjsl = () => {
                     name="impact"
                     value={formData.impact}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus: ring-blue-500 focus: border-transparent"
                     placeholder="Contoh: Peningkatan 35% pendapatan"
                   />
                 </div>
@@ -666,7 +727,7 @@ const ManageWkTjsl = () => {
                   type="text"
                   value={programInput}
                   onChange={(e) => setProgramInput(e.target.value)}
-                  onKeyPress={(e) => e. key === 'Enter' && (e.preventDefault(), addProgram())}
+                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addProgram())}
                   className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Nama program/kegiatan (tekan Enter)"
                 />
@@ -803,6 +864,7 @@ const ManageWkTjsl = () => {
                       <div className="flex justify-center items-center">
                         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
                       </div>
+                      <p className="mt-4 text-gray-600">Memuat data... </p>
                     </td>
                   </tr>
                 ) : filteredAreas.length === 0 ? (
@@ -837,8 +899,8 @@ const ManageWkTjsl = () => {
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div 
-                            className="w-4 h-4 rounded-full" 
-                            style={{ backgroundColor: area.color }}
+                            className="w-4 h-4 rounded-full flex-shrink-0" 
+                            style={{ backgroundColor:  area.color }}
                           />
                           <div>
                             <div className="text-sm font-semibold text-gray-900">{area. area_id}</div>
@@ -859,8 +921,8 @@ const ManageWkTjsl = () => {
                         {area.beneficiaries || '-'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-500">
-                        <div>X: {area.position_x}%</div>
-                        <div>Y: {area.position_y}%</div>
+                        <div>X:  {parseFloat(area.position_x).toFixed(2)}%</div>
+                        <div>Y: {parseFloat(area.position_y).toFixed(2)}%</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
                         {area.is_active ? (
@@ -873,13 +935,13 @@ const ManageWkTjsl = () => {
                         <div className="flex gap-3">
                           <button
                             onClick={() => handleEdit(area)}
-                            className="text-blue-600 hover:text-blue-900 transition-colors p-2 hover:bg-blue-50 rounded-lg"
+                            className="text-blue-600 hover: text-blue-900 transition-colors p-2 hover:bg-blue-50 rounded-lg"
                             title="Edit"
                           >
                             <FaEdit className="w-5 h-5" />
                           </button>
                           <button
-                            onClick={() => handleDelete(area. id)}
+                            onClick={() => handleDelete(area.id)}
                             className="text-red-600 hover:text-red-900 transition-colors p-2 hover:bg-red-50 rounded-lg"
                             title="Hapus"
                           >
