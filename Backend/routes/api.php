@@ -15,6 +15,8 @@ use App\Http\Controllers\Api\TestimonialController;
 use App\Http\Controllers\Api\TjslStatisticController;
 use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\SettingController;
+use App\Http\Controllers\Api\GalleryController;
+use App\Http\Controllers\Api\GalleryCategoryController;
 
 /*
 |--------------------------------------------------------------------------
@@ -251,4 +253,34 @@ Route::prefix('v1/admin')->group(function () {
     Route::post('/settings/upload', [SettingController::class, 'uploadImage']);
     Route::delete('/settings/image/{key}', [SettingController::class, 'deleteImage']);
     Route::post('/settings/reset', [SettingController::class, 'reset']);
+});
+
+/*
+|--------------------------------------------------------------------------
+| Gallery Routes
+|--------------------------------------------------------------------------
+*/
+
+Route::prefix('v1')->group(function () {
+    // Gallery Categories (Public)
+    Route::get('/gallery-categories', [GalleryCategoryController::class, 'index']);
+    Route::get('/gallery-categories/{slug}', [GalleryCategoryController::class, 'show']);
+    
+    // Gallery (Public)
+    Route::get('/gallery', [GalleryController::class, 'index']);
+    Route::get('/gallery/featured', [GalleryController::class, 'featured']);
+    Route::get('/gallery/{slug}', [GalleryController::class, 'show']);
+});
+
+Route::prefix('v1/admin')->group(function () {
+    // Gallery Categories (Admin)
+    Route::post('/gallery-categories', [GalleryCategoryController::class, 'store']);
+    Route::put('/gallery-categories/{id}', [GalleryCategoryController::class, 'update']);
+    Route::delete('/gallery-categories/{id}', [GalleryCategoryController::class, 'destroy']);
+    
+    // Gallery (Admin)
+    Route::get('/gallery', [GalleryController::class, 'adminIndex']);
+    Route::post('/gallery', [GalleryController::class, 'store']);
+    Route::post('/gallery/{id}', [GalleryController::class, 'update']); // POST untuk support file upload
+    Route::delete('/gallery/{id}', [GalleryController::class, 'destroy']);
 });
