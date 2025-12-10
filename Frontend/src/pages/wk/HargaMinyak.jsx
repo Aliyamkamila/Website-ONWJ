@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { hargaMinyakService } from '../../services/HargaMinyakService';
 import {
   AreaChart,
   Area,
@@ -9,7 +10,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
-import { FaChartLine, FaOilCan, FaArrowUp, FaArrowDown, FaCalendarAlt, FaTimes } from 'react-icons/fa';
+import { FaChartLine, FaOilCan, FaArrowUp, FaArrowDown, FaCalendarAlt, FaTimes, FaSpinner } from 'react-icons/fa';
 
 // ========== CONSTANTS ==========
 const MONTHS = [
@@ -19,112 +20,20 @@ const MONTHS = [
 
 const FILTER_OPTIONS = [
   { id: 'day', label: 'Harian', icon: '📅' },
-  { id: 'week', label: 'Mingguan', icon: '📆' },
+  { id:  'week', label: 'Mingguan', icon: '📆' },
   { id: 'month', label: 'Bulanan', icon: '📊' },
   { id: 'year', label: 'Tahunan', icon: '📈' },
 ];
 
 const OIL_TYPES = {
   brent: { label: 'Brent Crude', color: '#3b82f6', gradient: 'from-blue-500 to-blue-600' },
+  duri: { label: 'Duri Crude', color: '#f59e0b', gradient: 'from-amber-500 to-amber-600' },
   arjuna: { label: 'Arjuna Crude', color: '#10b981', gradient: 'from-emerald-500 to-emerald-600' },
+  kresna: { label: 'Kresna Crude', color: '#8b5cf6', gradient:  'from-violet-500 to-violet-600' },
+  icp: { label: 'ICP', color: '#ec4899', gradient: 'from-pink-500 to-pink-600' },
 };
 
 const YEARS = ['2021', '2022', '2023', '2024', '2025'];
-
-// ========== DATA GENERATION ==========
-const generateDailyData = () => {
-  const data = [];
-  let dayCount = 0;
-  
-  for (let month = 0; month < 12; month++) {
-    const daysInMonth = new Date(2025, month + 1, 0).getDate();
-    
-    for (let day = 1; day <= daysInMonth; day++) {
-      const date = new Date(2025, month, day);
-      const basePrice = 75 + Math.sin(dayCount * 0.1) * 10 + Math.random() * 3;
-      
-      data.push({
-        id: dayCount,
-        dayNumber: dayCount,
-        date: date,
-        dateStr: date.toISOString().split('T')[0],
-        label: `${day}/${month + 1}`,
-        fullLabel: `${day} ${MONTHS[month]} 2025`,
-        brent: parseFloat((basePrice + Math.random() * 4).toFixed(2)),
-        arjuna: parseFloat((basePrice - 2 + Math.random() * 3).toFixed(2)),
-      });
-      dayCount++;
-    }
-  }
-  
-  return data;
-};
-
-const generateWeeklyData = () => {
-  const data = [];
-  let weekCount = 0;
-
-  MONTHS.forEach((month, monthIndex) => {
-    const weeksInMonth = monthIndex === 1 ? 4 : monthIndex % 2 === 0 ? 5 : 4;
-    
-    for (let week = 1; week <= weeksInMonth; week++) {
-      const basePrice = 75 + Math.sin(weekCount * 0.3) * 10 + Math.random() * 5;
-      
-      data.push({
-        id: weekCount,
-        weekNumber: weekCount,
-        monthIndex: monthIndex,
-        monthName: month,
-        label: `W${week}`,
-        fullLabel: `Minggu ${week}, ${month} 2025`,
-        brent: parseFloat((basePrice + Math.random() * 3).toFixed(2)),
-        arjuna: parseFloat((basePrice - 2 + Math.random() * 2.5).toFixed(2)),
-      });
-      weekCount++;
-    }
-  });
-
-  return data;
-};
-
-const generateMonthlyData = () => {
-  return MONTHS.map((month, index) => {
-    const basePrice = 72 + Math.sin(index * 0.5) * 8 + index * 0.5;
-    
-    return {
-      id: index,
-      monthIndex: index,
-      label: month.substring(0, 3),
-      fullLabel: `${month} 2025`,
-      brent: parseFloat((basePrice + 5 + Math.random() * 3).toFixed(2)),
-      arjuna: parseFloat((basePrice + 2 + Math.random() * 2.5).toFixed(2)),
-    };
-  });
-};
-
-const generateYearlyData = () => {
-  return YEARS.map((year, index) => {
-    const basePrice = 60 + index * 5 + Math.random() * 10;
-    
-    return {
-      id: index,
-      yearIndex: index,
-      yearValue: year,
-      label: year,
-      fullLabel: `Tahun ${year}`,
-      brent: parseFloat((basePrice + 8 + Math.random() * 5).toFixed(2)),
-      arjuna: parseFloat((basePrice + 5 + Math.random() * 4).toFixed(2)),
-    };
-  });
-};
-
-// Generate all data
-const ALL_DATA = {
-  day: generateDailyData(),
-  week: generateWeeklyData(),
-  month: generateMonthlyData(),
-  year: generateYearlyData(),
-};
 
 // ========== UTILITY FUNCTIONS ==========
 const calculateChange = (current, previous) => 
@@ -168,7 +77,7 @@ const StatsCard = ({ title, value, change, color, gradient }) => {
   const isPositive = change >= 0;
 
   return (
-    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 hover:scale-105">
+    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 hover: scale-105">
       <div className="flex items-start justify-between mb-4">
         <div className={`p-3 rounded-xl bg-gradient-to-br ${gradient} shadow-md`}>
           <FaOilCan className="w-6 h-6 text-white" />
@@ -195,6 +104,11 @@ const FilterModal = ({ isOpen, onClose, filterType, rangeFrom, rangeTo, onApply 
   const [tempFrom, setTempFrom] = useState(rangeFrom);
   const [tempTo, setTempTo] = useState(rangeTo);
 
+  useEffect(() => {
+    setTempFrom(rangeFrom);
+    setTempTo(rangeTo);
+  }, [rangeFrom, rangeTo, isOpen]);
+
   if (!isOpen) return null;
 
   const handleApply = () => {
@@ -204,27 +118,18 @@ const FilterModal = ({ isOpen, onClose, filterType, rangeFrom, rangeTo, onApply 
 
   const getLabel = () => {
     switch (filterType) {
-      case 'day':
-        return 'Tanggal';
-      case 'week':
-        return 'Minggu';
-      case 'month':
-        return 'Bulan';
-      case 'year':
-        return 'Tahun';
-      default:
-        return '';
+      case 'day':  return 'Tanggal';
+      case 'week': return 'Minggu';
+      case 'month':  return 'Bulan';
+      case 'year': return 'Tahun';
+      default: return '';
     }
   };
 
   const getRangeDisplay = () => {
     switch (filterType) {
-      case 'day':
+      case 'day': 
         return `${formatDate(tempFrom)} - ${formatDate(tempTo)}`;
-      case 'week':
-        const fromWeek = ALL_DATA.week.find(w => w.weekNumber === tempFrom);
-        const toWeek = ALL_DATA.week.find(w => w.weekNumber === tempTo);
-        return `${fromWeek?.fullLabel || ''} - ${toWeek?.fullLabel || ''}`;
       case 'month':
         return `${MONTHS[tempFrom]} - ${MONTHS[tempTo]} 2025`;
       case 'year':
@@ -240,32 +145,23 @@ const FilterModal = ({ isOpen, onClose, filterType, rangeFrom, rangeTo, onApply 
         const start = new Date(tempFrom);
         const end = new Date(tempTo);
         const diffTime = Math.abs(end - start);
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-        return diffDays;
-      case 'week':
-        return tempTo - tempFrom + 1;
+        return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
       case 'month':
         return tempTo - tempFrom + 1;
       case 'year':
-        const yearFrom = parseInt(tempFrom);
-        const yearTo = parseInt(tempTo);
-        return yearTo - yearFrom + 1;
+        return parseInt(tempTo) - parseInt(tempFrom) + 1;
       default:
         return 0;
     }
   };
 
-  // Render input berdasarkan tipe filter
   const renderInputs = () => {
     switch (filterType) {
       case 'day':
-        // Input date picker untuk harian
         return (
           <>
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Dari Tanggal
-              </label>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Dari Tanggal</label>
               <input
                 type="date"
                 value={tempFrom}
@@ -274,16 +170,12 @@ const FilterModal = ({ isOpen, onClose, filterType, rangeFrom, rangeTo, onApply 
                   if (e.target.value > tempTo) setTempTo(e.target.value);
                 }}
                 max="2025-12-31"
-                min="2025-01-01"
+                min="2021-01-01"
                 className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-700 font-medium"
               />
-              <p className="text-xs text-gray-500 mt-1">📅 {formatDate(tempFrom)}</p>
             </div>
-
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Sampai Tanggal
-              </label>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Sampai Tanggal</label>
               <input
                 type="date"
                 value={tempTo}
@@ -292,67 +184,15 @@ const FilterModal = ({ isOpen, onClose, filterType, rangeFrom, rangeTo, onApply 
                 max="2025-12-31"
                 className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-700 font-medium"
               />
-              <p className="text-xs text-gray-500 mt-1">📅 {formatDate(tempTo)}</p>
-            </div>
-          </>
-        );
-
-      case 'week':
-        // Input minggu dengan bulan selector yang lebih mudah dipahami
-        return (
-          <>
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Dari Minggu
-              </label>
-              <select
-                value={tempFrom}
-                onChange={(e) => {
-                  const val = parseInt(e.target.value);
-                  setTempFrom(val);
-                  if (val > tempTo) setTempTo(val);
-                }}
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-700 font-medium"
-              >
-                {ALL_DATA.week.map((week) => (
-                  <option key={week.weekNumber} value={week.weekNumber}>
-                    {week.fullLabel}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Sampai Minggu
-              </label>
-              <select
-                value={tempTo}
-                onChange={(e) => setTempTo(parseInt(e.target.value))}
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-700 font-medium"
-              >
-                {ALL_DATA.week.map((week) => (
-                  <option 
-                    key={week.weekNumber} 
-                    value={week.weekNumber}
-                    disabled={week.weekNumber < tempFrom}
-                  >
-                    {week.fullLabel}
-                  </option>
-                ))}
-              </select>
             </div>
           </>
         );
 
       case 'month':
-        // Input bulan dengan nama bulan yang mudah dipahami
         return (
           <>
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Dari Bulan
-              </label>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Dari Bulan</label>
               <select
                 value={tempFrom}
                 onChange={(e) => {
@@ -360,29 +200,22 @@ const FilterModal = ({ isOpen, onClose, filterType, rangeFrom, rangeTo, onApply 
                   setTempFrom(val);
                   if (val > tempTo) setTempTo(val);
                 }}
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-700 font-medium"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus: ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-700 font-medium"
               >
                 {MONTHS.map((month, index) => (
-                  <option key={index} value={index}>
-                    {month} 2025
-                  </option>
+                  <option key={index} value={index}>{month}</option>
                 ))}
               </select>
             </div>
-
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Sampai Bulan
-              </label>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Sampai Bulan</label>
               <select
                 value={tempTo}
                 onChange={(e) => setTempTo(parseInt(e.target.value))}
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-700 font-medium"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus: ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-700 font-medium"
               >
                 {MONTHS.map((month, index) => (
-                  <option key={index} value={index} disabled={index < tempFrom}>
-                    {month} 2025
-                  </option>
+                  <option key={index} value={index} disabled={index < tempFrom}>{month}</option>
                 ))}
               </select>
             </div>
@@ -390,43 +223,30 @@ const FilterModal = ({ isOpen, onClose, filterType, rangeFrom, rangeTo, onApply 
         );
 
       case 'year':
-        // Input tahun dengan year picker yang simple
         return (
           <>
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Dari Tahun
-              </label>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Dari Tahun</label>
               <select
                 value={tempFrom}
                 onChange={(e) => {
-                  const val = e.target.value;
-                  setTempFrom(val);
-                  if (parseInt(val) > parseInt(tempTo)) setTempTo(val);
+                  setTempFrom(e.target.value);
+                  if (parseInt(e.target.value) > parseInt(tempTo)) setTempTo(e.target.value);
                 }}
                 className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-700 font-medium"
               >
-                {YEARS.map((year) => (
-                  <option key={year} value={year}>
-                    {year}
-                  </option>
-                ))}
+                {YEARS.map(year => <option key={year} value={year}>{year}</option>)}
               </select>
             </div>
-
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Sampai Tahun
-              </label>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Sampai Tahun</label>
               <select
                 value={tempTo}
                 onChange={(e) => setTempTo(e.target.value)}
                 className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-700 font-medium"
               >
-                {YEARS.map((year) => (
-                  <option key={year} value={year} disabled={parseInt(year) < parseInt(tempFrom)}>
-                    {year}
-                  </option>
+                {YEARS.map(year => (
+                  <option key={year} value={year} disabled={parseInt(year) < parseInt(tempFrom)}>{year}</option>
                 ))}
               </select>
             </div>
@@ -441,7 +261,6 @@ const FilterModal = ({ isOpen, onClose, filterType, rangeFrom, rangeTo, onApply 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm p-4 animate-fadeIn">
       <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-8 animate-slideUp">
-        {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-blue-100 rounded-lg">
@@ -449,41 +268,27 @@ const FilterModal = ({ isOpen, onClose, filterType, rangeFrom, rangeTo, onApply 
             </div>
             <h3 className="text-2xl font-bold text-gray-900">Filter Periode {getLabel()}</h3>
           </div>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-2 rounded-lg transition-all"
-          >
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-2 rounded-lg transition-all">
             <FaTimes className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Filter Inputs */}
-        <div className="space-y-5 mb-6">
-          {renderInputs()}
-        </div>
+        <div className="space-y-5 mb-6">{renderInputs()}</div>
 
-        {/* Info */}
         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-100 rounded-xl p-4 mb-6">
           <p className="text-sm text-blue-900 font-medium">
-            📊 Periode: <span className="font-bold">{getRangeDisplay()}</span>
+            📊 Periode:  <span className="font-bold">{getRangeDisplay()}</span>
           </p>
           <p className="text-xs text-blue-700 mt-1">
             Menampilkan {calculateDataCount()} data {getLabel().toLowerCase()}
           </p>
         </div>
 
-        {/* Actions */}
         <div className="flex gap-3">
-          <button
-            onClick={onClose}
-            className="flex-1 px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-all"
-          >
+          <button onClick={onClose} className="flex-1 px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-all">
             Batal
           </button>
-          <button
-            onClick={handleApply}
-            className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 shadow-lg transition-all"
-          >
+          <button onClick={handleApply} className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-semibold hover: from-blue-700 hover: to-blue-800 shadow-lg transition-all">
             Terapkan
           </button>
         </div>
@@ -493,108 +298,85 @@ const FilterModal = ({ isOpen, onClose, filterType, rangeFrom, rangeTo, onApply 
 };
 
 // ========== MAIN COMPONENT ==========
-const HargaMinyak = () => {
+const HargaMinyakPage = () => {
   const [activeFilter, setActiveFilter] = useState('month');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   
-  // Range states untuk setiap filter type
+  const [chartData, setChartData] = useState([]);
+  const [stats, setStats] = useState({});
+  
   const [dayRange, setDayRange] = useState({ from: '2025-01-01', to: '2025-01-31' });
-  const [weekRange, setWeekRange] = useState({ from: 0, to: 9 });
   const [monthRange, setMonthRange] = useState({ from: 0, to: 11 });
   const [yearRange, setYearRange] = useState({ from: '2021', to: '2025' });
 
-  // Get current range based on active filter
+  const fetchData = async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const params = {
+        periode: activeFilter,
+      };
+
+      if (activeFilter === 'day') {
+        params.from = dayRange.from;
+        params.to = dayRange.to;
+      } else if (activeFilter === 'month') {
+        const fromDate = `2025-${String(monthRange.from + 1).padStart(2, '0')}-01`;
+        const toMonth = monthRange.to + 1;
+        const toDate = `2025-${String(toMonth).padStart(2, '0')}-${new Date(2025, toMonth, 0).getDate()}`;
+        params.from = fromDate;
+        params.to = toDate;
+      } else if (activeFilter === 'year') {
+        params.from = `${yearRange.from}-01-01`;
+        params.to = `${yearRange.to}-12-31`;
+      }
+
+      const response = await hargaMinyakService.getAll(params);
+      
+      if (response.data.success) {
+        setChartData(response.data.data.chartData);
+        setStats(response.data.data.stats);
+      } else {
+        setError('Gagal memuat data');
+      }
+    } catch (err) {
+      console.error('Error fetching data:', err);
+      setError(err.response?.data?.message || 'Terjadi kesalahan saat memuat data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, [activeFilter, dayRange, monthRange, yearRange]);
+
   const getCurrentRange = () => {
     switch (activeFilter) {
-      case 'day':
-        return dayRange;
-      case 'week':
-        return weekRange;
-      case 'month':
-        return monthRange;
-      case 'year':
-        return yearRange;
-      default:
-        return { from: 0, to: 10 };
+      case 'day':  return dayRange;
+      case 'month': return monthRange;
+      case 'year': return yearRange;
+      default: return { from:  0, to: 10 };
     }
   };
 
-  // Handle filter apply
   const handleApplyFilter = (from, to) => {
     switch (activeFilter) {
-      case 'day':
-        setDayRange({ from, to });
-        break;
-      case 'week':
-        setWeekRange({ from, to });
-        break;
-      case 'month':
-        setMonthRange({ from, to });
-        break;
-      case 'year':
-        setYearRange({ from, to });
-        break;
+      case 'day':  setDayRange({ from, to }); break;
+      case 'month': setMonthRange({ from, to }); break;
+      case 'year': setYearRange({ from, to }); break;
     }
   };
-
-  // Filter data based on range
-  const chartData = useMemo(() => {
-    const allData = ALL_DATA[activeFilter] || ALL_DATA.month;
-    const range = getCurrentRange();
-    
-    switch (activeFilter) {
-      case 'day':
-        return allData.filter((item) => 
-          item.dateStr >= range.from && item.dateStr <= range.to
-        );
-      case 'week':
-        return allData.filter((item) => 
-          item.weekNumber >= range.from && item.weekNumber <= range.to
-        );
-      case 'month':
-        return allData.filter((item) => 
-          item.monthIndex >= range.from && item.monthIndex <= range.to
-        );
-      case 'year':
-        return allData.filter((item) => 
-          parseInt(item.yearValue) >= parseInt(range.from) && 
-          parseInt(item.yearValue) <= parseInt(range.to)
-        );
-      default:
-        return allData;
-    }
-  }, [activeFilter, dayRange, weekRange, monthRange, yearRange]);
-
-  const latestData = chartData[chartData.length - 1] || ALL_DATA.month[11];
-  const previousData = chartData[chartData.length - 2] || chartData[0] || ALL_DATA.month[10];
-
-  const stats = useMemo(() => [
-    {
-      title: OIL_TYPES.brent.label,
-      value: latestData.brent,
-      change: calculateChange(latestData.brent, previousData.brent),
-      color: OIL_TYPES.brent.color,
-      gradient: OIL_TYPES.brent.gradient,
-    },
-    {
-      title: OIL_TYPES.arjuna.label,
-      value: latestData.arjuna,
-      change: calculateChange(latestData.arjuna, previousData.arjuna),
-      color: OIL_TYPES.arjuna.color,
-      gradient: OIL_TYPES.arjuna.gradient,
-    },
-  ], [latestData, previousData]);
 
   const getPeriodLabel = () => {
     const range = getCurrentRange();
     
     switch (activeFilter) {
-      case 'day':
+      case 'day': 
         return `${formatDate(range.from)} - ${formatDate(range.to)}`;
-      case 'week':
-        const fromWeek = ALL_DATA.week.find(w => w.weekNumber === range.from);
-        const toWeek = ALL_DATA.week.find(w => w.weekNumber === range.to);
-        return `${fromWeek?.fullLabel} - ${toWeek?.fullLabel}`;
       case 'month':
         return `${MONTHS[range.from]} - ${MONTHS[range.to]} 2025`;
       case 'year':
@@ -604,10 +386,52 @@ const HargaMinyak = () => {
     }
   };
 
+  const statsCards = useMemo(() => {
+    if (!stats || Object.keys(stats).length === 0) return [];
+    
+    return Object.entries(OIL_TYPES).map(([key, oilType]) => ({
+      title: oilType.label,
+      value: stats[key]?.current || 0,
+      change:  stats[key]?.change || 0,
+      color: oilType.color,
+      gradient: oilType.gradient,
+    }));
+  }, [stats]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <FaSpinner className="w-12 h-12 text-blue-600 animate-spin mx-auto mb-4" />
+          <p className="text-gray-600 text-lg font-semibold">Memuat data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-3xl">⚠️</span>
+          </div>
+          <h3 className="text-2xl font-bold text-gray-900 mb-2">Terjadi Kesalahan</h3>
+          <p className="text-gray-600 mb-6">{error}</p>
+          <button
+            onClick={fetchData}
+            className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 transition-all"
+          >
+            Coba Lagi
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-12">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
-        {/* Header */}
+      <div className="container mx-auto px-4 sm:px-6 lg: px-8 max-w-7xl">
         <div className="text-center mb-12">
           <div className="inline-flex items-center justify-center gap-3 mb-4">
             <div className="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl shadow-lg">
@@ -616,22 +440,18 @@ const HargaMinyak = () => {
             <h1 className="text-4xl font-bold text-gray-900">Harga Minyak Dunia</h1>
           </div>
           <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-            Pantau perkembangan harga minyak mentah Brent dan Arjuna secara real-time
+            Pantau perkembangan harga minyak mentah secara real-time
           </p>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          {stats.map((stat, index) => (
+        <div className="grid grid-cols-1 md: grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-8">
+          {statsCards.map((stat, index) => (
             <StatsCard key={index} {...stat} />
           ))}
         </div>
 
-        {/* Chart Container */}
         <div className="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
-          {/* Controls */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-            {/* Period Filter */}
             <div className="flex gap-2 flex-wrap">
               {FILTER_OPTIONS.map((filter) => (
                 <button
@@ -649,7 +469,6 @@ const HargaMinyak = () => {
               ))}
             </div>
 
-            {/* Calendar Filter Button */}
             <button
               onClick={() => setIsFilterOpen(true)}
               className="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-xl font-semibold transition-all duration-300 flex items-center gap-2 shadow-lg"
@@ -659,7 +478,6 @@ const HargaMinyak = () => {
             </button>
           </div>
 
-          {/* Period Info */}
           <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border-2 border-blue-100">
             <p className="text-sm font-medium text-blue-900">
               📅 Periode: <span className="font-bold">{getPeriodLabel()}</span>
@@ -669,19 +487,16 @@ const HargaMinyak = () => {
             </p>
           </div>
 
-          {/* Chart */}
           <div className="h-[450px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                 <defs>
-                  <linearGradient id="colorBrent" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={OIL_TYPES.brent.color} stopOpacity={0.3} />
-                    <stop offset="95%" stopColor={OIL_TYPES.brent.color} stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient id="colorArjuna" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={OIL_TYPES.arjuna.color} stopOpacity={0.3} />
-                    <stop offset="95%" stopColor={OIL_TYPES.arjuna.color} stopOpacity={0} />
-                  </linearGradient>
+                  {Object.entries(OIL_TYPES).map(([key, oil]) => (
+                    <linearGradient key={key} id={`color${key}`} x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={oil.color} stopOpacity={0.3} />
+                      <stop offset="95%" stopColor={oil.color} stopOpacity={0} />
+                    </linearGradient>
+                  ))}
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" strokeOpacity={0.5} />
                 <XAxis
@@ -693,43 +508,34 @@ const HargaMinyak = () => {
                 <YAxis
                   tick={{ fill: '#6b7280', fontSize: 12, fontWeight: 500 }}
                   tickLine={{ stroke: '#e5e7eb' }}
-                  axisLine={{ stroke: '#d1d5db' }}
+                  axisLine={{ stroke:  '#d1d5db' }}
                   domain={['dataMin - 5', 'dataMax + 5']}
                   tickFormatter={(value) => `$${value}`}
                 />
                 <Tooltip content={<CustomTooltip />} />
                 <Legend 
-                  wrapperStyle={{ paddingTop: '20px' }} 
+                  wrapperStyle={{ paddingTop:  '20px' }} 
                   iconType="circle"
                   formatter={(value) => <span className="font-semibold text-gray-700">{value}</span>}
                 />
-                <Area
-                  type="monotone"
-                  dataKey="brent"
-                  name={OIL_TYPES.brent.label}
-                  stroke={OIL_TYPES.brent.color}
-                  strokeWidth={3}
-                  fillOpacity={1}
-                  fill="url(#colorBrent)"
-                  dot={{ fill: OIL_TYPES.brent.color, strokeWidth: 2, r: 4 }}
-                  activeDot={{ r: 6, stroke: OIL_TYPES.brent.color, strokeWidth: 3 }}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="arjuna"
-                  name={OIL_TYPES.arjuna.label}
-                  stroke={OIL_TYPES.arjuna.color}
-                  strokeWidth={3}
-                  fillOpacity={1}
-                  fill="url(#colorArjuna)"
-                  dot={{ fill: OIL_TYPES.arjuna.color, strokeWidth: 2, r: 4 }}
-                  activeDot={{ r: 6, stroke: OIL_TYPES.arjuna.color, strokeWidth: 3 }}
-                />
+                {Object.entries(OIL_TYPES).map(([key, oil]) => (
+                  <Area
+                    key={key}
+                    type="monotone"
+                    dataKey={key}
+                    name={oil.label}
+                    stroke={oil.color}
+                    strokeWidth={3}
+                    fillOpacity={1}
+                    fill={`url(#color${key})`}
+                    dot={{ fill: oil.color, strokeWidth: 2, r: 4 }}
+                    activeDot={{ r: 6, stroke: oil.color, strokeWidth: 3 }}
+                  />
+                ))}
               </AreaChart>
             </ResponsiveContainer>
           </div>
 
-          {/* Footer Info */}
           <div className="mt-8 pt-6 border-t-2 border-gray-100">
             <div className="flex flex-wrap justify-between items-center gap-4 text-sm text-gray-500">
               <div>
@@ -743,7 +549,6 @@ const HargaMinyak = () => {
         </div>
       </div>
 
-      {/* Filter Modal */}
       <FilterModal
         isOpen={isFilterOpen}
         onClose={() => setIsFilterOpen(false)}
@@ -753,31 +558,8 @@ const HargaMinyak = () => {
         onApply={handleApplyFilter}
       />
 
-      {/* CSS Animations */}
-      <style jsx>{`
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        @keyframes slideUp {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        .animate-fadeIn {
-          animation: fadeIn 0.2s ease-out;
-        }
-        .animate-slideUp {
-          animation: slideUp 0.3s ease-out;
-        }
-      `}</style>
     </div>
   );
 };
 
-export default HargaMinyak;
+export default HargaMinyakPage;

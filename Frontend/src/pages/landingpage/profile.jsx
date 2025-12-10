@@ -134,17 +134,6 @@ const ArrowIcon = () => (
   </svg>
 );
 
-const FeatureItem = ({ text }) => (
-  <li className="flex items-start gap-grid-3 group">
-    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary-50 flex items-center justify-center mt-0.5 transition-smooth group-hover:bg-primary-100 group-hover:shadow-sm">
-      <FeatureIcon />
-    </div>
-    <span className="text-body-md sm:text-body-lg text-secondary-700 font-medium leading-relaxed">
-      {text}
-    </span>
-  </li>
-);
-
 const StakeholderLogo = ({ src, alt, href, title }) => (
   <a
     href={href}
@@ -197,27 +186,17 @@ const ProfileSection = ({ sectionRef, imageRef, contentRef }) => (
           {/* Header */}
           <div className="mb-0">
             <span className="section-label">TENTANG KAMI</span>
-            <h2 className="section-title mt-grid-2">Visi dan Misi Kami</h2>
+            <h2 className="section-title mt-grid-2">MUJ ONWJ</h2>
           </div>
           
           {/* Description */}
-          <div className="space-y-grid-4">
+          <div className="space-y-grid-2">
             <p className="text-body-md sm:text-body-lg text-secondary-600 leading-relaxed text-pretty">
-              Kami berkomitmen untuk menjadi perusahaan energi terdepan yang 
-              mengutamakan keberlanjutan lingkungan dan pemberdayaan masyarakat lokal.
-            </p>
-            <p className="text-body-md sm:text-body-lg text-secondary-600 leading-relaxed text-pretty">
-              Dengan teknologi terkini dan tim profesional, kami menciptakan dampak 
-              positif untuk generasi mendatang.
+              MUJ ONWJ adalah Badan Usaha Milik Daerah yang mengelola 10% hak Participating Interest di blok Offshore North West Java (ONWJ),
+              dibentuk lewat mandat pemerintah daerah dan resmi beroperasi sejak 2019. Kami berdiri atas fondasi tata kelola transparan,
+              profesionalisme tinggi, dan komitmen menghadirkan manfaat energi bagi masyarakat dan daerah pemegang saham.
             </p>
           </div>
-
-          {/* Features */}
-          <ul className="space-y-grid-3 pt-grid-2" role="list">
-            {FEATURES.map((feature, index) => (
-              <FeatureItem key={index} text={feature} />
-            ))}
-          </ul>
 
           {/* CTA */}
           <div className="pt-grid-4">

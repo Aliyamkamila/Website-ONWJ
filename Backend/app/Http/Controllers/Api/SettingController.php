@@ -22,46 +22,51 @@ class SettingController extends Controller
     public function index()
     {
         try {
-            $settings = Setting:: getAllCached();
+            $settings = Setting::getAllCached();
+
+            // Helper function to get value safely
+            $get = function($key, $default = '') use ($settings) {
+                return $settings[$key] ?? $default;
+            };
 
             // Format settings for frontend
             $formatted = [
                 'company' => [
-                    'name' => $settings['company_name'] ?? '',
-                    'address' => $settings['company_address'] ?? '',
-                    'phone' => $settings['company_phone'] ?? '',
-                    'email' => $settings['company_email'] ?? '',
-                    'fax' => $settings['company_fax'] ?? '',
+                    'name' => $get('company_name'),
+                    'address' => $get('company_address'),
+                    'phone' => $get('company_phone'),
+                    'email' => $get('company_email'),
+                    'fax' => $get('company_fax'),
                 ],
                 'social_media' => [
-                    'facebook' => $settings['social_facebook'] ?? '',
-                    'instagram' => $settings['social_instagram'] ?? '',
-                    'twitter' => $settings['social_twitter'] ?? '',
-                    'linkedin' => $settings['social_linkedin'] ?? '',
-                    'youtube' => $settings['social_youtube'] ?? '',
+                    'facebook' => $get('social_facebook'),
+                    'instagram' => $get('social_instagram'),
+                    'twitter' => $get('social_twitter'),
+                    'linkedin' => $get('social_linkedin'),
+                    'youtube' => $get('social_youtube'),
                 ],
                 'contact' => [
-                    'email' => $settings['contact_email'] ?? '',
-                    'phone' => $settings['contact_phone'] ?? '',
-                    'whatsapp' => $settings['contact_whatsapp'] ?? '',
+                    'email' => $get('contact_email'),
+                    'phone' => $get('contact_phone'),
+                    'whatsapp' => $get('contact_whatsapp'),
                 ],
                 'operating_hours' => [
-                    'weekday' => $settings['hours_weekday'] ?? '',
-                    'weekend' => $settings['hours_weekend'] ?? '',
+                    'weekday' => $get('hours_weekday'),
+                    'weekend' => $get('hours_weekend'),
                 ],
                 'seo' => [
-                    'meta_title' => $settings['seo_meta_title'] ?? '',
-                    'meta_description' => $settings['seo_meta_description'] ?? '',
-                    'meta_keywords' => $settings['seo_meta_keywords'] ?? '',
+                    'meta_title' => $get('seo_meta_title'),
+                    'meta_description' => $get('seo_meta_description'),
+                    'meta_keywords' => $get('seo_meta_keywords'),
                 ],
                 'footer' => [
-                    'about_text' => $settings['footer_about_text'] ?? '',
-                    'copyright' => $settings['footer_copyright'] ?? '',
+                    'about_text' => $get('footer_about_text'),
+                    'copyright' => $get('footer_copyright'),
                 ],
                 'logo' => [
-                    'main' => $settings['logo_main'] ?  Storage::url($settings['logo_main']) : null,
-                    'footer' => $settings['logo_footer'] ? Storage::url($settings['logo_footer']) : null,
-                    'favicon' => $settings['logo_favicon'] ? Storage::url($settings['logo_favicon']) : null,
+                    'main' => $get('logo_main') ? Storage::url($get('logo_main')) : null,
+                    'footer' => $get('logo_footer') ? Storage::url($get('logo_footer')) : null,
+                    'favicon' => $get('logo_favicon') ? Storage::url($get('logo_favicon')) : null,
                 ],
             ];
 
@@ -91,7 +96,7 @@ class SettingController extends Controller
     public function adminIndex()
     {
         try {
-            $settings = Setting::getByCategory();
+            $settings = Setting:: getByCategory();
 
             return response()->json([
                 'success' => true,
@@ -149,7 +154,7 @@ class SettingController extends Controller
      */
     public function uploadImage(Request $request)
     {
-        $validator = Validator::make($request->all(), [
+        $validator = Validator:: make($request->all(), [
             'key' => 'required|string',
             'image' => 'required|image|mimes:jpeg,png,jpg,webp,svg|max:2048',
         ]);
@@ -180,14 +185,14 @@ class SettingController extends Controller
 
             // Upload new image
             $file = $request->file('image');
-            $filename = time() . '_' . $key . '.' . $file->getClientOriginalExtension();
+            $filename = time() .'_' .$key .'.' .$file->getClientOriginalExtension();
             $path = $file->storeAs('settings', $filename, 'public');
 
             // Update setting
             $setting->update(['value' => $path]);
 
             // Clear cache
-            Cache::forget('site_settings');
+            Cache:: forget('site_settings');
 
             return response()->json([
                 'success' => true,
@@ -215,7 +220,7 @@ class SettingController extends Controller
     public function deleteImage($key)
     {
         try {
-            $setting = Setting::where('key', $key)->first();
+            $setting = Setting:: where('key', $key)->first();
 
             if (!$setting) {
                 return response()->json([

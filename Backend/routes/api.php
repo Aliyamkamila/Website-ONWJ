@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\TestimonialController;
 use App\Http\Controllers\Api\TjslStatisticController;
 use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\SettingController;
+use App\Http\Controllers\Api\HargaMinyakController; // ← BARU
 
 /*
 |--------------------------------------------------------------------------
@@ -38,14 +39,14 @@ Route::middleware(['guest_only'])->group(function () {
 
 // Hidden admin login route
 Route::prefix('tukang-minyak-dan-gas')->group(function () {
-    Route::post('/login', [AdminAuthController::class, 'login'])
+    Route::post('/login', [AdminAuthController:: class, 'login'])
         ->middleware('throttle:5,1')
         ->name('admin.login');
 });
 
 // Protected admin routes
-Route::middleware(['auth:sanctum', 'admin_auth'])->group(function () {
-    Route::post('/admin/logout', [AdminAuthController::class, 'logout'])->name('admin.logout');
+Route:: middleware(['auth:sanctum', 'admin_auth'])->group(function () {
+    Route::post('/admin/logout', [AdminAuthController:: class, 'logout'])->name('admin.logout');
     Route::get('/admin/me', [AdminAuthController::class, 'me'])->name('admin.me');
     Route::post('/admin/refresh', [AdminAuthController::class, 'refresh'])->name('admin.refresh');
 
@@ -53,7 +54,7 @@ Route::middleware(['auth:sanctum', 'admin_auth'])->group(function () {
         Route::get('/', [AdminController::class, 'index'])->name('index');
         Route::post('/', [AdminController::class, 'store'])->name('store');
         Route::get('/{id}', [AdminController::class, 'show'])->name('show');
-        Route::put('/{id}', [AdminController::class, 'update'])->name('update');
+        Route::put('/{id}', [AdminController:: class, 'update'])->name('update');
         Route::patch('/{id}', [AdminController::class, 'update'])->name('patch');
         Route::delete('/{id}', [AdminController::class, 'destroy'])->name('destroy');
     });
@@ -90,7 +91,7 @@ Route::prefix('v1')->group(function () {
     Route::get('/programs', [ProgramController::class, 'index']);
     Route::get('/programs/{slug}', [ProgramController::class, 'show']);
     Route::get('/programs-recent', [ProgramController::class, 'recent']);
-    Route::get('/program-categories', [ProgramController::class, 'categories']);
+    Route::get('/program-categories', [ProgramController:: class, 'categories']);
     Route::get('/program-status-options', [ProgramController::class, 'statusOptions']);
     Route::get('/program-statistics', [ProgramController::class, 'statistics']);
 });
@@ -158,7 +159,7 @@ Route::prefix('v1/admin')->group(function () {
 
 Route::prefix('v1')->group(function () {
     Route::get('/berita', [BeritaController::class, 'index']);
-    Route::get('/berita/media-informasi', [BeritaController::class, 'forMediaInformasi']);
+    Route::get('/berita/media-informasi', [BeritaController:: class, 'forMediaInformasi']);
     Route::get('/berita/homepage', [BeritaController::class, 'forHomepage']);
     Route::get('/berita/{slug}', [BeritaController::class, 'show'])->where('slug', '[a-z0-9\-]+');
     Route::get('/berita-recent', [BeritaController::class, 'recent']);
@@ -182,20 +183,20 @@ Route::prefix('v1/admin')->group(function () {
 
 Route::prefix('v1')->group(function () {
     Route::get('/testimonials', [TestimonialController::class, 'index']);
-    Route::get('/testimonials/featured', [TestimonialController::class, 'getFeatured']);
+    Route::get('/testimonials/featured', [TestimonialController:: class, 'getFeatured']);
     Route::get('/testimonials/program/{program}', [TestimonialController::class, 'getByProgram']);
     Route::get('/testimonials/{id}', [TestimonialController::class, 'show']);
-    Route::get('/testimonial-programs', [TestimonialController::class, 'getPrograms']);
+    Route::get('/testimonial-programs', [TestimonialController:: class, 'getPrograms']);
 });
 
 Route::prefix('v1/admin')->group(function () {
     Route::get('/testimonials', [TestimonialController::class, 'adminIndex']);
-    Route::post('/testimonials', [TestimonialController::class, 'store']);
+    Route::post('/testimonials', [TestimonialController:: class, 'store']);
     Route::get('/testimonials/{id}', [TestimonialController::class, 'show']);
     Route::post('/testimonials/{id}', [TestimonialController::class, 'update']);
     Route::delete('/testimonials/{id}', [TestimonialController::class, 'destroy']);
     Route::post('/testimonials/bulk-delete', [TestimonialController::class, 'bulkDelete']);
-    Route::post('/testimonials/{id}/toggle-featured', [TestimonialController::class, 'toggleFeatured']);
+    Route::post('/testimonials/{id}/toggle-featured', [TestimonialController:: class, 'toggleFeatured']);
     Route::get('/testimonial-statistics', [TestimonialController::class, 'getStatistics']);
 });
 
@@ -232,12 +233,12 @@ Route::prefix('v1/admin')->group(function () {
     Route::get('/contacts/{id}', [ContactController::class, 'show']);
     Route::patch('/contacts/{id}/status', [ContactController::class, 'updateStatus']);
     Route::delete('/contacts/{id}', [ContactController::class, 'destroy']);
-    Route::post('/contacts/bulk-delete', [ContactController::class, 'bulkDelete']);
+    Route::post('/contacts/bulk-delete', [ContactController:: class, 'bulkDelete']);
 });
 
 /*
 |--------------------------------------------------------------------------
-| Site Settings Routes  ← tambahan baru
+| Site Settings Routes
 |--------------------------------------------------------------------------
 */
 
@@ -249,6 +250,29 @@ Route::prefix('v1/admin')->group(function () {
     Route::get('/settings', [SettingController::class, 'adminIndex']);
     Route::put('/settings', [SettingController::class, 'update']);
     Route::post('/settings/upload', [SettingController::class, 'uploadImage']);
-    Route::delete('/settings/image/{key}', [SettingController::class, 'deleteImage']);
+    Route::delete('/settings/image/{key}', [SettingController:: class, 'deleteImage']);
     Route::post('/settings/reset', [SettingController::class, 'reset']);
+});
+
+/*
+|--------------------------------------------------------------------------
+| Harga Minyak Routes ← BARU
+|--------------------------------------------------------------------------
+*/
+
+Route::prefix('v1')->group(function () {
+    Route::get('/harga-minyak', [HargaMinyakController::class, 'index']);
+    Route::get('/harga-minyak/{id}', [HargaMinyakController::class, 'show']);
+    Route::get('/harga-minyak-statistics', [HargaMinyakController::class, 'statistics']);
+    Route::get('/harga-minyak-latest', [HargaMinyakController::class, 'latest']);
+});
+
+Route::prefix('v1/admin')->group(function () {
+    Route::get('/harga-minyak', [HargaMinyakController::class, 'adminIndex']);
+    Route::post('/harga-minyak', [HargaMinyakController::class, 'store']);
+    Route::put('/harga-minyak/{id}', [HargaMinyakController::class, 'update']);
+    Route::patch('/harga-minyak/{id}', [HargaMinyakController::class, 'update']);
+    Route::delete('/harga-minyak/{id}', [HargaMinyakController::class, 'destroy']);
+    Route::post('/harga-minyak/bulk-store', [HargaMinyakController::class, 'bulkStore']);
+    Route::post('/harga-minyak/bulk-delete', [HargaMinyakController::class, 'bulkDelete']);
 });

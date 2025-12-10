@@ -6,13 +6,7 @@ const DeskripsiWK = () => {
   const workAreas = [
     {
       title: 'Wilayah Operasi ONWJ',
-      description: 'Wilayah kerja ONWJ mencakup area seluas lebih dari 8.300 kilometer persegi yang meliputi kawasan lepas pantai di utara Jawa Barat.',
-      points: [
-        'Kawasan Lepas Pantai Utara Jawa Barat',
-        'Area Operasi meliputi 4 Kabupaten/Kota',
-        'Kedalaman perairan 2-40 meter',
-        'Total area kerja 8.300 km²'
-      ]
+      description: 'MUJ ONWJ mengelola 10 persen Participating Interest di Blok ONWJ, yaitu wilayah laut seluas 8.300 km² yang membentang dari Kepulauan Seribu hingga utara Cirebon. Operasi mencakup lebih dari 220 platform lepas pantai, jaringan pipa bawah laut sepanjang 2.100 km, serta berbagai fasilitas pengolahan migas yang berperan dalam pemenuhan energi nasional.',
     }
   ];
 
@@ -55,14 +49,6 @@ const DeskripsiWK = () => {
                   <p className="text-sm text-secondary-600 mb-5 leading-relaxed">
                     {area.description}
                   </p>
-                  <ul className="space-y-2.5">
-                    {area.points.map((point, idx) => (
-                      <li key={idx} className="flex items-start gap-3 text-sm text-secondary-700">
-                        <span className="w-1.5 h-1.5 rounded-full bg-primary-600 mt-2 flex-shrink-0"></span>
-                        <span className="leading-relaxed">{point}</span>
-                      </li>
-                    ))}
-                  </ul>
                 </div>
               ))}
             </div>

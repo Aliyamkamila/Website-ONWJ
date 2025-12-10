@@ -54,6 +54,9 @@ import ManageKeuangan from './pages/admin/ManageKeuangan';
 import ManageWkTekkom from './pages/admin/ManageWkTekkom';
 import ManageWkTjsl from './pages/admin/ManageWkTjsl';
 
+// Tekkom
+import ManageHargaTekkom from './pages/admin/ManageMinyak';
+
 // Contacts
 import ManageContacts from './pages/admin/ManageContacts';
 
@@ -135,6 +138,9 @@ const router = createBrowserRouter([
       // Wilayah Kerja
       { path: 'manage-wk-tekkom', element: <ManageWkTekkom /> },
       { path: 'manage-wk-tjsl', element: <ManageWkTjsl /> },
+
+      // Tekkom
+      { path: 'manage-harga-tekkom', element: <ManageHargaTekkom /> },
 
       // Contacts
       { path: 'manage-contacts', element: <ManageContacts /> },

@@ -1,19 +1,21 @@
 import React, { useState } from 'react';
+import Cosmas from '../../assets/Manajemen/Cosmas.jpeg';
+import Dwi from '../../assets/Manajemen/Dwi.jpeg';
 
 const Komisaris = () => {
   const [selectedCommissioner, setSelectedCommissioner] = useState(null);
 
   const commissioners = [
     {
-      name: 'Lorem Ipsum Dolor',
+      name: 'Dwi',
       position: 'President Commissioner',
-      image: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&w=800&q=80',
+      image: Dwi,
       description: 'Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.'
     },
     {
-      name: 'Sit Amet Consectetur',
+      name: 'Cosmas',
       position: 'Commissioner',
-      image: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?ixlib=rb-4.0.3&w=800&q=80',
+      image: Cosmas,
       description: 'Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt.'
     }
   ];
