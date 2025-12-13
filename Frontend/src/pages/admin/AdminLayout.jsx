@@ -179,7 +179,7 @@ const AdminLayout = () => {
                         <NavLink to="/tukang-minyak-dan-gas/manage-wk-tekkom" className={subLinkClasses}>
                             Kelola WK TEKKOM
                         </NavLink>
-                        <NavLink to="/tuqkang-minyak-dan-gas/manage-harga-tekkom" className={subLinkClasses}>
+                        <NavLink to="/tukang-minyak-dan-gas/manage-harga-tekkom" className={subLinkClasses}>
                             Kelola Harga
                         </NavLink>
                     </SidebarDropdown>

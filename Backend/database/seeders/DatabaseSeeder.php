@@ -22,7 +22,20 @@ class DatabaseSeeder extends Seeder
 
         // ✅ PANGGIL SEEDER UMKM
         $this->call([
+            AdminSeeder::class,
+            BeritaSeeder::class,
+            ContactSeeder::class,
+            GalleryCategorySeeder::class,
+            HargaMinyakSeeder::class,
+            PenghargaanSeeder::class,
+            ProgramSeeder::class,
+            RealisasiBulananSeeder::class,
+            SettingSeeder::class,
+            TestimonialSeeder::class,
+            TjslStatisticSeeder::class,
             UmkmSeeder::class,
+            WkTekkomSeeder::class,
+            WkTjslSeeder::class,
             // Tambahkan seeder lain di sini jika ada
             // ProgramSeeder::class,
             // BeritaSeeder::class,

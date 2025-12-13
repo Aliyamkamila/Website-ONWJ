@@ -181,7 +181,7 @@ const ProfileSection = ({ sectionRef, imageRef, contentRef }) => (
         {/* Content */}
         <div 
           ref={contentRef}
-          className="w-full lg:w-1/2 space-y-grid-6 opacity-0 translate-x-full transition-smart will-change-transform"
+          className="w-full lg:w-1/2 space-y-grid-2 opacity-0 translate-x-full transition-smart will-change-transform"
         >
           {/* Header */}
           <div className="mb-0">

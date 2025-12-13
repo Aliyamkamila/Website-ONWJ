@@ -14,7 +14,7 @@ class TestimonialController extends Controller
     // ===== PUBLIC ROUTES (untuk website visitor) =====
 
     /**
-     * Get testimonials for AllProgramsPage. jsx
+     * Get testimonials for AllProgramsPage.jsx
      * Returns paginated testimonials with filters
      */
     public function index(Request $request)
@@ -174,7 +174,7 @@ class TestimonialController extends Controller
         }
     }
 
-    // ===== ADMIN ROUTES (untuk ManageTestimonial. jsx) =====
+    // ===== ADMIN ROUTES (untuk ManageTestimonial.jsx) =====
 
     /**
      * Get all testimonials for admin (with filters, search, pagination)
@@ -263,7 +263,7 @@ class TestimonialController extends Controller
             // Handle avatar upload
             if ($request->hasFile('avatar')) {
                 $avatar = $request->file('avatar');
-                $filename = time() . '_' .  Str::slug($request->name) . '.' . $avatar->getClientOriginalExtension();
+                $filename = time() .'_' .Str::slug($request->name) .'.' .$avatar->getClientOriginalExtension();
                 $path = $avatar->storeAs('testimonials/avatars', $filename, 'public');
                 $data['avatar_path'] = $path;
             }
@@ -322,7 +322,7 @@ class TestimonialController extends Controller
                 }
 
                 $avatar = $request->file('avatar');
-                $filename = time() . '_' . Str::slug($request->input('name', $testimonial->name)) . '.' . $avatar->getClientOriginalExtension();
+                $filename = time() .'_' .Str::slug($request->input('name', $testimonial->name)) .'.' .$avatar->getClientOriginalExtension();
                 $path = $avatar->storeAs('testimonials/avatars', $filename, 'public');
                 $data['avatar_path'] = $path;
             }

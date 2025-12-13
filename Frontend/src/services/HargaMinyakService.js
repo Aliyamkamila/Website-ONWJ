@@ -1,4 +1,3 @@
-// services/HargaMinyakService.js
 import api from '../api/axios';
 
 export const hargaMinyakService = {
@@ -12,7 +11,7 @@ export const hargaMinyakService = {
   getLatest: (params) => api.get('/v1/harga-minyak-latest', { params }),
 
   // Admin:  CRUD operations
-  admin: {
+  admin:  {
     getAll: (params) => api.get('/v1/admin/harga-minyak', { params }),
     
     create: (data) => api.post('/v1/admin/harga-minyak', data),
@@ -24,6 +23,11 @@ export const hargaMinyakService = {
     bulkStore: (data) => api.post('/v1/admin/harga-minyak/bulk-store', data),
     
     bulkDelete: (ids) => api.post('/v1/admin/harga-minyak/bulk-delete', { ids }),
+
+    // Realisasi Bulanan
+    getRealisasi: (params) => api.get('/v1/admin/realisasi-bulanan', { params }),
+    
+    storeRealisasi: (data) => api.post('/v1/admin/realisasi-bulanan', data),
   }
 };
 

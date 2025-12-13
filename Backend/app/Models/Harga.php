@@ -10,16 +10,14 @@ class Harga extends Model
 {
     use HasFactory;
 
-    protected $table = 'harga';
+    protected $table = 'harga_minyak';
 
     protected $fillable = [
         'tanggal',
         'brent',
         'duri',
-        'arjuna',
+        'ardjuna',
         'kresna',
-        'icp',
-        'periode',
         'tahun',
         'bulan',
         'minggu',
@@ -27,21 +25,14 @@ class Harga extends Model
 
     protected $casts = [
         'tanggal' => 'date',
-        'brent' => 'decimal:2',
+        'brent' => 'decimal: 2',
         'duri' => 'decimal:2',
-        'arjuna' => 'decimal:2',
-        'kresna' => 'decimal:2',
-        'icp' => 'decimal:2',
+        'ardjuna' => 'decimal:2',
+        'kresna' => 'decimal: 2',
         'tahun' => 'integer',
         'bulan' => 'integer',
         'minggu' => 'integer',
     ];
-
-    // Scope untuk filter berdasarkan periode
-    public function scopePeriode($query, $periode)
-    {
-        return $query->where('periode', $periode);
-    }
 
     // Scope untuk filter berdasarkan tanggal range
     public function scopeDateRange($query, $from, $to)
@@ -61,48 +52,18 @@ class Harga extends Model
         return $query->where('bulan', $bulan);
     }
 
-    // Scope untuk filter berdasarkan minggu
-    public function scopeMinggu($query, $minggu)
-    {
-        return $query->where('minggu', $minggu);
-    }
-
     // Accessor untuk format label
     public function getLabelAttribute()
     {
         $date = Carbon::parse($this->tanggal);
-        
-        switch ($this->periode) {
-            case 'day': 
-                return $date->format('d/m');
-            case 'week': 
-                return 'W' .$date->weekOfMonth;
-            case 'month': 
-                return $date->format('M');
-            case 'year': 
-                return $date->format('Y');
-            default:
-                return $date->format('d/m/Y');
-        }
+        return $date->format('d/m');
     }
 
     // Accessor untuk full label
     public function getFullLabelAttribute()
     {
         $date = Carbon::parse($this->tanggal);
-        
-        switch ($this->periode) {
-            case 'day': 
-                return $date->translatedFormat('d F Y');
-            case 'week': 
-                return 'Minggu ' .$date->weekOfMonth .', ' .$date->translatedFormat('F Y');
-            case 'month':
-                return $date->translatedFormat('F Y');
-            case 'year':
-                return 'Tahun ' .$date->format('Y');
-            default: 
-                return $date->translatedFormat('d F Y');
-        }
+        return $date->translatedFormat('d F Y');
     }
 
     // Method untuk menghitung perubahan persentase
@@ -115,9 +76,9 @@ class Harga extends Model
     }
 
     // Method untuk mendapatkan statistik
-    public static function getStats($periode = 'month', $filters = [])
+    public static function getStats($filters = [])
     {
-        $query = self::query()->periode($periode);
+        $query = self::query();
 
         // Apply filters
         if (isset($filters['from']) && isset($filters['to'])) {
@@ -130,10 +91,6 @@ class Harga extends Model
 
         if (isset($filters['bulan'])) {
             $query->bulan($filters['bulan']);
-        }
-
-        if (isset($filters['minggu'])) {
-            $query->minggu($filters['minggu']);
         }
 
         $data = $query->orderBy('tanggal', 'asc')->get();
@@ -159,19 +116,15 @@ class Harga extends Model
                 ],
                 'duri' => [
                     'current' => $latest->duri,
-                    'change' => self::calculateChange($latest->duri, $previous->duri),
+                    'change' => 0, // Duri always constant
                 ],
-                'arjuna' => [
-                    'current' => $latest->arjuna,
-                    'change' => self::calculateChange($latest->arjuna, $previous->arjuna),
+                'ardjuna' => [
+                    'current' => $latest->ardjuna,
+                    'change' => self::calculateChange($latest->ardjuna, $previous->ardjuna),
                 ],
                 'kresna' => [
                     'current' => $latest->kresna,
                     'change' => self::calculateChange($latest->kresna, $previous->kresna),
-                ],
-                'icp' => [
-                    'current' => $latest->icp,
-                    'change' => self::calculateChange($latest->icp, $previous->icp),
                 ],
             ],
         ];

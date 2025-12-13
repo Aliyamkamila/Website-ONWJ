@@ -256,7 +256,7 @@ Route::prefix('v1/admin')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| Harga Minyak Routes ← BARU
+| Harga Minyak Routes - PUBLIC
 |--------------------------------------------------------------------------
 */
 
@@ -267,12 +267,23 @@ Route::prefix('v1')->group(function () {
     Route::get('/harga-minyak-latest', [HargaMinyakController::class, 'latest']);
 });
 
-Route::prefix('v1/admin')->group(function () {
-    Route::get('/harga-minyak', [HargaMinyakController::class, 'adminIndex']);
+/*
+|--------------------------------------------------------------------------
+| Harga Minyak Routes - ADMIN
+|--------------------------------------------------------------------------
+*/
+
+Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin_auth'])->group(function () {
+    // Harga Minyak CRUD
+    Route::get('/harga-minyak', [HargaMinyakController:: class, 'adminIndex']);
     Route::post('/harga-minyak', [HargaMinyakController::class, 'store']);
     Route::put('/harga-minyak/{id}', [HargaMinyakController::class, 'update']);
     Route::patch('/harga-minyak/{id}', [HargaMinyakController::class, 'update']);
     Route::delete('/harga-minyak/{id}', [HargaMinyakController::class, 'destroy']);
     Route::post('/harga-minyak/bulk-store', [HargaMinyakController::class, 'bulkStore']);
     Route::post('/harga-minyak/bulk-delete', [HargaMinyakController::class, 'bulkDelete']);
+
+    // Realisasi Bulanan
+    Route::get('/realisasi-bulanan', [HargaMinyakController::class, 'getRealisasiBulanan']);
+    Route::post('/realisasi-bulanan', [HargaMinyakController::class, 'storeRealisasiBulanan']);
 });

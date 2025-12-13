@@ -4,24 +4,25 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Harga;
+use App\Models\RealisasiBulanan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 class HargaMinyakController extends Controller
 {
     /**
-     * Get data harga dengan filter (Public)
+     * PUBLIC:  Get data harga dengan filter
      */
     public function index(Request $request)
     {
         try {
             $validator = Validator::make($request->all(), [
-                'periode' => 'nullable|in:day,week,month,year',
                 'from' => 'nullable|date',
                 'to' => 'nullable|date|after_or_equal:from',
                 'tahun' => 'nullable|integer|min:2020|max:2030',
-                'bulan' => 'nullable|integer|min:1|max:12',
+                'bulan' => 'nullable|integer|min: 1|max:12',
                 'limit' => 'nullable|integer|min:1|max:1000',
             ]);
 
@@ -33,19 +34,14 @@ class HargaMinyakController extends Controller
                 ], 422);
             }
 
-            $periode = $request->input('periode', 'month');
-            $limit = $request->input('limit');
             $query = Harga::query();
-
-            // Filter berdasarkan periode
-            $query->where('periode', $periode);
 
             // Filter berdasarkan range tanggal
             if ($request->has('from') && $request->has('to')) {
                 $query->whereBetween('tanggal', [$request->from, $request->to]);
             } else {
-                // Default range jika tidak ada filter
-                $this->applyDefaultRange($query, $periode);
+                // Default: last 3 months
+                $query->where('tanggal', '>=', Carbon::now()->subMonths(3)->format('Y-m-d'));
             }
 
             // Filter tambahan
@@ -61,8 +57,8 @@ class HargaMinyakController extends Controller
             $query->orderBy('tanggal', 'asc');
 
             // Apply limit if provided
-            if ($limit) {
-                $query->limit($limit);
+            if ($request->has('limit')) {
+                $query->limit($request->limit);
             }
 
             $data = $query->get();
@@ -76,13 +72,8 @@ class HargaMinyakController extends Controller
                     'fullLabel' => $item->full_label,
                     'brent' => (float) $item->brent,
                     'duri' => (float) $item->duri,
-                    'arjuna' => (float) $item->arjuna,
+                    'ardjuna' => (float) $item->ardjuna,
                     'kresna' => (float) $item->kresna,
-                    'icp' => (float) $item->icp,
-                    'periode' => $item->periode,
-                    'tahun' => $item->tahun,
-                    'bulan' => $item->bulan,
-                    'minggu' => $item->minggu,
                 ];
             });
 
@@ -94,7 +85,7 @@ class HargaMinyakController extends Controller
                 'bulan' => $request->bulan,
             ];
 
-            $stats = Harga::getStats($periode, array_filter($filters));
+            $stats = Harga::getStats(array_filter($filters));
 
             return response()->json([
                 'success' => true,
@@ -103,26 +94,23 @@ class HargaMinyakController extends Controller
                     'chartData' => $chartData,
                     'stats' => $stats['stats'],
                     'total' => $chartData->count(),
-                    'periode' => $periode,
                 ],
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Terjadi kesalahan:  ' .$e->getMessage(),
+                'message' => 'Terjadi kesalahan: ' .$e->getMessage(),
             ], 500);
         }
     }
 
     /**
-     * Get statistics
+     * PUBLIC: Get statistics
      */
     public function statistics(Request $request)
     {
         try {
-            $periode = $request->input('periode', 'month');
-            
-            $stats = Harga:: getStats($periode, []);
+            $stats = Harga::getStats([]);
 
             return response()->json([
                 'success' => true,
@@ -132,22 +120,20 @@ class HargaMinyakController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Terjadi kesalahan:  ' .$e->getMessage(),
+                'message' => 'Terjadi kesalahan: ' .$e->getMessage(),
             ], 500);
         }
     }
 
     /**
-     * Get latest data
+     * PUBLIC: Get latest data
      */
     public function latest(Request $request)
     {
         try {
             $limit = $request->input('limit', 10);
-            $periode = $request->input('periode', 'day');
 
-            $data = Harga:: where('periode', $periode)
-                ->orderBy('tanggal', 'desc')
+            $data = Harga:: orderBy('tanggal', 'desc')
                 ->limit($limit)
                 ->get();
 
@@ -159,13 +145,13 @@ class HargaMinyakController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Terjadi kesalahan: ' .$e->getMessage(),
+                'message' => 'Terjadi kesalahan:  ' .$e->getMessage(),
             ], 500);
         }
     }
 
     /**
-     * Show single harga data
+     * PUBLIC: Show single harga data
      */
     public function show($id)
     {
@@ -180,20 +166,19 @@ class HargaMinyakController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Terjadi kesalahan: ' .$e->getMessage(),
-            ], 500);
+                'message' => 'Data tidak ditemukan',
+            ], 404);
         }
     }
 
     /**
-     * Admin:  Get all data with pagination
+     * ADMIN: Get all data with pagination
      */
     public function adminIndex(Request $request)
     {
         try {
             $perPage = $request->input('per_page', 15);
             $search = $request->input('search');
-            $periode = $request->input('periode');
             $tahun = $request->input('tahun');
             $bulan = $request->input('bulan');
             $sortBy = $request->input('sort_by', 'tanggal');
@@ -204,11 +189,6 @@ class HargaMinyakController extends Controller
             // Search
             if ($search) {
                 $query->where('tanggal', 'like', "%{$search}%");
-            }
-
-            // Filter periode
-            if ($periode) {
-                $query->where('periode', $periode);
             }
 
             // Filter tahun
@@ -248,19 +228,14 @@ class HargaMinyakController extends Controller
     }
 
     /**
-     * Admin: Store new harga data
+     * ADMIN: Store new harga data (hanya input Brent)
      */
     public function store(Request $request)
     {
         try {
             $validator = Validator::make($request->all(), [
-                'tanggal' => 'required|date|unique:harga,tanggal',
+                'tanggal' => 'required|date|unique:harga_minyak,tanggal',
                 'brent' => 'required|numeric|min:0|max:9999.99',
-                'duri' => 'required|numeric|min:0|max:9999.99',
-                'arjuna' => 'required|numeric|min:0|max:9999.99',
-                'kresna' => 'required|numeric|min:0|max:9999.99',
-                'icp' => 'required|numeric|min:0|max:9999.99',
-                'periode' => 'nullable|in:day,week,month,year',
             ]);
 
             if ($validator->fails()) {
@@ -272,15 +247,21 @@ class HargaMinyakController extends Controller
             }
 
             $date = Carbon::parse($request->tanggal);
+            
+            // Get alpha average for this month
+            $alpha = RealisasiBulanan::getCurrentMonthAlpha($date->year, $date->month);
+
+            // Calculate Ardjuna and Kresna
+            $brent = (float) $request->brent;
+            $ardjuna = round($brent + $alpha['avg_alpha_ardjuna'], 2);
+            $kresna = round($brent + $alpha['avg_alpha_kresna'], 2);
 
             $harga = Harga::create([
-                'tanggal' => $request->tanggal,
-                'brent' => $request->brent,
-                'duri' => $request->duri,
-                'arjuna' => $request->arjuna,
-                'kresna' => $request->kresna,
-                'icp' => $request->icp,
-                'periode' => $request->input('periode', 'day'),
+                'tanggal' => $date->format('Y-m-d'),
+                'brent' => $brent,
+                'duri' => 80.08, // Constant
+                'ardjuna' => $ardjuna,
+                'kresna' => $kresna,
                 'tahun' => $date->year,
                 'bulan' => $date->month,
                 'minggu' => $date->weekOfYear,
@@ -300,7 +281,7 @@ class HargaMinyakController extends Controller
     }
 
     /**
-     * Admin: Update harga data
+     * ADMIN: Update harga data (hanya update Brent)
      */
     public function update(Request $request, $id)
     {
@@ -308,13 +289,8 @@ class HargaMinyakController extends Controller
             $harga = Harga::findOrFail($id);
 
             $validator = Validator::make($request->all(), [
-                'tanggal' => 'required|date|unique:harga,tanggal,' .$id,
+                'tanggal' => 'required|date|unique:harga_minyak,tanggal,' .$id,
                 'brent' => 'required|numeric|min:0|max:9999.99',
-                'duri' => 'required|numeric|min:0|max:9999.99',
-                'arjuna' => 'required|numeric|min:0|max:9999.99',
-                'kresna' => 'required|numeric|min: 0|max:9999.99',
-                'icp' => 'required|numeric|min: 0|max:9999.99',
-                'periode' => 'nullable|in:day,week,month,year',
             ]);
 
             if ($validator->fails()) {
@@ -326,15 +302,21 @@ class HargaMinyakController extends Controller
             }
 
             $date = Carbon::parse($request->tanggal);
+            
+            // Get alpha average for this month
+            $alpha = RealisasiBulanan::getCurrentMonthAlpha($date->year, $date->month);
+
+            // Calculate Ardjuna and Kresna
+            $brent = (float) $request->brent;
+            $ardjuna = round($brent + $alpha['avg_alpha_ardjuna'], 2);
+            $kresna = round($brent + $alpha['avg_alpha_kresna'], 2);
 
             $harga->update([
-                'tanggal' => $request->tanggal,
-                'brent' => $request->brent,
-                'duri' => $request->duri,
-                'arjuna' => $request->arjuna,
-                'kresna' => $request->kresna,
-                'icp' => $request->icp,
-                'periode' => $request->input('periode', $harga->periode),
+                'tanggal' => $date->format('Y-m-d'),
+                'brent' => $brent,
+                'duri' => 80.08, // Constant
+                'ardjuna' => $ardjuna,
+                'kresna' => $kresna,
                 'tahun' => $date->year,
                 'bulan' => $date->month,
                 'minggu' => $date->weekOfYear,
@@ -354,7 +336,7 @@ class HargaMinyakController extends Controller
     }
 
     /**
-     * Admin: Delete harga data
+     * ADMIN: Delete harga data
      */
     public function destroy($id)
     {
@@ -369,25 +351,21 @@ class HargaMinyakController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Terjadi kesalahan: ' .$e->getMessage(),
+                'message' => 'Terjadi kesalahan:  ' .$e->getMessage(),
             ], 500);
         }
     }
 
     /**
-     * Admin: Bulk insert data
+     * ADMIN:  Bulk insert data (hanya Brent dari CSV/Excel)
      */
     public function bulkStore(Request $request)
     {
         try {
-            $validator = Validator::make($request->all(), [
+            $validator = Validator:: make($request->all(), [
                 'data' => 'required|array|min:1',
                 'data.*.tanggal' => 'required|date',
                 'data.*.brent' => 'required|numeric|min:0|max:9999.99',
-                'data.*.duri' => 'required|numeric|min:0|max:9999.99',
-                'data.*.arjuna' => 'required|numeric|min:0|max:9999.99',
-                'data.*.kresna' => 'required|numeric|min:0|max:9999.99',
-                'data.*.icp' => 'required|numeric|min: 0|max:9999.99',
             ]);
 
             if ($validator->fails()) {
@@ -401,12 +379,14 @@ class HargaMinyakController extends Controller
             $inserted = [];
             $errors = [];
 
+            DB::beginTransaction();
+
             foreach ($request->data as $item) {
                 try {
                     $date = Carbon::parse($item['tanggal']);
                     
                     // Check if date already exists
-                    $exists = Harga::where('tanggal', $item['tanggal'])->exists();
+                    $exists = Harga::where('tanggal', $date->format('Y-m-d'))->exists();
                     
                     if ($exists) {
                         $errors[] = [
@@ -416,14 +396,20 @@ class HargaMinyakController extends Controller
                         continue;
                     }
 
+                    // Get alpha average for this month
+                    $alpha = RealisasiBulanan::getCurrentMonthAlpha($date->year, $date->month);
+
+                    // Calculate Ardjuna and Kresna
+                    $brent = (float) $item['brent'];
+                    $ardjuna = round($brent + $alpha['avg_alpha_ardjuna'], 2);
+                    $kresna = round($brent + $alpha['avg_alpha_kresna'], 2);
+
                     $harga = Harga::create([
-                        'tanggal' => $item['tanggal'],
-                        'brent' => $item['brent'],
-                        'duri' => $item['duri'],
-                        'arjuna' => $item['arjuna'],
-                        'kresna' => $item['kresna'],
-                        'icp' => $item['icp'],
-                        'periode' => $item['periode'] ?? 'day',
+                        'tanggal' => $date->format('Y-m-d'),
+                        'brent' => $brent,
+                        'duri' => 80.08, // Constant
+                        'ardjuna' => $ardjuna,
+                        'kresna' => $kresna,
                         'tahun' => $date->year,
                         'bulan' => $date->month,
                         'minggu' => $date->weekOfYear,
@@ -438,6 +424,8 @@ class HargaMinyakController extends Controller
                 }
             }
 
+            DB:: commit();
+
             return response()->json([
                 'success' => true,
                 'message' => count($inserted) .' data berhasil ditambahkan',
@@ -449,6 +437,7 @@ class HargaMinyakController extends Controller
                 ],
             ], 201);
         } catch (\Exception $e) {
+            DB::rollBack();
             return response()->json([
                 'success' => false,
                 'message' => 'Terjadi kesalahan: ' .$e->getMessage(),
@@ -457,14 +446,14 @@ class HargaMinyakController extends Controller
     }
 
     /**
-     * Admin:  Bulk delete
+     * ADMIN:  Bulk delete
      */
     public function bulkDelete(Request $request)
     {
         try {
             $validator = Validator::make($request->all(), [
                 'ids' => 'required|array|min:1',
-                'ids.*' => 'required|integer|exists:harga,id',
+                'ids.*' => 'required|integer|exists:harga_minyak,id',
             ]);
 
             if ($validator->fails()) {
@@ -493,41 +482,131 @@ class HargaMinyakController extends Controller
     }
 
     /**
-     * Apply default range based on periode
+     * ADMIN:  Get realisasi bulanan
      */
-    private function applyDefaultRange($query, $periode)
+    public function getRealisasiBulanan(Request $request)
     {
-        $now = Carbon::now();
+        try {
+            $query = RealisasiBulanan::query();
 
-        switch ($periode) {
-            case 'day':
-                // Last 31 days
-                $query->whereBetween('tanggal', [
-                    $now->copy()->subDays(30)->format('Y-m-d'),
-                    $now->format('Y-m-d')
-                ]);
-                break;
-            case 'week':
-                // Last 10 weeks
-                $query->whereBetween('tanggal', [
-                    $now->copy()->subWeeks(9)->startOfWeek()->format('Y-m-d'),
-                    $now->format('Y-m-d')
-                ]);
-                break;
-            case 'month':
-                // This year
-                $query->whereBetween('tanggal', [
-                    $now->copy()->startOfYear()->format('Y-m-d'),
-                    $now->format('Y-m-d')
-                ]);
-                break;
-            case 'year':
-                // Last 5 years
-                $query->whereBetween('tanggal', [
-                    $now->copy()->subYears(4)->startOfYear()->format('Y-m-d'),
-                    $now->format('Y-m-d')
-                ]);
-                break;
+            if ($request->has('tahun')) {
+                $query->where('tahun', $request->tahun);
+            }
+
+            if ($request->has('bulan')) {
+                $query->where('bulan', $request->bulan);
+            }
+
+            $data = $query->orderBy('tahun', 'desc')
+                          ->orderBy('bulan', 'desc')
+                          ->get();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Data realisasi berhasil diambil',
+                'data' => $data,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan:  ' .$e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * ADMIN: Store/Update realisasi bulanan
+     */
+    public function storeRealisasiBulanan(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'tahun' => 'required|integer|min:2020|max:2030',
+                'bulan' => 'required|integer|min:1|max: 12',
+                'realisasi_brent' => 'required|numeric|min:0|max: 9999.99',
+                'realisasi_ardjuna' => 'required|numeric|min:0|max:9999.99',
+                'realisasi_kresna' => 'required|numeric|min:0|max:9999.99',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validasi gagal',
+                    'errors' => $validator->errors(),
+                ], 422);
+            }
+
+            DB::beginTransaction();
+
+            // Calculate alpha
+            $alpha = RealisasiBulanan::calculateAlpha(
+                $request->realisasi_brent,
+                $request->realisasi_ardjuna,
+                $request->realisasi_kresna
+            );
+
+            // Create or update
+            $realisasi = RealisasiBulanan::updateOrCreate(
+                [
+                    'tahun' => $request->tahun,
+                    'bulan' => $request->bulan,
+                ],
+                [
+                    'realisasi_brent' => $request->realisasi_brent,
+                    'realisasi_ardjuna' => $request->realisasi_ardjuna,
+                    'realisasi_kresna' => $request->realisasi_kresna,
+                    'alpha_ardjuna' => $alpha['alpha_ardjuna'],
+                    'alpha_kresna' => $alpha['alpha_kresna'],
+                ]
+            );
+
+            // Calculate 3-month average
+            $avg = RealisasiBulanan::calculate3MonthAverage($request->tahun, $request->bulan);
+            
+            if ($avg) {
+                $realisasi->update($avg);
+            }
+
+            // Recalculate all daily prices for this month
+            $this->recalculateMonthlyPrices($request->tahun, $request->bulan);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Data realisasi berhasil disimpan dan harga harian diperbarui',
+                'data' => $realisasi,
+            ], 201);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan: ' .$e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Helper:  Recalculate monthly prices after realisasi update
+     */
+    private function recalculateMonthlyPrices($tahun, $bulan)
+    {
+        // Get alpha average for this month
+        $alpha = RealisasiBulanan:: getCurrentMonthAlpha($tahun, $bulan);
+
+        // Get all daily data for this month
+        $dailyData = Harga::where('tahun', $tahun)
+                          ->where('bulan', $bulan)
+                          ->get();
+
+        foreach ($dailyData as $data) {
+            $ardjuna = round($data->brent + $alpha['avg_alpha_ardjuna'], 2);
+            $kresna = round($data->brent + $alpha['avg_alpha_kresna'], 2);
+
+            $data->update([
+                'ardjuna' => $ardjuna,
+                'kresna' => $kresna,
+            ]);
         }
     }
 }
