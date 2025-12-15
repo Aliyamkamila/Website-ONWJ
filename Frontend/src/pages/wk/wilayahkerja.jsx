@@ -390,6 +390,20 @@ const LegendItem = ({ area }) => (
 
 // Modal Component
 const Modal = ({ area, onClose, onViewNews }) => {
+  const [activeTab, setActiveTab] = useState(
+    area.category === 'TEKKOM' ? 'overview' : 'overview'
+  );
+
+  const tabs = area.category === 'TEKKOM'
+    ? [
+        { id: 'overview', label: 'Ringkasan' },
+        { id: 'produksi', label: 'Produksi Bulanan' },
+      ]
+    : [
+        { id: 'overview', label: 'Ringkasan' },
+        { id: 'dokumentasi', label: 'Foto Dokumentasi' },
+      ];
+
   // Close on ESC key
   useEffect(() => {
     const handleEsc = (e) => {
@@ -425,12 +439,33 @@ const Modal = ({ area, onClose, onViewNews }) => {
         {/* Modal Header */}
         <ModalHeader area={area} onClose={onClose} />
 
+        <div style={{ display: 'flex', gap: 8, padding: '12px 24px', borderBottom: '1px solid #e5e7eb' }}>
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              style={{
+                padding: '10px 14px',
+                borderRadius: '8px',
+                border: activeTab === tab.id ? '2px solid #2563eb' : '1px solid #e5e7eb',
+                backgroundColor: activeTab === tab.id ? '#eff6ff' : '#f9fafb',
+                color: activeTab === tab.id ? '#1d4ed8' : '#4b5563',
+                fontWeight: 700,
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+              }}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
         {/* Modal Body */}
         <div className="modal-body" style={{ padding: '24px' }}>
           {area.category === 'TEKKOM' ?  (
-            <TekkomModalContent area={area} />
+            <TekkomModalContent area={area} activeTab={activeTab} />
           ) : (
-            <TjslModalContent area={area} onViewNews={onViewNews} />
+            <TjslModalContent area={area} onViewNews={onViewNews} activeTab={activeTab} />
           )}
         </div>
       </div>
@@ -487,165 +522,208 @@ const ModalHeader = ({ area, onClose }) => (
 );
 
 // TEKKOM Modal Content Component
-const TekkomModalContent = ({ area }) => (
-  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap:  24 }}>
-    {/* Left Column */}
-    <div>
-      <h4 className="modal-section-title" style={{ fontSize: '16px', fontWeight: '600', marginBottom: '12px', color: '#374151' }}>
-        📋 Deskripsi
-      </h4>
-      <p className="modal-text" style={{ color: '#6b7280', lineHeight: '1.6', marginBottom: '20px' }}>
-        {area.description}
-      </p>
+const TekkomModalContent = ({ area, activeTab }) => {
+  const dummyProduksi = [
+    { bulan: 'Jan 2025', produksi: '5,200 BOPD', catatan: 'Stabil' },
+    { bulan: 'Feb 2025', produksi: '5,150 BOPD', catatan: 'Maintenance ringan' },
+    { bulan: 'Mar 2025', produksi: '5,320 BOPD', catatan: 'Kenaikan tipis' },
+    { bulan: 'Apr 2025', produksi: '5,280 BOPD', catatan: 'Normal' },
+  ];
 
-      <h4 className="modal-section-title" style={{ fontSize: '16px', fontWeight: '600', marginBottom: '12px', color: '#374151' }}>
-        📐 Data Teknis
-      </h4>
-      <div style={{ 
-        display: 'grid', 
-        gridTemplateColumns:  '1fr 1fr', 
-        gap: '12px',
-        backgroundColor: '#f9fafb',
-        padding: '16px',
-        borderRadius: '8px'
-      }}>
-        <DataField label="ID Area" value={area.id} />
-        <DataField 
-          label="Status" 
-          value={area. status} 
-          color={area.status === 'Operasional' ? '#059669' : '#f59e0b'} 
-        />
-        {area.wells > 0 && <DataField label="Jumlah Sumur" value={`${area.wells} sumur`} />}
-        {area. depth && <DataField label="Kedalaman" value={area.depth} />}
-        {area.pressure && <DataField label="Tekanan" value={area.pressure} color="#dc2626" />}
-        {area.temperature && <DataField label="Temperatur" value={area.temperature} color="#ea580c" />}
-        {area.production && (
-          <div style={{ gridColumn: '1 / -1' }}>
-            <DataField label="Produksi" value={area.production} color="#2563eb" fontSize="16px" />
-          </div>
+  if (activeTab === 'produksi') {
+    return (
+      <div>
+        <h4 className="modal-section-title" style={{ fontSize: '16px', fontWeight: '700', marginBottom: '12px', color: '#111827' }}>
+          📊 Data Produksi Per Bulan (Dummy)
+        </h4>
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr style={{ backgroundColor: '#f3f4f6', color: '#374151' }}>
+                <th style={{ textAlign: 'left', padding: '10px', fontWeight: 700 }}>Bulan</th>
+                <th style={{ textAlign: 'left', padding: '10px', fontWeight: 700 }}>Produksi</th>
+                <th style={{ textAlign: 'left', padding: '10px', fontWeight: 700 }}>Catatan</th>
+              </tr>
+            </thead>
+            <tbody>
+              {dummyProduksi.map((row) => (
+                <tr key={row.bulan} style={{ borderBottom: '1px solid #e5e7eb' }}>
+                  <td style={{ padding: '10px', fontWeight: 600 }}>{row.bulan}</td>
+                  <td style={{ padding: '10px', color: '#2563eb', fontWeight: 700 }}>{row.produksi}</td>
+                  <td style={{ padding: '10px', color: '#6b7280' }}>{row.catatan}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap:  24 }}>
+      {/* Left Column */}
+      <div>
+        <h4 className="modal-section-title" style={{ fontSize: '16px', fontWeight: '600', marginBottom: '12px', color: '#374151' }}>
+          📋 Deskripsi
+        </h4>
+        <p className="modal-text" style={{ color: '#6b7280', lineHeight: '1.6', marginBottom: '20px' }}>
+          {area.description}
+        </p>
+
+        <h4 className="modal-section-title" style={{ fontSize: '16px', fontWeight: '600', marginBottom: '12px', color: '#374151' }}>
+          📐 Data Teknis
+        </h4>
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns:  '1fr 1fr', 
+          gap: '12px',
+          backgroundColor: '#f9fafb',
+          padding: '16px',
+          borderRadius: '8px'
+        }}>
+          <DataField label="ID Area" value={area.id} />
+          <DataField 
+            label="Status" 
+            value={area. status} 
+            color={area.status === 'Operasional' ? '#059669' : '#f59e0b'} 
+          />
+          {area.wells > 0 && <DataField label="Jumlah Sumur" value={`${area.wells} sumur`} />}
+          {area. depth && <DataField label="Kedalaman" value={area.depth} />}
+          {area.pressure && <DataField label="Tekanan" value={area.pressure} color="#dc2626" />}
+          {area.temperature && <DataField label="Temperatur" value={area.temperature} color="#ea580c" />}
+          {area.production && (
+            <div style={{ gridColumn: '1 / -1' }}>
+              <DataField label="Produksi" value={area.production} color="#2563eb" fontSize="16px" />
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Right Column */}
+      <div>
+        <h4 className="modal-section-title" style={{ fontSize: '16px', fontWeight: '600', marginBottom: '12px', color: '#374151' }}>
+          🏭 Fasilitas & Infrastruktur
+        </h4>
+        {area.facilities && area.facilities.length > 0 ?  (
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0, marginBottom: '20px' }}>
+            {area.facilities.map((f, i) => (
+              <ListItem key={i} text={f} color={area.color} />
+            ))}
+          </ul>
+        ) : (
+          <p className="modal-text text-gray-500">Tidak ada data fasilitas. </p>
         )}
       </div>
     </div>
-
-    {/* Right Column */}
-    <div>
-      <h4 className="modal-section-title" style={{ fontSize: '16px', fontWeight: '600', marginBottom: '12px', color: '#374151' }}>
-        🏭 Fasilitas & Infrastruktur
-      </h4>
-      {area.facilities && area.facilities.length > 0 ?  (
-        <ul style={{ listStyle: 'none', padding: 0, margin: 0, marginBottom: '20px' }}>
-          {area.facilities.map((f, i) => (
-            <ListItem key={i} text={f} color={area.color} />
-          ))}
-        </ul>
-      ) : (
-        <p className="modal-text text-gray-500">Tidak ada data fasilitas. </p>
-      )}
-
-      <div style={{ marginTop: '20px', display: 'flex', gap:  '8px', flexDirection: 'column' }}>
-        <ActionButton
-          primary
-          onClick={() => alert(`Membuka detail produksi untuk ${area.name}`)}
-        >
-          📊 Lihat Detail Produksi
-        </ActionButton>
-        <ActionButton
-          onClick={() => alert(`Membuka rencana kerja untuk ${area.name}`)}
-        >
-          📋 Rencana Kerja 2025
-        </ActionButton>
-      </div>
-    </div>
-  </div>
-);
+  );
+};
 
 // TJSL Modal Content Component
-const TjslModalContent = ({ area, onViewNews }) => (
-  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
-    {/* Left Column */}
-    <div>
-      <h4 className="modal-section-title" style={{ fontSize: '16px', fontWeight: '600', marginBottom: '12px', color: '#374151' }}>
-        📋 Deskripsi Program
-      </h4>
-      <p className="modal-text" style={{ color: '#6b7280', lineHeight: '1.6', marginBottom: '20px' }}>
-        {area. description}
-      </p>
+const TjslModalContent = ({ area, onViewNews, activeTab }) => {
+  const dummyPhotos = [
+    { title: 'Kegiatan Sosialisasi', url: 'https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?auto=format&fit=crop&w=400&q=60' },
+    { title: 'Pelatihan Masyarakat', url: 'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=400&q=60' },
+    { title: 'Monitoring Lapangan', url: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=400&q=60' },
+  ];
 
-      <h4 className="modal-section-title" style={{ fontSize: '16px', fontWeight:  '600', marginBottom: '12px', color: '#374151' }}>
-        📊 Informasi Program
-      </h4>
-      <div style={{ 
-        display: 'grid', 
-        gridTemplateColumns: '1fr', 
-        gap: '12px',
-        backgroundColor: '#f9fafb',
-        padding:  '16px',
-        borderRadius: '8px'
-      }}>
-        <DataField label="ID Area" value={area.id} />
-        <DataField 
-          label="Status Program" 
-          value={area. status} 
-          color={area.status === 'Aktif' ? '#059669' :  '#f59e0b'} 
-        />
-        {area.duration && <DataField label="Durasi Program" value={area.duration} />}
-        {area.beneficiaries && <DataField label="Penerima Manfaat" value={area. beneficiaries} color="#7c3aed" />}
-        {area.budget && <DataField label="Anggaran Program" value={area.budget} color="#2563eb" fontSize="16px" fontWeight="700" />}
-        {area. impact && <DataField label="Dampak Utama" value={area.impact} color="#059669" />}
-      </div>
-    </div>
-
-    {/* Right Column */}
-    <div>
-      <h4 className="modal-section-title" style={{ fontSize: '16px', fontWeight: '600', marginBottom: '12px', color: '#374151' }}>
-        🎯 Program & Kegiatan
-      </h4>
-      {area.programs && area.programs.length > 0 ? (
-        <ul style={{ listStyle: 'none', padding: 0, margin: 0, marginBottom: '20px' }}>
-          {area.programs.map((p, i) => (
-            <ListItem key={i} text={p} color={area.color} />
+  if (activeTab === 'dokumentasi') {
+    return (
+      <div>
+        <h4 className="modal-section-title" style={{ fontSize: '16px', fontWeight: '700', marginBottom: '12px', color: '#111827' }}>
+          📸 Dokumentasi Program (Dummy)
+        </h4>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12 }}>
+          {dummyPhotos.map((photo) => (
+            <div key={photo.title} style={{ backgroundColor: '#f9fafb', borderRadius: '10px', overflow: 'hidden', boxShadow: '0 2px 6px rgba(0,0,0,0.08)' }}>
+              <img src={photo.url} alt={photo.title} style={{ width: '100%', height: '120px', objectFit: 'cover' }} />
+              <div style={{ padding: '10px', fontSize: '13px', fontWeight: 700, color: '#374151' }}>{photo.title}</div>
+            </div>
           ))}
-        </ul>
-      ) : (
-        <p className="modal-text text-gray-500">Tidak ada data program. </p>
-      )}
+        </div>
+      </div>
+    );
+  }
 
-      <div style={{ marginTop: '20px', display: 'flex', gap: '8px', flexDirection: 'column' }}>
-        {/* Button Berita Terkait */}
-        {area.related_news_slug ?  (
-          <ActionButton
-            primary
-            color="#059669"
-            hoverColor="#047857"
-            onClick={() => onViewNews(area.related_news_slug)}
-          >
-            📰 Lihat Berita Terkait
-          </ActionButton>
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+      {/* Left Column */}
+      <div>
+        <h4 className="modal-section-title" style={{ fontSize: '16px', fontWeight: '600', marginBottom: '12px', color: '#374151' }}>
+          📋 Deskripsi Program
+        </h4>
+        <p className="modal-text" style={{ color: '#6b7280', lineHeight: '1.6', marginBottom: '20px' }}>
+          {area. description}
+        </p>
+
+        <h4 className="modal-section-title" style={{ fontSize: '16px', fontWeight:  '600', marginBottom: '12px', color: '#374151' }}>
+          📊 Informasi Program
+        </h4>
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: '1fr', 
+          gap: '12px',
+          backgroundColor: '#f9fafb',
+          padding:  '16px',
+          borderRadius: '8px'
+        }}>
+          <DataField label="ID Area" value={area.id} />
+          <DataField 
+            label="Status Program" 
+            value={area. status} 
+            color={area.status === 'Aktif' ? '#059669' :  '#f59e0b'} 
+          />
+          {area.duration && <DataField label="Durasi Program" value={area.duration} />}
+          {area.beneficiaries && <DataField label="Penerima Manfaat" value={area. beneficiaries} color="#7c3aed" />}
+          {area.budget && <DataField label="Anggaran Program" value={area.budget} color="#2563eb" fontSize="16px" fontWeight="700" />}
+          {area. impact && <DataField label="Dampak Utama" value={area.impact} color="#059669" />}
+        </div>
+      </div>
+
+      {/* Right Column */}
+      <div>
+        <h4 className="modal-section-title" style={{ fontSize: '16px', fontWeight: '600', marginBottom: '12px', color: '#374151' }}>
+          🎯 Program & Kegiatan
+        </h4>
+        {area.programs && area.programs.length > 0 ? (
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0, marginBottom: '20px' }}>
+            {area.programs.map((p, i) => (
+              <ListItem key={i} text={p} color={area.color} />
+            ))}
+          </ul>
         ) : (
-          <div style={{
-            padding: '12px 16px',
-            borderRadius: '8px',
-            backgroundColor: '#f3f4f6',
-            color: '#9ca3af',
-            fontSize:  '14px',
-            fontWeight: '600',
-            textAlign: 'center',
-            border: '2px dashed #e5e7eb'
-          }}>
-            📰 Belum ada berita terkait
-          </div>
+          <p className="modal-text text-gray-500">Tidak ada data program. </p>
         )}
-        
-        <ActionButton
-          onClick={() => alert(`Membuka dokumentasi program ${area.name}`)}
-          hoverBorderColor="#059669"
-        >
-          📸 Galeri Dokumentasi
-        </ActionButton>
+
+        <div style={{ marginTop: '20px', display: 'flex', gap: '8px', flexDirection: 'column' }}>
+          {area.related_news_slug ?  (
+            <ActionButton
+              primary
+              color="#059669"
+              hoverColor="#047857"
+              onClick={() => onViewNews(area.related_news_slug)}
+            >
+              📰 Lihat Berita Terkait
+            </ActionButton>
+          ) : (
+            <div style={{
+              padding: '12px 16px',
+              borderRadius: '8px',
+              backgroundColor: '#f3f4f6',
+              color: '#9ca3af',
+              fontSize:  '14px',
+              fontWeight: '600',
+              textAlign: 'center',
+              border: '2px dashed #e5e7eb'
+            }}>
+              📰 Belum ada berita terkait
+            </div>
+          )}
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 // ==================== UTILITY COMPONENTS ====================
 

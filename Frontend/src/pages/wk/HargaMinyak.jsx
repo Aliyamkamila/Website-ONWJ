@@ -196,18 +196,31 @@ const HargaMinyakPage = () => {
   
   const [chartData, setChartData] = useState([]);
   const [stats, setStats] = useState({});
+
+  const today = new Date();
+  const [monthFilter, setMonthFilter] = useState({
+    year: String(today.getFullYear()),
+    month: today.getMonth(),
+  });
   
-  // Default:  last 3 months
-  const getDefaultDates = () => {
-    const today = new Date();
-    const threeMonthsAgo = new Date(today.getFullYear(), today.getMonth() - 3, today.getDate());
+  // Default: current month
+  const getMonthRange = (year, monthIndex) => {
+    const start = new Date(year, monthIndex, 1);
+    const end = new Date(year, monthIndex + 1, 0);
     return {
-      from: threeMonthsAgo.toISOString().split('T')[0],
-      to: today.toISOString().split('T')[0]
+      from: start.toISOString().split('T')[0],
+      to: end.toISOString().split('T')[0],
     };
   };
 
-  const [dateRange, setDateRange] = useState(getDefaultDates());
+  const [dateRange, setDateRange] = useState(
+    getMonthRange(today.getFullYear(), today.getMonth())
+  );
+
+  const applyMonthFilter = (year, monthIndex) => {
+    setMonthFilter({ year: String(year), month: monthIndex });
+    setDateRange(getMonthRange(year, monthIndex));
+  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -241,6 +254,14 @@ const HargaMinyakPage = () => {
 
   const handleApplyFilter = (from, to) => {
     setDateRange({ from, to });
+  };
+
+  const handleMonthChange = (type, value) => {
+    const updated = {
+      year: type === 'year' ? value : monthFilter.year,
+      month: type === 'month' ? Number(value) : monthFilter.month,
+    };
+    applyMonthFilter(updated.year, updated.month);
   };
 
   const getPeriodLabel = () => {
@@ -318,14 +339,35 @@ const HargaMinyakPage = () => {
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Grafik Harga Minyak</h2>
               <p className="text-gray-600 text-sm">Pergerakan harga dalam periode yang dipilih</p>
             </div>
-
-            <button
-              onClick={() => setIsFilterOpen(true)}
-              className="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-xl font-semibold transition-all duration-300 flex items-center gap-2 shadow-lg"
-            >
-              <FaCalendarAlt className="w-4 h-4" />
-              <span>Filter Periode</span>
-            </button>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+              <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 shadow-sm">
+                <select
+                  value={monthFilter.month}
+                  onChange={(e) => handleMonthChange('month', e.target.value)}
+                  className="bg-transparent text-sm font-semibold text-gray-700 focus:outline-none"
+                >
+                  {MONTHS.map((m, idx) => (
+                    <option key={m} value={idx}>{m}</option>
+                  ))}
+                </select>
+                <select
+                  value={monthFilter.year}
+                  onChange={(e) => handleMonthChange('year', e.target.value)}
+                  className="bg-transparent text-sm font-semibold text-gray-700 focus:outline-none"
+                >
+                  {YEARS.map((y) => (
+                    <option key={y} value={y}>{y}</option>
+                  ))}
+                </select>
+              </div>
+              <button
+                onClick={() => setIsFilterOpen(true)}
+                className="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-xl font-semibold transition-all duration-300 flex items-center gap-2 shadow-lg"
+              >
+                <FaCalendarAlt className="w-4 h-4" />
+                <span>Filter Periode</span>
+              </button>
+            </div>
           </div>
 
           <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border-2 border-blue-100">
@@ -378,36 +420,14 @@ const HargaMinyakPage = () => {
                     strokeWidth={3}
                     fillOpacity={1}
                     fill={`url(#color${key})`}
-                    dot={{ fill: oil.color, strokeWidth: 2, r: 4 }}
-                    activeDot={{ r: 6, stroke: oil.color, strokeWidth: 3 }}
+                    dot={false}
+                    activeDot={false}
                   />
                 ))}
               </AreaChart>
             </ResponsiveContainer>
           </div>
 
-          <div className="mt-8 pt-6 border-t-2 border-gray-100">
-            <div className="grid grid-cols-1 md: grid-cols-2 gap-4">
-              <div className="bg-blue-50 p-4 rounded-xl border border-blue-200">
-                <h4 className="text-sm font-bold text-blue-900 mb-2">ℹ️ Informasi</h4>
-                <ul className="text-xs text-blue-700 space-y-1">
-                  <li>• <strong>Brent:</strong> Harga patokan minyak dunia</li>
-                  <li>• <strong>Duri:</strong> Minyak mentah Indonesia (konstan $80.08)</li>
-                  <li>• <strong>Ardjuna:</strong> Dihitung dari Brent + Alpha Ardjuna</li>
-                  <li>• <strong>Kresna:</strong> Dihitung dari Brent + Alpha Kresna</li>
-                </ul>
-              </div>
-              <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-200">
-                <h4 className="text-sm font-bold text-emerald-900 mb-2">📊 Statistik</h4>
-                <ul className="text-xs text-emerald-700 space-y-1">
-                  <li>• Total Data: <strong>{chartData.length} hari</strong></li>
-                  <li>• Sumber: Data Real-time</li>
-                  <li>• Update: Setiap hari kerja</li>
-                  <li>• Alpha: Rata-rata 3 bulan terakhir</li>
-                </ul>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 

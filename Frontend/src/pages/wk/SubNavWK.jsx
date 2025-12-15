@@ -20,12 +20,6 @@ const SubNavWK = () => {
         >
           Harga Minyak
         </NavLink>
-        <NavLink 
-          to="/wilayah-kerja/produksi" 
-          className={({ isActive }) => isActive ? activeStyle : inactiveStyle}
-        >
-          Data Produksi
-        </NavLink>
       </nav>
     </div>
   );
