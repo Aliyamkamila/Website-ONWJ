@@ -1,121 +1,129 @@
-import api from '../api/axios';
+import axios from 'axios';
+import Cookies from 'js-cookie';
 
-export const testimonialService = {
-  // ===== PUBLIC ENDPOINTS =====
-  
-  /**
-   * Get all testimonials with pagination & filters
-   * @param {Object} params - { page, per_page, program, search }
-   */
-  getAll: (params = {}) => {
-    return api.get('/v1/testimonials', { params });
-  },
+const API_URL = import.meta?. env?.VITE_API_BASE_URL || 'http://localhost:8000/api';
 
-  /**
-   * Get featured testimonials (for homepage highlights)
-   */
-  getFeatured: () => {
-    return api.get('/v1/testimonials/featured');
-  },
+const apiClient = axios.create({
+    baseURL: API_URL,
+    headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+    },
+    timeout: 15000,
+});
 
-  /**
-   * Get testimonials by specific program
-   * @param {string} program - Program name
-   */
-  getByProgram: (program) => {
-    return api.get(`/v1/testimonials/program/${program}`);
-  },
+// ===== REQUEST INTERCEPTOR =====
+apiClient.interceptors.request.use(
+    (config) => {
+        const token = Cookies.get('admin_token'); // ✅ Pakai Cookies
+        
+        if (token) {
+            config.headers. Authorization = `Bearer ${token}`;
+        }
 
-  /**
-   * Get single testimonial detail
-   * @param {number} id - Testimonial ID
-   */
-  getById: (id) => {
-    return api.get(`/v1/testimonials/${id}`);
-  },
+        console.log('🚀 Testimonial API Request:', {
+            method: config.method. toUpperCase(),
+            url: config.url,
+            hasToken: !!token,
+        });
 
-  /**
-   * Get list of all programs (for filter dropdown)
-   */
-  getPrograms: () => {
-    return api.get('/v1/testimonial-programs');
-  },
+        return config;
+    },
+    (error) => {
+        console.error('❌ Request Error:', error);
+        return Promise.reject(error);
+    }
+);
 
-  // ===== ADMIN ENDPOINTS =====
-  
-  admin: {
-    /**
-     * Get all testimonials for admin with filters
-     * @param {Object} params - { page, per_page, search, program, is_featured }
-     */
+// ===== RESPONSE INTERCEPTOR =====
+apiClient.interceptors.response.use(
+    (response) => {
+        console.log('✅ Testimonial API Response:', {
+            status: response.status,
+            url: response.config.url,
+        });
+        return response;
+    },
+    (error) => {
+        console. error('❌ Testimonial API Error:', {
+            message: error.message,
+            status: error.response?.status,
+            url: error.config?.url,
+        });
+
+        if (error.response?.status === 401) {
+            Cookies.remove('admin_token');
+            Cookies.remove('admin_user');
+            
+            if (window.location.pathname !== '/tukang-minyak-dan-gas/login') {
+                window.location.href = '/tukang-minyak-dan-gas/login';
+            }
+        }
+
+        return Promise.reject(error);
+    }
+);
+
+// ===== PUBLIC API =====
+export const testimonialApi = {
     getAll: (params = {}) => {
-      return api.get('/v1/admin/testimonials', { params });
+        return apiClient.get('/v1/testimonials', { params });
     },
 
-    /**
-     * Create new testimonial
-     * @param {FormData} formData - Testimonial data with avatar image
-     */
-    create: (formData) => {
-      return api.post('/v1/admin/testimonials', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-    },
-
-    /**
-     * Get single testimonial for editing
-     * @param {number} id - Testimonial ID
-     */
     getById: (id) => {
-      return api. get(`/v1/admin/testimonials/${id}`);
+        return apiClient.get(`/v1/testimonials/${id}`);
     },
 
-    /**
-     * Update testimonial
-     * @param {number} id - Testimonial ID
-     * @param {FormData} formData - Updated data with optional new avatar
-     */
-    update:  (id, formData) => {
-      return api.post(`/v1/admin/testimonials/${id}`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+    getFeatured: () => {
+        return apiClient.get('/v1/testimonials/featured');
     },
 
-    /**
-     * Delete testimonial
-     * @param {number} id - Testimonial ID
-     */
-    delete: (id) => {
-      return api.delete(`/v1/admin/testimonials/${id}`);
+    getByProgram: (program) => {
+        return apiClient.get(`/v1/testimonials/program/${program}`);
     },
 
-    /**
-     * Bulk delete testimonials
-     * @param {Array<number>} ids - Array of testimonial IDs
-     */
-    bulkDelete: (ids) => {
-      return api. post('/v1/admin/testimonials/bulk-delete', { ids });
+    getPrograms: () => {
+        return apiClient.get('/v1/testimonial-programs');
     },
-
-    /**
-     * Toggle featured status
-     * @param {number} id - Testimonial ID
-     */
-    toggleFeatured: (id) => {
-      return api.post(`/v1/admin/testimonials/${id}/toggle-featured`);
-    },
-
-    /**
-     * Get statistics for dashboard
-     */
-    getStatistics: () => {
-      return api.get('/v1/admin/testimonial-statistics');
-    },
-  },
 };
 
-export default testimonialService;
+// ===== ADMIN API =====
+export const testimonialAdminApi = {
+    getAll: (params = {}) => {
+        return apiClient.get('/v1/admin/testimonials', { params });
+    },
+
+    getById: (id) => {
+        return apiClient.get(`/v1/admin/testimonials/${id}`);
+    },
+
+    create: (formData) => {
+        return apiClient.post('/v1/admin/testimonials', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
+    },
+
+    update: (id, formData) => {
+        return apiClient. post(`/v1/admin/testimonials/${id}`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
+    },
+
+    delete:  (id) => {
+        return apiClient.delete(`/v1/admin/testimonials/${id}`);
+    },
+
+    bulkDelete: (ids) => {
+        return apiClient.post('/v1/admin/testimonials/bulk-delete', { ids });
+    },
+
+    toggleFeatured: (id) => {
+        return apiClient.post(`/v1/admin/testimonials/${id}/toggle-featured`);
+    },
+
+    getStatistics: () => {
+        return apiClient.get('/v1/admin/testimonial-statistics');
+    },
+};
+
+export default testimonialApi;

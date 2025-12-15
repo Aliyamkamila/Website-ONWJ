@@ -1,20 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { FaEdit, FaTrash, FaPlus, FaImage, FaTimes, FaQuoteLeft, FaSearch, FaFilter, FaUser, FaMapMarkerAlt, FaCheck, FaArrowLeft, FaFileExcel } from 'react-icons/fa';
+import { 
+    FaEdit, FaTrash, FaPlus, FaImage, FaTimes, FaQuoteLeft, 
+    FaSearch, FaFilter, FaUser, FaMapMarkerAlt, FaCheck, 
+    FaArrowLeft, FaFileExcel, FaStar, FaFileAlt, FaCalendarAlt 
+} from 'react-icons/fa';
 import * as XLSX from 'xlsx';
-import axios from 'axios';
 import toast from 'react-hot-toast';
 
-// ✅ API Configuration
-const API_URL = import. meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
-
-const apiClient = axios.create({
-    baseURL: API_URL,
-    headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-    },
-    timeout: 15000,
-});
+// ✅ IMPORT SERVICE (Pastikan path sesuai struktur folder Anda)
+import { testimonialAdminApi } from '../../services/TestimonialService';
 
 const ManageTestimonial = () => {
     const [showForm, setShowForm] = useState(false);
@@ -70,15 +64,15 @@ const ManageTestimonial = () => {
     const fetchTestimonials = async () => {
         try {
             setLoading(true);
-            const response = await apiClient.get('/v1/admin/testimonials', {
-                params: {
-                    per_page: 999,
-                    sort_by: 'created_at',
-                    sort_order: 'desc'
-                }
+            // Menggunakan Service
+            const response = await testimonialAdminApi.getAll({
+                per_page: 999,
+                sort_by: 'created_at',
+                sort_order: 'desc'
             });
             
-            if (response.data.success) {
+            // Sesuaikan dengan struktur response service Anda
+            if (response.data && response.data.success) {
                 setTestimonialList(response.data.data);
                 setFilteredTestimonials(response.data.data);
             }
@@ -92,8 +86,8 @@ const ManageTestimonial = () => {
 
     const fetchStatistics = async () => {
         try {
-            const response = await apiClient. get('/v1/admin/testimonial-statistics');
-            if (response.data.success) {
+            const response = await testimonialAdminApi.getStatistics();
+            if (response.data && response.data.success) {
                 setStats(response.data.data);
             }
         } catch (error) {
@@ -109,7 +103,7 @@ const ManageTestimonial = () => {
             result = result.filter(item =>
                 item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 item.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                item. testimonial.toLowerCase().includes(searchTerm.toLowerCase())
+                item.testimonial.toLowerCase().includes(searchTerm.toLowerCase())
             );
         }
 
@@ -140,10 +134,10 @@ const ManageTestimonial = () => {
     };
 
     const handleAvatarUpload = (e) => {
-        const file = e.target. files[0];
+        const file = e.target.files[0];
         if (file) {
             if (file.size > 2 * 1024 * 1024) {
-                toast.error('Ukuran file terlalu besar!  Maksimal 2MB');
+                toast.error('Ukuran file terlalu besar! Maksimal 2MB');
                 return;
             }
             
@@ -156,7 +150,7 @@ const ManageTestimonial = () => {
     };
 
     const removeAvatar = () => {
-        if (formData.avatarPreview) {
+        if (formData.avatarPreview && !formData.avatarPreview.startsWith('http')) {
             URL.revokeObjectURL(formData.avatarPreview);
         }
         setFormData(prev => ({
@@ -167,7 +161,7 @@ const ManageTestimonial = () => {
     };
 
     const resetForm = () => {
-        if (formData.avatarPreview) {
+        if (formData.avatarPreview && !formData.avatarPreview.startsWith('http')) {
             URL.revokeObjectURL(formData.avatarPreview);
         }
         setFormData({
@@ -187,7 +181,7 @@ const ManageTestimonial = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         
-        if (!formData. name || !formData.location || !formData.program || !formData.testimonial) {
+        if (!formData.name || !formData.location || !formData.program || !formData.testimonial) {
             toast.error('Mohon lengkapi semua field yang wajib diisi!');
             return;
         }
@@ -201,26 +195,25 @@ const ManageTestimonial = () => {
             setLoading(true);
 
             const submitData = new FormData();
-            submitData. append('name', formData.name);
+            submitData.append('name', formData.name);
             submitData.append('location', formData.location);
             submitData.append('program', formData.program);
             submitData.append('testimonial', formData.testimonial);
             submitData.append('status', formData.status);
-            submitData. append('featured', formData.featured ?  '1' : '0');
+            // Konversi boolean ke string '1' atau '0' untuk backend Laravel
+            submitData.append('featured', formData.featured ? '1' : '0');
             
             if (formData.avatar instanceof File) {
-                submitData. append('avatar', formData.avatar);
+                submitData.append('avatar', formData.avatar);
             }
 
             if (editingId) {
-                await apiClient.post(`/v1/admin/testimonials/${editingId}`, submitData, {
-                    headers: { 'Content-Type': 'multipart/form-data' }
-                });
+                // Laravel biasanya butuh _method: 'PUT' atau 'PATCH' di FormData untuk update file
+                submitData.append('_method', 'POST'); 
+                await testimonialAdminApi.update(editingId, submitData);
                 toast.success('✅ Testimonial berhasil diupdate!');
             } else {
-                await apiClient.post('/v1/admin/testimonials', submitData, {
-                    headers: { 'Content-Type': 'multipart/form-data' }
-                });
+                await testimonialAdminApi.create(submitData);
                 toast.success('✅ Testimonial berhasil ditambahkan!');
             }
             
@@ -249,7 +242,7 @@ const ManageTestimonial = () => {
                 avatar: null,
                 avatarPreview: testimonial.full_avatar_url || null,
                 status: testimonial.status,
-                featured: testimonial.featured || false
+                featured: Boolean(testimonial.featured) // Pastikan boolean
             });
             setEditingId(id);
             setShowForm(true);
@@ -261,13 +254,13 @@ const ManageTestimonial = () => {
         if (window.confirm('Apakah Anda yakin ingin menghapus testimonial ini?')) {
             try {
                 setLoading(true);
-                await apiClient.delete(`/v1/admin/testimonials/${id}`);
+                await testimonialAdminApi.delete(id);
                 toast.success('✅ Testimonial berhasil dihapus!');
                 await fetchTestimonials();
                 await fetchStatistics();
             } catch (error) {
                 console.error('❌ Error deleting testimonial:', error);
-                toast.error('❌ Gagal menghapus testimonial! ');
+                toast.error('❌ Gagal menghapus testimonial!');
             } finally {
                 setLoading(false);
             }
@@ -275,7 +268,7 @@ const ManageTestimonial = () => {
     };
 
     const handleCancel = () => {
-        if (window.confirm('Apakah Anda yakin ingin membatalkan?  Data yang belum disimpan akan hilang. ')) {
+        if (window.confirm('Apakah Anda yakin ingin membatalkan? Data yang belum disimpan akan hilang.')) {
             setShowForm(false);
             resetForm();
         }
@@ -284,8 +277,8 @@ const ManageTestimonial = () => {
     // ===== EXPORT TO EXCEL =====
     const exportToExcel = () => {
         try {
-            if (filteredTestimonials. length === 0) {
-                toast.error('⚠️ Tidak ada data untuk diexport! ');
+            if (filteredTestimonials.length === 0) {
+                toast.error('⚠️ Tidak ada data untuk diexport!');
                 return;
             }
 
@@ -296,8 +289,8 @@ const ManageTestimonial = () => {
                 'Program Terkait': item.program || '-',
                 'Isi Testimonial': item.testimonial || '-',
                 'Status': item.status || '-',
-                'Featured': item.featured ?  'Ya' : 'Tidak',
-                'Tanggal Input': item.created_at ? new Date(item.created_at). toLocaleDateString('id-ID') : '-',
+                'Featured': item.featured ? 'Ya' : 'Tidak',
+                'Tanggal Input': item.created_at ? new Date(item.created_at).toLocaleDateString('id-ID') : '-',
             }));
 
             const wb = XLSX.utils.book_new();
@@ -321,11 +314,11 @@ const ManageTestimonial = () => {
 
             XLSX.writeFile(wb, filename);
 
-            toast.success(`✅ Data berhasil diexport!\n\nTotal: ${filteredTestimonials. length} testimonial`);
+            toast.success(`✅ Data berhasil diexport!\n\nTotal: ${filteredTestimonials.length} testimonial`);
 
         } catch (error) {
             console.error('❌ Error exporting to Excel:', error);
-            toast. error(`❌ Gagal export ke Excel!`);
+            toast.error(`❌ Gagal export ke Excel!`);
         }
     };
 
@@ -351,7 +344,7 @@ const ManageTestimonial = () => {
                     <h1 className="text-3xl font-bold text-gray-900">Kelola Testimonial</h1>
                     <p className="text-gray-600 mt-1">Voices From The Community - Suara dari masyarakat</p>
                 </div>
-                {! showForm && (
+                {!showForm && (
                     <button
                         onClick={() => setShowForm(true)}
                         className="flex items-center gap-2 bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-blue-700 transition-all transform hover:-translate-y-0.5"
@@ -362,9 +355,10 @@ const ManageTestimonial = () => {
                 )}
             </div>
 
-            {/* Stats Cards */}
-            {! showForm && (
+            {/* Stats Cards (DIPERBAIKI: Menggunakan react-icons) */}
+            {!showForm && (
                 <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
+                    {/* Total */}
                     <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white">
                         <div className="flex items-center justify-between mb-4">
                             <div className="p-3 bg-white bg-opacity-20 rounded-lg">
@@ -375,6 +369,7 @@ const ManageTestimonial = () => {
                         <div className="text-sm text-blue-100">Total Testimonial</div>
                     </div>
                     
+                    {/* Published */}
                     <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg p-6 text-white">
                         <div className="flex items-center justify-between mb-4">
                             <div className="p-3 bg-white bg-opacity-20 rounded-lg">
@@ -385,36 +380,36 @@ const ManageTestimonial = () => {
                         <div className="text-sm text-green-100">Published</div>
                     </div>
 
+                    {/* Draft */}
                     <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-xl shadow-lg p-6 text-white">
                         <div className="flex items-center justify-between mb-4">
                             <div className="p-3 bg-white bg-opacity-20 rounded-lg">
-                                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                </svg>
+                                {/* Fix: Use Icon instead of raw SVG */}
+                                <FaFileAlt className="w-6 h-6" /> 
                             </div>
                         </div>
                         <div className="text-3xl font-bold mb-1">{stats.draft}</div>
                         <div className="text-sm text-yellow-100">Draft</div>
                     </div>
 
+                    {/* This Month */}
                     <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 text-white">
                         <div className="flex items-center justify-between mb-4">
                             <div className="p-3 bg-white bg-opacity-20 rounded-lg">
-                                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
+                                {/* Fix: Use Icon instead of raw SVG */}
+                                <FaCalendarAlt className="w-6 h-6" />
                             </div>
                         </div>
-                        <div className="text-3xl font-bold mb-1">{stats. this_month}</div>
+                        <div className="text-3xl font-bold mb-1">{stats.this_month}</div>
                         <div className="text-sm text-purple-100">Bulan Ini</div>
                     </div>
 
+                    {/* Featured */}
                     <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg p-6 text-white">
                         <div className="flex items-center justify-between mb-4">
                             <div className="p-3 bg-white bg-opacity-20 rounded-lg">
-                                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M9. 049 2.927c.3-.921 1. 603-.921 1.902 0l1.07 3. 292a1 1 0 00.95.69h3. 462c.969 0 1.371 1.24.588 1.81l-2.8 2. 034a1 1 0 00-.364 1.118l1.07 3.292c. 3.921-.755 1. 688-1.54 1.118l-2.8-2. 034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-. 57-.38-1.81. 588-1.81h3. 461a1 1 0 00.951-.69l1.07-3.292z" />
-                                </svg>
+                                {/* Fix: Use Icon instead of raw SVG */}
+                                <FaStar className="w-6 h-6" />
                             </div>
                         </div>
                         <div className="text-3xl font-bold mb-1">{stats.featured}</div>
@@ -434,7 +429,8 @@ const ManageTestimonial = () => {
 
                         <button
                             onClick={exportToExcel}
-                            className="flex items-center gap-2 px-5 py-2. 5 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                            className="flex items-center gap-2 px-5 py-2.5 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                            title="Export data UMKM ke Excel"
                         >
                             <FaFileExcel className="w-5 h-5" />
                             Export ke Excel
@@ -455,7 +451,7 @@ const ManageTestimonial = () => {
 
                         <select
                             value={filterProgram}
-                            onChange={(e) => setFilterProgram(e. target.value)}
+                            onChange={(e) => setFilterProgram(e.target.value)}
                             className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                         >
                             <option value="">Semua Program</option>
@@ -495,12 +491,28 @@ const ManageTestimonial = () => {
                 </div>
             )}
 
-            {/* Form Input (UNCHANGED - keep your existing form JSX) */}
+            {/* Form Input Section */}
             {showForm && (
-                <div className="bg-white rounded-xl shadow-lg p-8 mb-8">
-                    {/* Your existing form JSX here - no changes needed */}
+                <div className="bg-white rounded-xl shadow-lg p-8 mb-8 animate-fade-in">
+                    <div className="flex justify-between items-center mb-8 pb-6 border-b border-gray-200">
+                        <div>
+                            <h2 className="text-2xl font-bold text-gray-900">
+                                {editingId ? 'Edit Testimonial' : 'Tambah Testimonial Baru'}
+                            </h2>
+                            <p className="text-gray-600 text-sm mt-1">
+                                Lengkapi formulir di bawah untuk mengelola data testimonial
+                            </p>
+                        </div>
+                        <button
+                            onClick={handleCancel}
+                            className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-lg"
+                        >
+                            <FaTimes className="w-6 h-6" />
+                        </button>
+                    </div>
+
                     <form onSubmit={handleSubmit}>
-                        {/* Personal Info Section */}
+                        {/* Personal Info */}
                         <div className="mb-8">
                             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                                 <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -595,7 +607,7 @@ const ManageTestimonial = () => {
                             </div>
                         </div>
 
-                        {/* Avatar Upload Section */}
+                        {/* Avatar Upload */}
                         <div className="mb-8">
                             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                                 <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
@@ -632,7 +644,7 @@ const ManageTestimonial = () => {
                                 ) : (
                                     <div className="relative inline-block">
                                         <img
-                                            src={formData. avatarPreview}
+                                            src={formData.avatarPreview}
                                             alt="Avatar Preview"
                                             className="w-32 h-32 rounded-full object-cover shadow-lg mx-auto"
                                         />
@@ -648,7 +660,7 @@ const ManageTestimonial = () => {
                             </div>
                         </div>
 
-                        {/* Testimonial Content Section */}
+                        {/* Testimonial Content */}
                         <div className="mb-8">
                             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                                 <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
@@ -699,7 +711,7 @@ const ManageTestimonial = () => {
                                                 {formData.name || 'Nama Pemberi Testimonial'}
                                             </p>
                                             <p className="text-xs text-gray-600">
-                                                {formData. location || 'Lokasi'}
+                                                {formData.location || 'Lokasi'}
                                             </p>
                                             {formData.program && (
                                                 <p className="text-xs text-blue-600 mt-1 font-semibold">
@@ -727,20 +739,20 @@ const ManageTestimonial = () => {
                                 disabled={loading}
                                 className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg transform hover:-translate-y-0.5 disabled:opacity-50"
                             >
-                                {loading ?  'Menyimpan...' : (editingId ? 'Update Testimonial' : 'Simpan Testimonial')}
+                                {loading ? 'Menyimpan...' : (editingId ? 'Update Testimonial' : 'Simpan Testimonial')}
                             </button>
                         </div>
                     </form>
                 </div>
             )}
 
-            {/* Table List (keep your existing table JSX with updated data source) */}
-            {! showForm && (
+            {/* Table List */}
+            {!showForm && (
                 <div className="bg-white rounded-xl shadow-lg overflow-hidden">
                     {loading ? (
                         <div className="text-center py-12">
                             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
-                            <p className="text-gray-600">Memuat data... </p>
+                            <p className="text-gray-600">Memuat data...</p>
                         </div>
                     ) : (
                         <div className="overflow-x-auto">
@@ -772,12 +784,12 @@ const ManageTestimonial = () => {
                                         <tr key={item.id} className="hover:bg-blue-50 transition-colors">
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-3">
-                                                    {item. full_avatar_url ?  (
+                                                    {item.full_avatar_url ? (
                                                         <img src={item.full_avatar_url} alt={item.name} className="w-12 h-12 rounded-full object-cover shadow-md" />
                                                     ) : (
                                                         <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center">
                                                             <span className="text-blue-600 font-bold text-lg">
-                                                                {item. name. charAt(0)}
+                                                                {item.name.charAt(0)}
                                                             </span>
                                                         </div>
                                                     )}
@@ -811,11 +823,11 @@ const ManageTestimonial = () => {
                                                         ? 'bg-green-100 text-green-800' 
                                                         : 'bg-yellow-100 text-yellow-800'
                                                 }`}>
-                                                    {item. status === 'published' ? 'Published' : 'Draft'}
+                                                    {item.status === 'published' ? 'Published' : 'Draft'}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">
-                                                {new Date(item. created_at).toLocaleDateString('id-ID', {
+                                                {new Date(item.created_at).toLocaleDateString('id-ID', {
                                                     day: 'numeric',
                                                     month: 'short',
                                                     year: 'numeric'
@@ -824,7 +836,7 @@ const ManageTestimonial = () => {
                                             <td className="px-6 py-4 text-sm font-medium whitespace-nowrap">
                                                 <div className="flex gap-3">
                                                     <button
-                                                        onClick={() => handleEdit(item. id)}
+                                                        onClick={() => handleEdit(item.id)}
                                                         className="text-blue-600 hover:text-blue-900 transition-colors p-2 hover:bg-blue-50 rounded-lg"
                                                         title="Edit"
                                                     >
@@ -847,7 +859,7 @@ const ManageTestimonial = () => {
                     )}
                     
                     {/* Empty State */}
-                    {! loading && filteredTestimonials.length === 0 && (
+                    {!loading && filteredTestimonials.length === 0 && (
                         <div className="text-center py-16 bg-gray-50">
                             <div className="w-20 h-20 bg-gray-200 rounded-full mx-auto mb-4 flex items-center justify-center">
                                 <FaQuoteLeft className="w-10 h-10 text-gray-400" />
