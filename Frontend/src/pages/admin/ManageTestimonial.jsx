@@ -8,7 +8,7 @@ import * as XLSX from 'xlsx';
 import toast from 'react-hot-toast';
 
 // ✅ IMPORT SERVICE (Pastikan path sesuai struktur folder Anda)
-import { testimonialAdminApi } from '../../services/TestimonialService';
+import { testimonialAdminApi } from './../services/TestimonialService';
 
 const ManageTestimonial = () => {
     const [showForm, setShowForm] = useState(false);
