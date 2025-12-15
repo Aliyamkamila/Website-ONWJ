@@ -64,6 +64,12 @@ apiClient.interceptors.response.use(
             url: error.config?.url,
         });
         
+        const status = error.response?.status;
+
+        if (status === 401) {
+            Cookies.remove('admin_token');
+            window.location.href = '/login';
+        }
         // PERBAIKAN FUNDAMENTAL: Melempar rejection agar catch block di komponen tereksekusi
         return Promise.reject(error); 
     }

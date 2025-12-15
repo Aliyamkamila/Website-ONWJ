@@ -132,7 +132,7 @@ const AdminLayout = () => {
                 <nav className="flex-1 p-4 space-y-2 overflow-y-auto overflow-x-hidden">
 
                     <SidebarLink 
-                        to="/tukang-minyak-dan-gas"
+                        to="/tukang-minyak-dan-gas/dashboard"
                         icon={<FaTachometerAlt />}
                         label="Dashboard"
                     />
