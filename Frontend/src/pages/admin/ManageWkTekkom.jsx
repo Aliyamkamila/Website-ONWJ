@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { FaEdit, FaTrash, FaPlus, FaTimes, FaMapMarkerAlt, FaCheck, FaOilCan, FaSearch, FaFilter, FaIndustry, FaArrowLeft } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaPlus, FaTimes, FaMapMarkerAlt, FaCheck, FaOilCan, FaSearch, FaFilter, FaIndustry, FaArrowLeft, FaChartLine } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import Cookies from 'js-cookie'; // ✅ TAMBAHKAN INI
 import { wilayahKerjaService } from '../../services/WilayahKerjaService'; // ✅ Import service
+import { produksiBulananService } from '../../services/ProduksiBulananService';
 import MapClickSelector from '../../components/MapClickSelector';
 import PetaImage from '../wk/Peta.png';
 
@@ -12,6 +13,9 @@ const ManageWkTekkom = () => {
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingArea, setEditingArea] = useState(null);
+  const [loadingProd, setLoadingProd] = useState(false);
+  const [prodStats, setProdStats] = useState(null);
+  const [latestByArea, setLatestByArea] = useState({});
   
   // Search & Filter States
   const [searchTerm, setSearchTerm] = useState('');
@@ -25,18 +29,9 @@ const ManageWkTekkom = () => {
     position_y: '',
     color: '#EF4444',
     description: '',
-    facilities: [],
-    production: '',
-    status: 'Operasional',
-    wells: '',
-    depth: '',
-    pressure: '',
-    temperature: '',
     order: 0,
     is_active: true,
   });
-
-  const [facilityInput, setFacilityInput] = useState('');
 
   // ✅ Debug Auth pada Load
   useEffect(() => {
@@ -49,6 +44,43 @@ const ManageWkTekkom = () => {
     
     fetchAreas();
   }, []);
+
+  // Fetch produksi summary and latest per area
+  const fetchProduksiSummary = async () => {
+    try {
+      setLoadingProd(true);
+      const tahun = new Date().getFullYear();
+
+      const [statsResp, allResp] = await Promise.all([
+        produksiBulananService.getStatistics({ tahun }),
+        produksiBulananService.admin.getAll({ tahun })
+      ]);
+
+      if (statsResp.data?.success) {
+        setProdStats(statsResp.data.data || null);
+      } else {
+        setProdStats(null);
+      }
+
+      const latestMap = {};
+      if (allResp.data?.success && Array.isArray(allResp.data.data)) {
+        for (const item of allResp.data.data) {
+          const key = item.wk_tekkom_id;
+          const cur = latestMap[key];
+          if (!cur || item.tahun > cur.tahun || (item.tahun === cur.tahun && item.bulan > cur.bulan)) {
+            latestMap[key] = item;
+          }
+        }
+      }
+      setLatestByArea(latestMap);
+    } catch (e) {
+      console.error('❌ Gagal memuat ringkasan produksi:', e);
+      setProdStats(null);
+      setLatestByArea({});
+    } finally {
+      setLoadingProd(false);
+    }
+  };
 
   // Filter Logic
   useEffect(() => {
@@ -106,6 +138,8 @@ const ManageWkTekkom = () => {
         setFilteredAreas(data);
         console.log('✅ TEKKOM areas loaded:', data.length);
         toast.success(`${data.length} area TEKKOM berhasil dimuat`);
+        // Load produksi summary after areas are available
+        fetchProduksiSummary();
       }
     } catch (error) {
       console.error('❌ Error fetching TEKKOM areas:', error);
@@ -140,22 +174,7 @@ const ManageWkTekkom = () => {
     }));
   };
 
-  const addFacility = () => {
-    if (facilityInput.trim()) {
-      setFormData(prev => ({
-        ...prev,
-        facilities: [...prev.facilities, facilityInput.trim()]
-      }));
-      setFacilityInput('');
-    }
-  };
-
-  const removeFacility = (index) => {
-    setFormData(prev => ({
-      ...prev,
-      facilities: prev.facilities.filter((_, i) => i !== index)
-    }));
-  };
+  // Facilities and technical inputs removed; managed in ManageProduksi
 
   // ✅ Handle Submit menggunakan service
   const handleSubmit = async (e) => {
@@ -228,13 +247,7 @@ const ManageWkTekkom = () => {
       position_y: parseFloat(area.position_y),
       color: area.color,
       description: area.description,
-      facilities: area.facilities || [],
-      production: area.production || '',
       status: area.status,
-      wells: area.wells || '',
-      depth: area.depth || '',
-      pressure: area.pressure || '',
-      temperature: area.temperature || '',
       order: area.order || 0,
       is_active: area.is_active,
     });
@@ -286,17 +299,10 @@ const ManageWkTekkom = () => {
       position_y: '',
       color: '#EF4444',
       description: '',
-      facilities:  [],
-      production: '',
       status: 'Operasional',
-      wells: '',
-      depth: '',
-      pressure: '',
-      temperature: '',
       order: 0,
       is_active: true,
     });
-    setFacilityInput('');
   };
 
   const handleCancel = () => {
@@ -346,49 +352,85 @@ const ManageWkTekkom = () => {
         )}
       </div>
 
-      {/* Stats Cards */}
+      {/* Stats Cards - Clean & Simple Design */}
       {! showForm && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-white bg-opacity-20 rounded-lg">
-                <FaOilCan className="w-6 h-6" />
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            {/* Total & Active Areas */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <div className="text-sm font-medium text-gray-500 mb-1">Total Area TEKKOM</div>
+                  <div className="text-4xl font-bold text-gray-900">{stats.total}</div>
+                </div>
+                <div className="p-4 bg-blue-50 rounded-xl">
+                  <FaOilCan className="w-8 h-8 text-blue-600" />
+                </div>
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                <div className="flex items-center gap-1">
+                  <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                  <span className="text-gray-600">{stats.aktif} Aktif di Website</span>
+                </div>
               </div>
             </div>
-            <div className="text-3xl font-bold mb-1">{stats.total}</div>
-            <div className="text-sm text-blue-100">Total Area TEKKOM</div>
-          </div>
-          
-          <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg p-6 text-white">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-white bg-opacity-20 rounded-lg">
-                <FaCheck className="w-6 h-6" />
+            
+            {/* Status Breakdown */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="text-sm font-medium text-gray-500 mb-4">Status Operasional</div>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                    <span className="text-sm text-gray-700 font-medium">Operasional</span>
+                  </div>
+                  <div className="text-2xl font-bold text-gray-900">{stats.operasional}</div>
+                </div>
+                <div className="h-px bg-gray-200"></div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 rounded-full bg-gray-400"></div>
+                    <span className="text-sm text-gray-700 font-medium">Non-Operasional</span>
+                  </div>
+                  <div className="text-2xl font-bold text-gray-900">{stats.nonOperasional}</div>
+                </div>
               </div>
             </div>
-            <div className="text-3xl font-bold mb-1">{stats.operasional}</div>
-            <div className="text-sm text-green-100">Operasional</div>
           </div>
 
-          <div className="bg-gradient-to-br from-red-500 to-red-600 rounded-xl shadow-lg p-6 text-white">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-white bg-opacity-20 rounded-lg">
-                <FaTimes className="w-6 h-6" />
+          {/* Production Overview - Clean Design */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between mb-2">
+                <div className="p-3 bg-indigo-50 rounded-xl">
+                  <FaChartLine className="w-6 h-6 text-indigo-600" />
+                </div>
               </div>
+              <div className="text-3xl font-bold text-gray-900 mb-1">{loadingProd ? '...' : Object.keys(latestByArea).length}</div>
+              <div className="text-sm text-gray-500">Area dengan Data (Tahun Ini)</div>
             </div>
-            <div className="text-3xl font-bold mb-1">{stats.nonOperasional}</div>
-            <div className="text-sm text-red-100">Non-Operasional</div>
-          </div>
 
-          <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg p-6 text-white">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-white bg-opacity-20 rounded-lg">
-                <FaIndustry className="w-6 h-6" />
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between mb-2">
+                <div className="p-3 bg-sky-50 rounded-xl">
+                  <FaOilCan className="w-6 h-6 text-sky-600" />
+                </div>
               </div>
+              <div className="text-3xl font-bold text-gray-900 mb-1">{loadingProd ? '...' : (prodStats?.total_produksi_minyak ?? 0).toLocaleString('id-ID')}</div>
+              <div className="text-sm text-gray-500">Total Minyak YTD (BOPD)</div>
             </div>
-            <div className="text-3xl font-bold mb-1">{stats.aktif}</div>
-            <div className="text-sm text-orange-100">Status Aktif</div>
+
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between mb-2">
+                <div className="p-3 bg-emerald-50 rounded-xl">
+                  <FaIndustry className="w-6 h-6 text-emerald-600" />
+                </div>
+              </div>
+              <div className="text-3xl font-bold text-gray-900 mb-1">{loadingProd ? '...' : (prodStats?.total_produksi_gas ?? 0).toLocaleString('id-ID')}</div>
+              <div className="text-sm text-gray-500">Total Gas YTD (MMSCFD)</div>
+            </div>
           </div>
-        </div>
+        </>
       )}
 
       {/* Search & Filter Section */}
@@ -643,133 +685,7 @@ const ManageWkTekkom = () => {
               />
             </div>
 
-            {/* Section 4: Technical Data */}
-            <div className="mb-8">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
-                  <FaIndustry className="w-4 h-4 text-orange-600" />
-                </div>
-                Data Teknis
-              </h3>
-              <div className="grid grid-cols-1 md: grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Produksi
-                  </label>
-                  <input
-                    type="text"
-                    name="production"
-                    value={formData.production}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                    placeholder="Contoh: 5,200 BOPD"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Jumlah Sumur
-                  </label>
-                  <input
-                    type="number"
-                    name="wells"
-                    value={formData.wells}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                    placeholder="12"
-                    min="0"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Kedalaman
-                  </label>
-                  <input
-                    type="text"
-                    name="depth"
-                    value={formData.depth}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                    placeholder="Contoh: 3,450 m"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Tekanan
-                  </label>
-                  <input
-                    type="text"
-                    name="pressure"
-                    value={formData.pressure}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                    placeholder="Contoh: 2,850 psi"
-                  />
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Temperatur
-                  </label>
-                  <input
-                    type="text"
-                    name="temperature"
-                    value={formData.temperature}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                    placeholder="Contoh: 85°C"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Section 5: Facilities */}
-            <div className="mb-8">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center">
-                  <svg className="w-4 h-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                  </svg>
-                </div>
-                Fasilitas & Infrastruktur
-              </h3>
-              <div className="flex gap-2 mb-3">
-                <input
-                  type="text"
-                  value={facilityInput}
-                  onChange={(e) => setFacilityInput(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addFacility())}
-                  className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus: ring-blue-500 focus: border-transparent transition-all"
-                  placeholder="Nama fasilitas (tekan Enter)"
-                />
-                <button
-                  type="button"
-                  onClick={addFacility}
-                  className="px-6 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors"
-                >
-                  + Tambah
-                </button>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {formData.facilities.map((facility, index) => (
-                  <span
-                    key={index}
-                    className="bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-sm flex items-center gap-2 font-medium"
-                  >
-                    {facility}
-                    <button
-                      type="button"
-                      onClick={() => removeFacility(index)}
-                      className="text-blue-600 hover:text-blue-900 font-bold"
-                    >
-                      ✕
-                    </button>
-                  </span>
-                ))}
-              </div>
-            </div>
+            {/* Technical Data & Facilities moved to ManageProduksi */}
 
             {/* Active Status */}
             <div className="bg-gradient-to-br from-green-50 to-blue-50 p-6 rounded-xl border-2 border-green-200">
@@ -827,10 +743,10 @@ const ManageWkTekkom = () => {
                     Status
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
-                    Produksi
+                    Produksi Terbaru
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
-                    Sumur
+                    Sumur (Terbaru)
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Posisi
@@ -895,19 +811,30 @@ const ManageWkTekkom = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          area.status === 'Operasional'
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-red-100 text-red-800'
-                        }`}>
-                          {area.status}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <div className={`w-2 h-2 rounded-full ${
+                            area.status === 'Operasional' ? 'bg-green-500' : 'bg-gray-400'
+                          }`}></div>
+                          <span className="text-sm text-gray-700">{area.status}</span>
+                        </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 font-mono">
-                        {area.production || '-'}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        {latestByArea[area.id] ? (
+                          <div className="flex flex-col">
+                            <span className="font-mono text-blue-600 font-bold">
+                              {latestByArea[area.id].produksi_minyak ? Number(latestByArea[area.id].produksi_minyak).toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-'} BOPD
+                            </span>
+                            <span className="font-mono text-emerald-600 font-bold">
+                              {latestByArea[area.id].produksi_gas ? Number(latestByArea[area.id].produksi_gas).toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-'} MMSCFD
+                            </span>
+                            <span className="text-xs text-gray-500">{latestByArea[area.id].periode}</span>
+                          </div>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        {area.wells || '-'}
+                        {latestByArea[area.id]?.wells ?? '-'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-500">
                         <div>X:  {parseFloat(area.position_x).toFixed(2)}%</div>

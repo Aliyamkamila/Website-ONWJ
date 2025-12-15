@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { produksiBulananService } from '../../services/ProduksiBulananService';
 import './wilayahkerja.css';
 import Peta from './Peta.png';
 
@@ -523,39 +524,99 @@ const ModalHeader = ({ area, onClose }) => (
 
 // TEKKOM Modal Content Component
 const TekkomModalContent = ({ area, activeTab }) => {
-  const dummyProduksi = [
-    { bulan: 'Jan 2025', produksi: '5,200 BOPD', catatan: 'Stabil' },
-    { bulan: 'Feb 2025', produksi: '5,150 BOPD', catatan: 'Maintenance ringan' },
-    { bulan: 'Mar 2025', produksi: '5,320 BOPD', catatan: 'Kenaikan tipis' },
-    { bulan: 'Apr 2025', produksi: '5,280 BOPD', catatan: 'Normal' },
-  ];
+  const [produksiData, setProduksiData] = useState([]);
+  const [loadingProduksi, setLoadingProduksi] = useState(false);
+  const [latestProd, setLatestProd] = useState(null);
+
+  // Fetch produksi data when tab is 'produksi'
+  useEffect(() => {
+    if (activeTab === 'produksi') {
+      fetchProduksi();
+    }
+  }, [activeTab, area.dbId]);
+
+  // Always fetch latest produksi (for Overview tab technical/facilities)
+  useEffect(() => {
+    const fetchLatest = async () => {
+      try {
+        const resp = await produksiBulananService.getAll({ wk_tekkom_id: area.dbId });
+        if (resp.data?.success) {
+          const items = Array.isArray(resp.data.data) ? resp.data.data.slice() : [];
+          items.sort((a, b) => (b.tahun - a.tahun) || (b.bulan - a.bulan));
+          setLatestProd(items[0] || null);
+        } else {
+          setLatestProd(null);
+        }
+      } catch (e) {
+        console.error('❌ Error fetching latest produksi for overview:', e);
+        setLatestProd(null);
+      }
+    };
+    fetchLatest();
+  }, [area.dbId]);
+
+  const fetchProduksi = async () => {
+    setLoadingProduksi(true);
+    try {
+      const response = await produksiBulananService.getAll({
+        wk_tekkom_id: area.dbId,
+        tahun: new Date().getFullYear(),
+      });
+      
+      if (response.data.success) {
+        setProduksiData(response.data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching produksi:', error);
+      setProduksiData([]);
+    } finally {
+      setLoadingProduksi(false);
+    }
+  };
 
   if (activeTab === 'produksi') {
     return (
       <div>
         <h4 className="modal-section-title" style={{ fontSize: '16px', fontWeight: '700', marginBottom: '12px', color: '#111827' }}>
-          📊 Data Produksi Per Bulan (Dummy)
+          📊 Data Produksi Per Bulan
         </h4>
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ backgroundColor: '#f3f4f6', color: '#374151' }}>
-                <th style={{ textAlign: 'left', padding: '10px', fontWeight: 700 }}>Bulan</th>
-                <th style={{ textAlign: 'left', padding: '10px', fontWeight: 700 }}>Produksi</th>
-                <th style={{ textAlign: 'left', padding: '10px', fontWeight: 700 }}>Catatan</th>
-              </tr>
-            </thead>
-            <tbody>
-              {dummyProduksi.map((row) => (
-                <tr key={row.bulan} style={{ borderBottom: '1px solid #e5e7eb' }}>
-                  <td style={{ padding: '10px', fontWeight: 600 }}>{row.bulan}</td>
-                  <td style={{ padding: '10px', color: '#2563eb', fontWeight: 700 }}>{row.produksi}</td>
-                  <td style={{ padding: '10px', color: '#6b7280' }}>{row.catatan}</td>
+        
+        {loadingProduksi ? (
+          <div className="flex justify-center items-center py-8">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          </div>
+        ) : produksiData.length === 0 ? (
+          <div className="text-center py-8 bg-gray-50 rounded-lg">
+            <p className="text-gray-500">Belum ada data produksi untuk area ini</p>
+          </div>
+        ) : (
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ backgroundColor: '#f3f4f6', color: '#374151' }}>
+                  <th style={{ textAlign: 'left', padding: '10px', fontWeight: 700 }}>Bulan</th>
+                  <th style={{ textAlign: 'right', padding: '10px', fontWeight: 700 }}>Minyak (BOPD)</th>
+                  <th style={{ textAlign: 'right', padding: '10px', fontWeight: 700 }}>Gas (MMSCFD)</th>
+                  <th style={{ textAlign: 'left', padding: '10px', fontWeight: 700 }}>Catatan</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {produksiData.map((row) => (
+                  <tr key={row.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
+                    <td style={{ padding: '10px', fontWeight: 600 }}>{row.periode}</td>
+                    <td style={{ padding: '10px', color: '#2563eb', fontWeight: 700, textAlign: 'right' }}>
+                      {row.produksi_minyak ? Number(row.produksi_minyak).toLocaleString('id-ID', { minimumFractionDigits: 2 }) : '-'}
+                    </td>
+                    <td style={{ padding: '10px', color: '#059669', fontWeight: 700, textAlign: 'right' }}>
+                      {row.produksi_gas ? Number(row.produksi_gas).toLocaleString('id-ID', { minimumFractionDigits: 2 }) : '-'}
+                    </td>
+                    <td style={{ padding: '10px', color: '#6b7280' }}>{row.catatan || '-'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     );
   }
@@ -585,16 +646,21 @@ const TekkomModalContent = ({ area, activeTab }) => {
           <DataField label="ID Area" value={area.id} />
           <DataField 
             label="Status" 
-            value={area. status} 
-            color={area.status === 'Operasional' ? '#059669' : '#f59e0b'} 
+            value={latestProd?.status || '-'} 
+            color={latestProd?.status === 'Operasional' ? '#059669' : '#f59e0b'} 
           />
-          {area.wells > 0 && <DataField label="Jumlah Sumur" value={`${area.wells} sumur`} />}
-          {area. depth && <DataField label="Kedalaman" value={area.depth} />}
-          {area.pressure && <DataField label="Tekanan" value={area.pressure} color="#dc2626" />}
-          {area.temperature && <DataField label="Temperatur" value={area.temperature} color="#ea580c" />}
-          {area.production && (
+          {latestProd?.wells > 0 && <DataField label="Jumlah Sumur" value={`${latestProd.wells} sumur`} />}
+          {latestProd?.depth && <DataField label="Kedalaman" value={latestProd.depth} />}
+          {latestProd?.pressure && <DataField label="Tekanan" value={latestProd.pressure} color="#dc2626" />}
+          {latestProd?.temperature && <DataField label="Temperatur" value={latestProd.temperature} color="#ea580c" />}
+          {(latestProd?.produksi_minyak || latestProd?.produksi_gas) && (
             <div style={{ gridColumn: '1 / -1' }}>
-              <DataField label="Produksi" value={area.production} color="#2563eb" fontSize="16px" />
+              <DataField 
+                label="Produksi Terbaru" 
+                value={`Minyak: ${latestProd?.produksi_minyak ?? '-'} BOPD  •  Gas: ${latestProd?.produksi_gas ?? '-'} MMSCFD (${latestProd?.periode || ''})`} 
+                color="#2563eb" 
+                fontSize="16px" 
+              />
             </div>
           )}
         </div>
@@ -605,9 +671,9 @@ const TekkomModalContent = ({ area, activeTab }) => {
         <h4 className="modal-section-title" style={{ fontSize: '16px', fontWeight: '600', marginBottom: '12px', color: '#374151' }}>
           🏭 Fasilitas & Infrastruktur
         </h4>
-        {area.facilities && area.facilities.length > 0 ?  (
+        {latestProd?.facilities && latestProd.facilities.length > 0 ?  (
           <ul style={{ listStyle: 'none', padding: 0, margin: 0, marginBottom: '20px' }}>
-            {area.facilities.map((f, i) => (
+            {latestProd.facilities.map((f, i) => (
               <ListItem key={i} text={f} color={area.color} />
             ))}
           </ul>

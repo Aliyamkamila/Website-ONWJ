@@ -58,6 +58,7 @@ import ManageWkTjsl from './pages/admin/ManageWkTjsl';
 
 // Tekkom
 import ManageHargaTekkom from './pages/admin/ManageMinyak';
+import ManageProduksiTekkom from './pages/admin/ManageProduksi';
 
 // Contacts
 import ManageContacts from './pages/admin/ManageContacts';
@@ -145,6 +146,7 @@ const router = createBrowserRouter([
 
       // Tekkom
       { path: 'manage-harga-tekkom', element: <ManageHargaTekkom /> },
+      { path: 'manage-produksi-tekkom', element: <ManageProduksiTekkom /> },
 
       // Contacts
       { path: 'manage-contacts', element: <ManageContacts /> },

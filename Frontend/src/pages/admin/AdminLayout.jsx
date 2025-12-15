@@ -182,6 +182,9 @@ const AdminLayout = () => {
                         <NavLink to="/tukang-minyak-dan-gas/manage-harga-tekkom" className={subLinkClasses}>
                             Kelola Harga
                         </NavLink>
+                        <NavLink to="/tukang-minyak-dan-gas/manage-produksi-tekkom" className={subLinkClasses}>
+                            Kelola Produksi
+                        </NavLink>
                     </SidebarDropdown>
 
                     {/* Divisi Keuangan */}

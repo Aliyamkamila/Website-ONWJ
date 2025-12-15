@@ -309,6 +309,26 @@ Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin_auth'])->group(fun
 
 /*
 |--------------------------------------------------------------------------
+| Produksi Bulanan Routes
+|--------------------------------------------------------------------------
+*/
+
+Route::prefix('v1')->group(function () {
+    Route::get('/produksi-bulanan', [\App\Http\Controllers\Api\ProduksiBulananController::class, 'index']);
+    Route::get('/produksi-bulanan-statistics', [\App\Http\Controllers\Api\ProduksiBulananController::class, 'statistics']);
+});
+
+Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin_auth'])->group(function () {
+    Route::get('/produksi-bulanan', [\App\Http\Controllers\Api\ProduksiBulananController::class, 'adminIndex']);
+    Route::post('/produksi-bulanan', [\App\Http\Controllers\Api\ProduksiBulananController::class, 'store']);
+    Route::put('/produksi-bulanan/{id}', [\App\Http\Controllers\Api\ProduksiBulananController::class, 'update']);
+    Route::patch('/produksi-bulanan/{id}', [\App\Http\Controllers\Api\ProduksiBulananController::class, 'update']);
+    Route::delete('/produksi-bulanan/{id}', [\App\Http\Controllers\Api\ProduksiBulananController::class, 'destroy']);
+    Route::get('/produksi-bulanan/areas', [\App\Http\Controllers\Api\ProduksiBulananController::class, 'getAreas']);
+});
+
+/*
+|--------------------------------------------------------------------------
 | Gallery Routes - PUBLIC (TAMBAHAN)
 |--------------------------------------------------------------------------
 */

@@ -55,6 +55,12 @@ class WkTekkom extends Model
         return $query->orderBy('order', 'asc')->orderBy('name', 'asc');
     }
 
+    // Relationships
+    public function produksiBulanan()
+    {
+        return $this->hasMany(ProduksiBulanan::class, 'wk_tekkom_id');
+    }
+
     // Accessors
     public function getPositionAttribute()
     {
