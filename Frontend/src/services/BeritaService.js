@@ -1,7 +1,8 @@
 import axios from 'axios';
+import Cookies from 'js-cookie'; 
 
-// ✅ FIXED: Pakai VITE_API_BASE_URL sesuai dengan . env
-const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
+// ✅ Base URL dari environment variable
+const API_URL = import.meta?.env?. VITE_API_BASE_URL || 'http://localhost:8000/api';
 
 // Create axios instance with default config
 const apiClient = axios.create({
@@ -16,19 +17,21 @@ const apiClient = axios.create({
 // ===== REQUEST INTERCEPTOR =====
 apiClient.interceptors.request.use(
     (config) => {
-        // Add auth token if available (for admin routes)
-        const token = localStorage. getItem('admin_token');
+        // ✅ FIX: Ganti localStorage. getItem() jadi Cookies. get()
+        const token = Cookies.get('admin_token'); // ✅ INI YANG DIPERBAIKI
+        
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
 
         // Debug log
         console.log('🚀 API Request:', {
-            method: config.method. toUpperCase(),
+            method: config.method.toUpperCase(),
             url: config.url,
-            baseURL: config.baseURL,
+            baseURL:  config.baseURL,
             fullURL: `${config.baseURL}${config.url}`,
             params: config.params,
+            hasToken: !!token, // ✅ Tambahkan log apakah token ada
         });
 
         return config;
@@ -55,19 +58,29 @@ apiClient.interceptors.response.use(
         // Enhanced error handling
         console.error('❌ API Error:', {
             message: error. message,
-            code: error.code,
-            url: error.config?. url,
+            code: error. code,
+            url: error. config?.url,
             status: error.response?.status,
             data: error.response?.data,
         });
 
         // Specific error messages
-        if (error.code === 'ECONNABORTED') {
+        if (error. code === 'ECONNABORTED') {
             console.error('⏱️ Request timeout - Backend lambat atau tidak running');
         } else if (error.code === 'ERR_NETWORK') {
             console.error('🌐 Network Error - Pastikan backend running di http://localhost:8000');
-        } else if (error.response?. status === 404) {
+        } else if (error.response?.status === 404) {
             console.error('🔍 404 Not Found - Endpoint tidak ditemukan');
+        } else if (error.response?.status === 401) {
+            console.error('🔒 401 Unauthorized - Token tidak valid atau expired');
+            
+            // ✅ Auto redirect ke login jika 401
+            Cookies.remove('admin_token');
+            Cookies.remove('admin_user');
+            
+            if (window.location.pathname !== '/tukang-minyak-dan-gas/login') {
+                window.location.href = '/tukang-minyak-dan-gas/login';
+            }
         } else if (error.response?.status === 500) {
             console.error('💥 500 Server Error - Ada error di backend');
         }
@@ -92,7 +105,7 @@ export const beritaApi = {
      * @param {string} slug - Berita slug
      * @returns {Promise}
      */
-    getBySlug: (slug) => {
+    getBySlug:  (slug) => {
         return apiClient.get(`/v1/berita/${slug}`);
     },
 
@@ -138,7 +151,7 @@ export const beritaAdminApi = {
      * @param {Object} params - Query parameters (page, per_page, status, category, search, sort_by, sort_order)
      * @returns {Promise}
      */
-    getAll: (params = {}) => {
+    getAll:  (params = {}) => {
         return apiClient.get('/v1/admin/berita', { params });
     },
 
@@ -147,13 +160,13 @@ export const beritaAdminApi = {
      * @param {number} id - Berita ID
      * @returns {Promise}
      */
-    getById: (id) => {
+    getById:  (id) => {
         return apiClient.get(`/v1/admin/berita/${id}`);
     },
 
     /**
      * Create new berita
-     * @param {FormData} formData - Berita data (must include: title, date, category, content, image)
+     * @param {FormData} formData - Berita data (must include:  title, date, category, content, image)
      * @returns {Promise}
      */
     create: (formData) => {
@@ -184,7 +197,7 @@ export const beritaAdminApi = {
      * @returns {Promise}
      */
     delete: (id) => {
-        return apiClient.delete(`/v1/admin/berita/${id}`);
+        return apiClient. delete(`/v1/admin/berita/${id}`);
     },
 
     /**
@@ -200,7 +213,7 @@ export const beritaAdminApi = {
      * @param {Array} ids - Array of berita IDs
      * @returns {Promise}
      */
-    bulkDelete: (ids) => {
+    bulkDelete:  (ids) => {
         return apiClient.post('/v1/admin/berita/bulk-delete', { ids });
     },
 };

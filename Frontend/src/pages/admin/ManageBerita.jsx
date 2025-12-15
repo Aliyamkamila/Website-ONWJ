@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaEdit, FaTrash, FaPlus, FaImage, FaTimes, FaNewspaper, FaCalendar, FaUser, FaEye, FaSave, FaCheck, FaSearch, FaFilter, FaArrowLeft, FaFileExcel, FaSpinner } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaPlus, FaImage, FaTimes, FaNewspaper, FaCalendar, FaUser, FaEye, FaSave, FaCheck, FaSearch, FaFilter, FaArrowLeft, FaFileExcel, FaSpinner, FaCog, FaGlobe } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 import { beritaAdminApi } from '../../services/BeritaService';
@@ -76,7 +76,7 @@ const ManageBerita = () => {
             
             if (response.data.success) {
                 console.log('✅ Berita loaded:', response.data.data.length, 'items');
-                setBeritaList(response.data. data);
+                setBeritaList(response.data.data);
             } else {
                 console.warn('⚠️ Response success = false');
                 setBeritaList([]);
@@ -107,12 +107,12 @@ const ManageBerita = () => {
 
     // ===== FILTERING =====
     useEffect(() => {
-        let result = [... beritaList];
+        let result = [...beritaList];
 
         if (searchTerm) {
             result = result.filter(item =>
-                item.title.toLowerCase(). includes(searchTerm.toLowerCase()) ||
-                (item.author && item.author. toLowerCase().includes(searchTerm. toLowerCase())) ||
+                item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                (item.author && item.author.toLowerCase().includes(searchTerm.toLowerCase())) ||
                 item.category.toLowerCase().includes(searchTerm.toLowerCase())
             );
         }
@@ -122,7 +122,7 @@ const ManageBerita = () => {
         }
 
         if (filterStatus) {
-            result = result.filter(item => item.status. toLowerCase() === filterStatus.toLowerCase());
+            result = result.filter(item => item.status.toLowerCase() === filterStatus.toLowerCase());
         }
 
         setFilteredBerita(result);
@@ -149,7 +149,7 @@ const ManageBerita = () => {
                 'Tanggal': item.date ? new Date(item.date).toLocaleDateString('id-ID') : '-',
                 'Penulis': item.author || '-',
                 'Status': item.status || '-',
-                'Tampil di TJSL': item. show_in_tjsl ?  'Ya' : 'Tidak',
+                'Tampil di TJSL': item.show_in_tjsl ? 'Ya' : 'Tidak',
                 'Tampil di Media Informasi': item.show_in_media_informasi ? 'Ya' : 'Tidak',
                 'Tampil di Dashboard': item.show_in_dashboard ? 'Ya' : 'Tidak',
                 'Pinned ke Homepage': item.pin_to_homepage ? 'Ya' : 'Tidak',
@@ -164,7 +164,7 @@ const ManageBerita = () => {
                 { wch: 20 }, { wch: 22 }
             ];
 
-            XLSX. utils.book_append_sheet(wb, ws, 'Data Berita');
+            XLSX.utils.book_append_sheet(wb, ws, 'Data Berita');
 
             const timestamp = new Date().toISOString().slice(0, 10);
             const filename = `Data_Berita_MHJ_ONWJ_${timestamp}.xlsx`;
@@ -175,7 +175,7 @@ const ManageBerita = () => {
 
         } catch (error) {
             console.error('❌ Error exporting to Excel:', error);
-            toast. error('❌ Gagal export ke Excel! ');
+            toast.error('❌ Gagal export ke Excel! ');
         }
     };
 
@@ -192,21 +192,21 @@ const ManageBerita = () => {
         const file = e.target.files[0];
         if (file) {
             if (file.size > 5 * 1024 * 1024) {
-                toast.error('Ukuran file terlalu besar!  Maksimal 5MB');
+                toast.error('Ukuran file terlalu besar! Maksimal 5MB');
                 return;
             }
             
             setFormData(prev => ({
                 ...prev,
                 image: file,
-                imagePreview: URL. createObjectURL(file)
+                imagePreview: URL.createObjectURL(file)
             }));
         }
     };
 
     const removeImage = () => {
         if (formData.imagePreview) {
-            URL. revokeObjectURL(formData.imagePreview);
+            URL.revokeObjectURL(formData.imagePreview);
         }
         setFormData(prev => ({
             ...prev,
@@ -243,13 +243,13 @@ const ManageBerita = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         
-        if (! formData.title || !formData.date || !formData.category || !formData.content) {
+        if (!formData.title || !formData.date || !formData.category || !formData.content) {
             toast.error('Mohon lengkapi semua field yang wajib diisi!');
             return;
         }
 
-        if (! formData.image && !editingId) {
-            toast. error('Mohon upload foto berita!');
+        if (!formData.image && !editingId && !formData.imagePreview) { // Cek imagePreview untuk kasus edit tanpa ganti gambar
+            toast.error('Mohon upload foto berita!');
             return;
         }
 
@@ -259,26 +259,32 @@ const ManageBerita = () => {
             // Prepare FormData
             const submitData = new FormData();
             submitData.append('title', formData.title);
-            submitData.append('date', formData. date);
+            submitData.append('date', formData.date);
             submitData.append('category', formData.category);
             submitData.append('author', formData.author || '');
             submitData.append('short_description', formData.shortDescription || '');
-            submitData. append('content', formData.content);
+            submitData.append('content', formData.content);
             submitData.append('status', formData.status);
             submitData.append('display_option', formData.displayOption || '');
-            submitData.append('auto_link', formData. autoLink || 'none');
-            submitData.append('show_in_tjsl', formData. showInTJSL ? '1' : '0');
-            submitData.append('show_in_media_informasi', formData.showInMediaInformasi ?  '1' : '0');
+            submitData.append('auto_link', formData.autoLink || 'none');
+            submitData.append('show_in_tjsl', formData.showInTJSL ? '1' : '0');
+            submitData.append('show_in_media_informasi', formData.showInMediaInformasi ? '1' : '0');
             submitData.append('show_in_dashboard', formData.showInDashboard ? '1' : '0');
             submitData.append('pin_to_homepage', formData.pinToHomepage ? '1' : '0');
 
             if (formData.image) {
                 submitData.append('image', formData.image);
             }
+            
+            // Tambahkan method PUT/PATCH untuk Laravel (jika menggunakan POST untuk file upload)
+            if (editingId) {
+                submitData.append('_method', 'POST'); 
+            }
 
             let response;
             if (editingId) {
-                response = await beritaAdminApi.update(editingId, submitData);
+                // Gunakan POST jika backend di-handle dengan post() untuk update file, seperti di rute backend Laravel Anda
+                response = await beritaAdminApi.update(editingId, submitData); 
                 toast.success('✅ Berita berhasil diupdate! ');
             } else {
                 response = await beritaAdminApi.create(submitData);
@@ -311,16 +317,16 @@ const ManageBerita = () => {
                 category: berita.category,
                 author: berita.author || '',
                 image: null,
-                imagePreview: berita.full_image_url || null,
+                imagePreview: berita.full_image_url || null, // Menggunakan URL penuh dari API
                 shortDescription: berita.short_description || '',
                 content: berita.content || '',
-                status: berita. status,
+                status: berita.status,
                 displayOption: berita.display_option || '',
                 autoLink: berita.auto_link || 'none',
                 showInTJSL: berita.show_in_tjsl,
                 showInMediaInformasi: berita.show_in_media_informasi,
-                showInDashboard: berita. show_in_dashboard,
-                pinToHomepage: berita. pin_to_homepage
+                showInDashboard: berita.show_in_dashboard,
+                pinToHomepage: berita.pin_to_homepage
             });
             setEditingId(id);
             setShowForm(true);
@@ -346,18 +352,19 @@ const ManageBerita = () => {
     };
 
     const handleCancel = () => {
-        if (window.confirm('Apakah Anda yakin ingin membatalkan?  Data yang belum disimpan akan hilang. ')) {
+        if (window.confirm('Apakah Anda yakin ingin membatalkan? Data yang belum disimpan akan hilang. ')) {
             setShowForm(false);
             resetForm();
         }
     };
 
+    // PERBAIKAN: Mengganti toast.info dengan toast() yang memiliki ikon
     const handlePreview = () => {
-        if (! formData.title || !formData.content) {
+        if (!formData.title || !formData.content) {
             toast.error('Mohon isi minimal judul dan konten untuk preview!');
             return;
         }
-        toast.info('Preview feature coming soon!');
+        toast('Preview feature coming soon!', { icon: '💡' });
     };
 
     // ===== RENDER =====
@@ -375,8 +382,7 @@ const ManageBerita = () => {
             {showForm && (
                 <button
                     onClick={() => {
-                        setShowForm(false);
-                        resetForm();
+                        handleCancel(); // Memanggil handleCancel agar ada konfirmasi
                     }}
                     className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg font-semibold transition-all mb-6"
                 >
@@ -392,7 +398,7 @@ const ManageBerita = () => {
                     <p className="text-gray-600 mt-1">Manajemen berita dan artikel perusahaan</p>
                 </div>
                 
-                {! showForm && (
+                {!showForm && (
                     <button
                         onClick={() => setShowForm(true)}
                         className="flex items-center gap-2 bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-blue-700 transition-all transform hover:-translate-y-0.5"
@@ -404,7 +410,7 @@ const ManageBerita = () => {
             </div>
 
             {/* Stats Cards */}
-            {! showForm && (
+            {!showForm && (
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                     <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white">
                         <div className="flex items-center justify-between mb-4">
@@ -459,7 +465,7 @@ const ManageBerita = () => {
 
                         <button
                             onClick={exportToExcel}
-                            className="flex items-center gap-2 px-5 py-2. 5 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0. 5"
+                            className="flex items-center gap-2 px-5 py-2.5 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                         >
                             <FaFileExcel className="w-5 h-5" />
                             Export ke Excel
@@ -523,7 +529,7 @@ const ManageBerita = () => {
                     <div className="flex justify-between items-center mb-8 pb-6 border-b border-gray-200">
                         <div>
                             <h2 className="text-2xl font-bold text-gray-900">
-                                {editingId ?  'Edit Berita' : 'Tambah Berita Baru'}
+                                {editingId ? 'Edit Berita' : 'Tambah Berita Baru'}
                             </h2>
                             <p className="text-gray-600 text-sm mt-1">
                                 Lengkapi formulir di bawah ini untuk mengelola konten berita
@@ -621,7 +627,7 @@ const ManageBerita = () => {
                             </h3>
                             
                             <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-blue-500 transition-all bg-gray-50">
-                                {! formData.imagePreview ?  (
+                                {!formData.imagePreview ? (
                                     <div>
                                         <input
                                             type="file"
@@ -715,14 +721,12 @@ const ManageBerita = () => {
                             </div>
                         </div>
 
-                        {/* Section 4: Settings */}
+                        {/* Section 4: Settings (Pengaturan Publikasi) */}
                         <div className="mb-8">
                             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                                 <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
-                                    <svg className="w-4 h-4 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10. 325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1. 543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1. 543.94-3.31-. 826-2.37-2. 37a1.724 1. 724 0 00-1. 065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3. 31 2.37-2. 37.996.608 2. 296.07 2.572-1.065z" />
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                    </svg>
+                                    {/* MENGGANTI SVG INLINE */}
+                                    <FaCog className="w-4 h-4 text-orange-600" />
                                 </div>
                                 Pengaturan Publikasi
                             </h3>
@@ -762,13 +766,12 @@ const ManageBerita = () => {
                             </div>
                         </div>
 
-                        {/* Section 5: Distribution */}
+                        {/* Section 5: Distribution (Distribusi Konten) */}
                         <div className="mb-8">
                             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                                 <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center">
-                                    <svg className="w-4 h-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5. 447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-. 553-.894L15 4m0 13V4m0 0L9 7" />
-                                    </svg>
+                                    {/* MENGGANTI SVG INLINE */}
+                                    <FaGlobe className="w-4 h-4 text-indigo-600" />
                                 </div>
                                 Distribusi Konten
                             </h3>
@@ -882,7 +885,7 @@ const ManageBerita = () => {
             )}
 
             {/* ========== TABLE LIST BERITA ========== */}
-            {! showForm && (
+            {!showForm && (
                 <div className="bg-white rounded-xl shadow-lg overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="min-w-full divide-y divide-gray-200">
@@ -920,7 +923,7 @@ const ManageBerita = () => {
                                         </td>
                                         <td className="px-6 py-4">
                                             <span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                                                {item. category}
+                                                {item.category}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">
@@ -941,7 +944,7 @@ const ManageBerita = () => {
                                         </td>
                                         <td className="px-6 py-4">
                                             <div className="flex flex-wrap gap-1">
-                                                {item. show_in_tjsl && (
+                                                {item.show_in_tjsl && (
                                                     <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-md font-semibold">
                                                         TJSL
                                                     </span>
@@ -966,14 +969,14 @@ const ManageBerita = () => {
                                         <td className="px-6 py-4 text-sm font-medium whitespace-nowrap">
                                             <div className="flex gap-3">
                                                 <button
-                                                    onClick={() => handleEdit(item. id)}
+                                                    onClick={() => handleEdit(item.id)}
                                                     className="text-blue-600 hover:text-blue-900 transition-colors p-2 hover:bg-blue-50 rounded-lg"
                                                     title="Edit"
                                                 >
                                                     <FaEdit className="w-5 h-5" />
                                                 </button>
                                                 <button
-                                                    onClick={() => handleDelete(item. id)}
+                                                    onClick={() => handleDelete(item.id)}
                                                     className="text-red-600 hover:text-red-900 transition-colors p-2 hover:bg-red-50 rounded-lg"
                                                     title="Hapus"
                                                 >
@@ -987,7 +990,7 @@ const ManageBerita = () => {
                         </table>
                     </div>
                     
-                    {filteredBerita.length === 0 && ! loading && (
+                    {filteredBerita.length === 0 && !loading && (
                         <div className="text-center py-16 bg-gray-50">
                             <div className="w-20 h-20 bg-gray-200 rounded-full mx-auto mb-4 flex items-center justify-center">
                                 <FaNewspaper className="w-10 h-10 text-gray-400" />

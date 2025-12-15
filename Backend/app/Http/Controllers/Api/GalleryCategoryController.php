@@ -10,7 +10,11 @@ use Illuminate\Support\Facades\Validator;
 class GalleryCategoryController extends Controller
 {
     /**
-     * Get all categories (Public)
+     * ==================== PUBLIC ====================
+     */
+
+    /**
+     * Get all categories
      * GET /api/v1/gallery-categories
      */
     public function index(Request $request)
@@ -18,15 +22,15 @@ class GalleryCategoryController extends Controller
         try {
             $query = GalleryCategory::query();
 
-            // Filter active only for public
+            // Default: hanya active
             if (! $request->has('include_inactive')) {
-                $query->active();
+                $query->where('is_active', true);
             }
 
-            // With gallery count
-            $query->withCount('galleries');
-
-            $categories = $query->ordered()->get();
+            $categories = $query
+                ->withCount('galleries')
+                ->orderBy('order')
+                ->get();
 
             return response()->json([
                 'success' => true,
@@ -44,7 +48,7 @@ class GalleryCategoryController extends Controller
     }
 
     /**
-     * Get single category
+     * Get single category by slug
      * GET /api/v1/gallery-categories/{slug}
      */
     public function show($slug)
@@ -70,29 +74,29 @@ class GalleryCategoryController extends Controller
     }
 
     /**
-     * ==================== ADMIN ROUTES ====================
+     * ==================== ADMIN ====================
      */
 
     /**
-     * Create category (Admin)
+     * Create category
      * POST /api/v1/admin/gallery-categories
      */
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'slug' => 'nullable|string|max:255|unique:gallery_categories,slug',
+            'name'        => 'required|string|max:255',
+            'slug'        => 'nullable|string|max:255|unique:gallery_categories,slug',
             'description' => 'nullable|string',
-            'icon' => 'nullable|string|max:100',
-            'order' => 'nullable|integer',
-            'is_active' => 'nullable|boolean',
+            'icon'        => 'nullable|string|max:100',
+            'order'       => 'nullable|integer',
+            'is_active'   => 'nullable|boolean',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Validation error',
-                'errors' => $validator->errors()
+                'errors'  => $validator->errors()
             ], 422);
         }
 
@@ -102,38 +106,38 @@ class GalleryCategoryController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Category created successfully',
-                'data' => $category
+                'data'    => $category
             ], 201);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to create category',
-                'error' => $e->getMessage()
+                'error'   => $e->getMessage()
             ], 500);
         }
     }
 
     /**
-     * Update category (Admin)
+     * Update category
      * PUT /api/v1/admin/gallery-categories/{id}
      */
     public function update(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'slug' => 'nullable|string|max:255|unique:gallery_categories,slug,' .  $id,
+            'name'        => 'required|string|max:255',
+            'slug'        => 'nullable|string|max:255|unique:gallery_categories,slug,' . $id,
             'description' => 'nullable|string',
-            'icon' => 'nullable|string|max:100',
-            'order' => 'nullable|integer',
-            'is_active' => 'nullable|boolean',
+            'icon'        => 'nullable|string|max:100',
+            'order'       => 'nullable|integer',
+            'is_active'   => 'nullable|boolean',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Validation error',
-                'errors' => $validator->errors()
+                'errors'  => $validator->errors()
             ], 422);
         }
 
@@ -144,33 +148,34 @@ class GalleryCategoryController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Category updated successfully',
-                'data' => $category
+                'data'    => $category
             ], 200);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to update category',
-                'error' => $e->getMessage()
+                'error'   => $e->getMessage()
             ], 500);
         }
     }
 
     /**
-     * Delete category (Admin)
+     * Delete category
      * DELETE /api/v1/admin/gallery-categories/{id}
      */
     public function destroy($id)
     {
         try {
             $category = GalleryCategory::findOrFail($id);
+            $galleryCount = $category->galleries()->count();
 
-            // Check if has galleries
-            if ($category->galleries()->count() > 0) {
+            if ($galleryCount > 0) {
                 return response()->json([
-                    'success' => false,
-                    'message' => 'Cannot delete category with existing galleries'
-                ], 400);
+                    'success'        => false,
+                    'message'        => 'Cannot delete category with existing galleries',
+                    'gallery_count' => $galleryCount
+                ], 422);
             }
 
             $category->delete();
@@ -184,7 +189,7 @@ class GalleryCategoryController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to delete category',
-                'error' => $e->getMessage()
+                'error'   => $e->getMessage()
             ], 500);
         }
     }

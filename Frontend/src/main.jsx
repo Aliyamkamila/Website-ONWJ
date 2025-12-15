@@ -25,6 +25,7 @@ import Mmanajemen from './pages/manajemen/mmanajemen';
 import UmkmPage from './pages/UmkmPage';
 import KontakPage from './pages/KontakPage';
 import Profile from './pages/landingpage/profile';
+import GalleryPage from './pages/GalleryPage'; // ← BARU: Import GalleryPage
 
 // ==== WILAYAH KERJA ====
 import Mainwk from './pages/wk/mainwk';
@@ -41,6 +42,7 @@ import ManageUmkm from './pages/admin/ManageUmkm';
 import ManageTestimonial from './pages/admin/ManageTestimonial';
 import ManageAngkaStatistikTJSL from './pages/admin/ManageAngkaStatistikTJSL';
 import UnifiedImportExport from './pages/admin/UnifiedImportExport';
+import ManageGallery from "./pages/admin/Gallery/ManageGallery";
 
 // Sekretaris Perusahaan
 import ManagePenghargaan from './pages/admin/ManagePenghargaan';
@@ -80,6 +82,7 @@ const router = createBrowserRouter([
       { path: 'berita-tjsl', element: <BeritaTJSLPage /> },
       { path: 'artikel/:slug', element: <ArtikelPage /> },
       { path: 'program-berkelanjutan', element: <AllProgramsPage /> },
+      { path: 'gallery', element: <GalleryPage /> }, // ← BARU: Public Gallery Route
       { path: 'tentang', element: <Tentang /> },
       { path: 'kelola', element: <TataKelola /> },
       { path: 'media-informasi', element: <MediaInformasiPage /> },
@@ -126,6 +129,7 @@ const router = createBrowserRouter([
       { path: 'manage-testimonial', element: <ManageTestimonial /> },
       { path: 'manage-angka-statistik-tjsl', element: <ManageAngkaStatistikTJSL /> },
       { path: 'unified-import-export', element: <UnifiedImportExport /> },
+      { path: 'manage-gallery', element: <ManageGallery /> }, // ← BARU: Admin Gallery Route
 
       // Sekper
       { path: 'manage-penghargaan', element: <ManagePenghargaan /> },
