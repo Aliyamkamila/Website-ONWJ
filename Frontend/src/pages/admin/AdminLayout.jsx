@@ -100,7 +100,7 @@ const AdminLayout = () => {
 
                 {/* Logo */}
                 <div className="p-6 border-b border-gray-200">
-                    <Link to="/tukang-minyak-dan-gas/dashboard" className="flex items-center gap-3">
+                    <Link to="/tukang-minyak-dan-gas" className="flex items-center gap-3">
                         <img src={logo} alt="Logo" className="h-10 w-10" />
                         <div>
                             <h2 className="font-bold text-gray-900">Admin Panel</h2>
@@ -132,7 +132,7 @@ const AdminLayout = () => {
                 <nav className="flex-1 p-4 space-y-2 overflow-y-auto overflow-x-hidden">
 
                     <SidebarLink 
-                        to="/tukang-minyak-dan-gas/dashboard"
+                        to="/tukang-minyak-dan-gas"
                         icon={<FaTachometerAlt />}
                         label="Dashboard"
                     />

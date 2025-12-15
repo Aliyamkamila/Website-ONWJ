@@ -1,11 +1,12 @@
 import axios from 'axios';
+import Cookies from 'js-cookie'; // ✅ Digunakan untuk mengambil token dari cookie
 
 // Base API URL
-const API_BASE_URL = import.meta.env. VITE_API_BASE_URL || 'http://localhost:8000/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
 
 // ✅ DEBUG LOG
 console.log('🔧 umkmService initialized');
-console.log('📍 VITE_API_BASE_URL:', import.meta.env. VITE_API_BASE_URL);
+console.log('📍 VITE_API_BASE_URL:', import.meta.env.VITE_API_BASE_URL);
 console.log('📍 API_BASE_URL:', API_BASE_URL);
 
 // Create axios instance
@@ -15,21 +16,24 @@ const apiClient = axios.create({
         'Content-Type': 'application/json',
         'Accept': 'application/json',
     },
-    withCredentials: false,
+    // Jika backend menggunakan cookie, withCredentials harus true
+    // withCredentials: true, // <-- Opsional: Coba aktifkan ini jika token disimpan sebagai HttpOnly cookie
 });
 
 // Add auth token to requests if available
 apiClient.interceptors.request.use(
     (config) => {
         console.log('🚀 UMKM API Request:', {
-            method: config.method. toUpperCase(),
+            method: config.method.toUpperCase(),
             url: config.url,
             baseURL: config.baseURL,
             fullURL: `${config.baseURL}${config.url}`,
             params: config.params,
         });
         
-        const token = localStorage.getItem('admin_token');
+        // PERBAIKAN: Mengambil token dari Cookies
+        const token = Cookies.get('admin_token'); 
+        
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
@@ -37,7 +41,7 @@ apiClient.interceptors.request.use(
     },
     (error) => {
         console.error('❌ Request Error:', error);
-        return Promise. reject(error);
+        return Promise.reject(error);
     }
 );
 
@@ -52,7 +56,7 @@ apiClient.interceptors.response.use(
         return response;
     },
     (error) => {
-        console. error('❌ UMKM API Error:', {
+        console.error('❌ UMKM API Error:', {
             message: error.message,
             code: error.code,
             status: error.response?.status,
@@ -60,12 +64,8 @@ apiClient.interceptors.response.use(
             url: error.config?.url,
         });
         
-        if (error.response?.status === 401) {
-            // Unauthorized - redirect to login
-            localStorage. removeItem('admin_token');
-            window.location.href = '/tukang-minyak-dan-gas/login';
-        }
-        return Promise.reject(error);
+        // PERBAIKAN FUNDAMENTAL: Melempar rejection agar catch block di komponen tereksekusi
+        return Promise.reject(error); 
     }
 );
 
@@ -78,17 +78,17 @@ export const umkmService = {
             const response = await apiClient.get('/v1/umkm', { params });
             return response.data;
         } catch (error) {
-            console. error('❌ getAllUmkm error:', error);
-            throw error. response?.data || error.message;
+            // PERBAIKAN: Cukup lempar objek error Axios
+            throw error; 
         }
     },
 
     getUmkmById: async (id) => {
         try {
             const response = await apiClient.get(`/v1/umkm/${id}`);
-            return response. data;
+            return response.data;
         } catch (error) {
-            throw error.response?.data || error. message;
+            throw error;
         }
     },
 
@@ -97,7 +97,7 @@ export const umkmService = {
             const response = await apiClient.get('/v1/umkm-categories');
             return response.data;
         } catch (error) {
-            throw error.response?. data || error.message;
+            throw error;
         }
     },
 
@@ -106,7 +106,7 @@ export const umkmService = {
             const response = await apiClient.get('/v1/umkm-status-options');
             return response.data;
         } catch (error) {
-            throw error.response?.data || error.message;
+            throw error;
         }
     },
 
@@ -116,7 +116,8 @@ export const umkmService = {
             const response = await apiClient.get('/v1/admin/umkm');
             return response.data;
         } catch (error) {
-            throw error.response?.data || error.message;
+            // PERBAIKAN: Cukup lempar objek error Axios
+            throw error;
         }
     },
 
@@ -124,25 +125,33 @@ export const umkmService = {
         try {
             const response = await apiClient.post('/v1/admin/umkm', formData, {
                 headers: {
-                    'Content-Type': 'multipart/form-data',
+                    // Set Content-Type ke undefined agar Axios/Browser otomatis mengatur boundary
+                    'Content-Type': undefined, 
                 },
             });
             return response.data;
         } catch (error) {
-            throw error.response?.data || error. message;
+            throw error;
         }
     },
 
     updateUmkm: async (id, formData) => {
         try {
+            // Pastikan Anda menggunakan PUT atau PATCH di backend Laravel/Express/dll. 
+            // Jika backend hanya menerima POST untuk update form-data, tambahkan _method: 'PUT'/'PATCH' 
+            // ke dalam formData (ini adalah konvensi Laravel)
+            
+            // Contoh konvensi Laravel:
+            // formData.append('_method', 'PUT'); 
+
             const response = await apiClient.post(`/v1/admin/umkm/${id}`, formData, {
                 headers: {
-                    'Content-Type': 'multipart/form-data',
+                    'Content-Type': undefined, 
                 },
             });
             return response.data;
         } catch (error) {
-            throw error.response?.data || error.message;
+            throw error;
         }
     },
 
@@ -151,7 +160,7 @@ export const umkmService = {
             const response = await apiClient.delete(`/v1/admin/umkm/${id}`);
             return response.data;
         } catch (error) {
-            throw error.response?.data || error.message;
+            throw error;
         }
     },
 };

@@ -5,9 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str; // ✅ PENTING: Import Str untuk generate slug
 
 class Umkm extends Model
 {
@@ -17,72 +16,116 @@ class Umkm extends Model
 
     protected $fillable = [
         'name',
-        'slug',
+        'slug', // ✅ PENTING: Tambahkan ini agar bisa disimpan
         'category',
         'owner',
         'location',
         'description',
         'testimonial',
-        'image_path',
-        'image_url',
         'shop_link',
         'contact_number',
+        'image_path',
         'status',
         'year_started',
         'achievement',
         'is_featured',
-        'display_order',
         'views',
     ];
 
     protected $casts = [
         'is_featured' => 'boolean',
-        'display_order' => 'integer',
         'views' => 'integer',
         'year_started' => 'integer',
     ];
 
-    protected $appends = ['full_image_url'];
+    protected $appends = ['full_image_url', 'whatsapp_link'];
 
-    // ===== BOOT METHOD =====
+    /**
+     * ✅ LOGIKA OTOMATIS GENERATE SLUG & HAPUS GAMBAR
+     * Fungsi boot() ini akan berjalan otomatis setiap ada event create/update/delete
+     */
     protected static function boot()
     {
         parent::boot();
 
-        // Auto-generate slug
+        // 1. Saat Membuat Data Baru (Creating)
         static::creating(function ($umkm) {
+            // Jika slug kosong, buat dari nama (contoh: "Kopi Enak" -> "kopi-enak")
             if (empty($umkm->slug)) {
                 $umkm->slug = static::generateUniqueSlug($umkm->name);
             }
         });
 
-        // Delete image when deleting UMKM
+        // 2. Saat Mengupdate Data (Updating)
+        static::updating(function ($umkm) {
+            // Jika nama berubah, update slug juga agar sinkron
+            if ($umkm->isDirty('name')) {
+                $umkm->slug = static::generateUniqueSlug($umkm->name, $umkm->id);
+            }
+        });
+
+        // 3. Saat Menghapus Data (Deleting)
         static::deleting(function ($umkm) {
+            // Hapus file gambar dari storage jika ada
             if ($umkm->image_path && Storage::disk('public')->exists($umkm->image_path)) {
                 Storage::disk('public')->delete($umkm->image_path);
             }
         });
     }
 
-    // ===== ACCESSORS =====
-    public function getFullImageUrlAttribute()
+    /**
+     * ✅ Helper untuk memastikan slug unik (tidak duplikat)
+     * Misal: "kopi-enak" sudah ada, maka jadi "kopi-enak-1", "kopi-enak-2", dst.
+     */
+    public static function generateUniqueSlug($name, $id = null)
     {
-        // Priority: external URL > local storage > default
-        if ($this->image_url) {
-            return $this->image_url;
+        $slug = Str::slug($name);
+        $originalSlug = $slug;
+        $count = 1;
+
+        // Cek database apakah slug sudah dipakai (kecuali oleh ID sendiri saat update)
+        while (static::where('slug', $slug)
+                    ->when($id, fn($q) => $q->where('id', '!=', $id))
+                    ->exists()) {
+            $slug = $originalSlug . '-' . $count;
+            $count++;
         }
-        
-        if ($this->image_path && Storage::disk('public')->exists($this->image_path)) {
-            return asset('storage/' . $this->image_path);
-        }
-        
-        return asset('images/default-umkm.jpg');
+
+        return $slug;
     }
 
-    // ===== SCOPES =====
-    public function scopeActive($query)
+    // --- ACCESSORS & SCOPES ---
+
+    public function getFullImageUrlAttribute()
     {
-        return $query->where('status', 'Aktif');
+        if (! $this->image_path) {
+            return null;
+        }
+
+        if (Storage::disk('public')->exists($this->image_path)) {
+            return url('storage/' . $this->image_path);
+        }
+
+        return null;
+    }
+
+    public function getWhatsappLinkAttribute()
+    {
+        if (!$this->contact_number) {
+            return null;
+        }
+
+        // Bersihkan karakter non-angka
+        $phone = preg_replace('/\D/', '', $this->contact_number);
+
+        // Ubah 08xxx jadi 628xxx
+        if (substr($phone, 0, 1) === '0') {
+            $phone = '62' . substr($phone, 1);
+        }
+
+        $message = urlencode("Halo, saya tertarik dengan produk {$this->name} dari UMKM Binaan MHJ ONWJ. Bisa dibantu informasi lebih lanjut?");
+
+        return "https://wa.me/{$phone}?text={$message}";
     }
 
     public function scopeFeatured($query)
@@ -90,9 +133,9 @@ class Umkm extends Model
         return $query->where('is_featured', true);
     }
 
-    public function scopeByCategory($query, $category)
+    public function scopeOrdered($query)
     {
-        return $query->where('category', $category);
+        return $query->orderBy('name');
     }
 
     public function scopeSearch($query, $search)
@@ -101,31 +144,8 @@ class Umkm extends Model
             $q->where('name', 'like', "%{$search}%")
               ->orWhere('owner', 'like', "%{$search}%")
               ->orWhere('location', 'like', "%{$search}%")
-              ->orWhere('description', 'like', "%{$search}%");
+              ->orWhere('category', 'like', "%{$search}%");
         });
-    }
-
-    // ✅ TAMBAHKAN SCOPE INI (INI YANG HILANG!)
-    public function scopeOrdered($query)
-    {
-        return $query->orderBy('display_order', 'desc')
-                     ->orderBy('created_at', 'desc');
-    }
-
-    // ===== HELPER METHODS =====
-    public static function generateUniqueSlug($name, $id = null)
-    {
-        $slug = Str::slug($name);
-        $originalSlug = $slug;
-        $count = 1;
-
-        while (static::where('slug', $slug)
-                    ->when($id, fn($q) => $q->where('id', '!=', $id))
-                    ->exists()) {
-            $slug = $originalSlug . '-' . $count++;
-        }
-
-        return $slug;
     }
 
     public function incrementViews()
@@ -135,33 +155,21 @@ class Umkm extends Model
 
     public static function getCategories()
     {
-        return static::select('category')
-                     ->distinct()
-                     ->orderBy('category')
-                     ->pluck('category')
-                     ->toArray();
+        return self::select('category')
+                   ->distinct()
+                   ->pluck('category')
+                   ->filter()
+                   ->values()
+                   ->toArray();
     }
 
     public static function getCategoryCounts()
     {
-        $categories = static::select('category', DB::raw('count(*) as count'))
-                            ->groupBy('category')
-                            ->pluck('count', 'category')
-                            ->toArray();
-        
-        $categories['all'] = static::count();
-        
-        return $categories;
-    }
-
-    public static function getStatistics()
-    {
-        return [
-            'total' => static::count(),
-            'active' => static::where('status', 'Aktif')->count(),
-            'graduated' => static::where('status', 'Lulus Binaan')->count(),
-            'featured' => static::where('is_featured', true)->count(),
-            'total_views' => static::sum('views'),
-        ];
+        return self::selectRaw('category, COUNT(*) as count')
+                   ->groupBy('category')
+                   ->get()
+                   ->mapWithKeys(function ($item) {
+                       return [$item->category => $item->count];
+                   });
     }
 }

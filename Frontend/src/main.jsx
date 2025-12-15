@@ -120,7 +120,7 @@ const router = createBrowserRouter([
       </ProtectedRoute>
     ),
     children: [
-      { index: true, element: <DashboardPage /> },
+      { path: 'dashboard', element: <DashboardPage /> },
 
       // TJSL
       { path: 'manage-berita', element: <ManageBerita /> },

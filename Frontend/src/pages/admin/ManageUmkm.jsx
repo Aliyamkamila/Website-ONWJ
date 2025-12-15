@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom'; // <-- Ditambahkan
 import { FaEdit, FaTrash, FaPlus, FaImage, FaTimes, FaStore, FaStar, FaSearch, FaFilter, FaLink, FaPhone, FaMapMarkerAlt, FaUser, FaCalendar, FaTrophy, FaArrowLeft, FaFileExcel } from 'react-icons/fa';
 import { umkmService } from '../../services/umkmService';
 import toast from 'react-hot-toast';
 import * as XLSX from 'xlsx';
 
 const ManageUmkm = () => {
+    const navigate = useNavigate(); // <-- Ditambahkan: Inisialisasi useNavigate
     const [umkmList, setUmkmList] = useState([]);
     const [filteredList, setFilteredList] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState(null);
+    const [isSubmitting, setIsSubmitting] = useState(false); // Tambahkan state Submitting
     
     // Search & Filter States
     const [searchTerm, setSearchTerm] = useState('');
@@ -50,7 +53,7 @@ const ManageUmkm = () => {
         fetchUmkmData();
     }, []);
 
-    // Filter & Search Logic
+    // Filter & Search Logic (kode ini tetap)
     useEffect(() => {
         let result = [...umkmList];
 
@@ -89,21 +92,30 @@ const ManageUmkm = () => {
             setLoading(true);
             const response = await umkmService.adminGetAllUmkm();
             
-            if (response.success) {
+            if (response && response.success) { // <-- Penanganan Response 200 OK
                 setUmkmList(response.data);
                 setFilteredList(response.data);
             } else {
-                throw new Error(response.message);
+                throw new Error(response?.message || 'Gagal memuat data UMKM: Respon API tidak valid.');
             }
         } catch (error) {
             console.error('Error fetching UMKM:', error);
-            toast.error('Gagal memuat data UMKM');
+            
+            // Penanganan Error 401 (Unauthorized)
+            if (error.response && error.response.status === 401) {
+                toast.error('Sesi Anda berakhir. Mohon login ulang.');
+                navigate('/tukang-minyak-dan-gas/login');
+                return; 
+            }
+            
+            // Penanganan error umum
+            toast.error('Gagal memuat data UMKM'); 
         } finally {
             setLoading(false);
         }
     };
 
-    // ✅ EXPORT TO EXCEL - OPTIMIZED VERSION
+    // ✅ EXPORT TO EXCEL - OPTIMIZED VERSION (Kode tetap sama)
     const exportToExcel = () => {
         try {
             // Check if data is empty
@@ -241,6 +253,7 @@ const ManageUmkm = () => {
         setFilterFeatured('');
     };
 
+    // 🔥 FUNGSI HANDLE SUBMIT YANG SUDAH DIPERBAIKI
     const handleSubmit = async (e) => {
         e.preventDefault();
         
@@ -260,16 +273,18 @@ const ManageUmkm = () => {
         }
 
         const submitData = new FormData();
+        
+        // MAPPING FIELD DARI camelCase di state ke snake_case di Backend
         submitData.append('name', formData.name);
         submitData.append('category', formData.category);
         submitData.append('owner', formData.owner);
         submitData.append('location', formData.location);
-        submitData.append('description', formData.description);
+        submitData.append('description', formData.description || '');
         submitData.append('testimonial', formData.testimonial || '');
-        submitData.append('shop_link', formData.shop_link || '');
-        submitData.append('contact_number', formData.contact_number || '');
-        submitData.append('status', formData.status);
-        submitData.append('year_started', formData.year_started);
+        submitData.append('shop_link', formData.shop_link || ''); // ✅ snake_case
+        submitData.append('contact_number', formData.contact_number || ''); // ✅ snake_case
+        submitData.append('status', formData.status || 'Aktif');
+        submitData.append('year_started', formData.year_started); // Cek: Jika ini string di state, Laravel akan mengkonversi
         submitData.append('achievement', formData.achievement || '');
         submitData.append('is_featured', formData.is_featured ? 1 : 0);
         
@@ -278,11 +293,22 @@ const ManageUmkm = () => {
         }
 
         try {
+            setIsSubmitting(true);
             const loadingToast = toast.loading(editingId ? 'Mengupdate UMKM...' : 'Menambahkan UMKM...');
             
+            // DEBUG LOG: MENGIRIM DATA
+            console.log('📤 Submitting UMKM Data: ');
+            for (let [key, value] of submitData.entries()) {
+                console.log(`  ${key}:`, value);
+            }
+
             let response;
             if (editingId) {
-                response = await umkmService.updateUmkm(editingId, submitData);
+                // Laravel workaround untuk multipart/form-data PUT/PATCH
+                submitData.append('_method', 'POST'); 
+                
+                // Gunakan post, tetapi tambahkan _method: 'PUT'/'PATCH' di formData
+                response = await umkmService.updateUmkm(editingId, submitData); 
             } else {
                 response = await umkmService.createUmkm(submitData);
             }
@@ -291,24 +317,43 @@ const ManageUmkm = () => {
 
             if (response.success) {
                 toast.success(editingId ? 'UMKM berhasil diupdate!' : 'UMKM berhasil ditambahkan!');
+                
+                await fetchUmkmData();
                 setShowForm(false);
                 resetForm();
-                fetchUmkmData();
             } else {
+                // Jika response 200 OK tapi success: false
                 throw new Error(response.message);
             }
         } catch (error) {
-            console.error('Error submitting UMKM:', error);
+            console.error('❌ Full Error:', error);
+            console.error('❌ Error Response:', error.response?.data);
             
-            if (error.errors) {
-                Object.keys(error.errors).forEach(key => {
-                    toast.error(error.errors[key][0]);
+            toast.dismiss(toast.loading());
+            
+            // Penanganan 401 (Unauthorized)
+            if (error.response && error.response.status === 401) {
+                toast.error('Sesi Anda berakhir. Mohon login ulang.');
+                navigate('/tukang-minyak-dan-gas/login');
+                return;
+            }
+
+            // Penanganan 422 (Validation Error)
+            if (error.response?.data?.errors) {
+                const errors = error.response.data.errors;
+                Object.keys(errors).forEach(key => {
+                    toast.error(`${key}: ${errors[key][0]}`);
                 });
             } else {
-                toast.error(error.message || 'Gagal menyimpan data UMKM');
+                // Penanganan error umum atau 500
+                const errorMsg = error.message || error.response?.data?.message || 'Gagal menyimpan data UMKM';
+                toast.error(`❌ ${errorMsg}`);
             }
+        } finally {
+            setIsSubmitting(false);
         }
     };
+    // AKHIR DARI FUNGSI HANDLE SUBMIT YANG DIPERBAIKI
 
     const handleEdit = (umkm) => {
         setFormData({
@@ -350,6 +395,14 @@ const ManageUmkm = () => {
             }
         } catch (error) {
             console.error('Error deleting UMKM:', error);
+            
+            // Tambahkan penanganan 401 saat delete
+            if (error.response && error.response.status === 401) {
+                toast.error('Sesi Anda berakhir. Mohon login ulang.');
+                navigate('/tukang-minyak-dan-gas/login');
+                return;
+            }
+            
             toast.error(error.message || 'Gagal menghapus UMKM');
         }
     };
@@ -775,7 +828,7 @@ const ManageUmkm = () => {
                                     </label>
                                     <input
                                         type="url"
-                                        name="shop_link"
+                                        name="shop_link" // field name sesuai state
                                         value={formData.shop_link}
                                         onChange={handleInputChange}
                                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
@@ -792,7 +845,7 @@ const ManageUmkm = () => {
                                     </label>
                                     <input
                                         type="tel"
-                                        name="contact_number"
+                                        name="contact_number" // field name sesuai state
                                         value={formData.contact_number}
                                         onChange={handleInputChange}
                                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
@@ -809,7 +862,7 @@ const ManageUmkm = () => {
                                     </label>
                                     <input
                                         type="number"
-                                        name="year_started"
+                                        name="year_started" // field name sesuai state
                                         value={formData.year_started}
                                         onChange={handleInputChange}
                                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
@@ -867,14 +920,16 @@ const ManageUmkm = () => {
                                 type="button"
                                 onClick={handleCancel}
                                 className="px-6 py-3 bg-white border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-all"
+                                disabled={isSubmitting}
                             >
                                 Batal
                             </button>
                             <button
                                 type="submit"
                                 className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg transform hover:-translate-y-0.5"
+                                disabled={isSubmitting}
                             >
-                                {editingId ? 'Update UMKM' : 'Simpan UMKM'}
+                                {isSubmitting ? 'Memproses...' : (editingId ? 'Update UMKM' : 'Simpan UMKM')}
                             </button>
                         </div>
                     </form>
@@ -1033,4 +1088,4 @@ const ManageUmkm = () => {
     );
 };
 
-    export default ManageUmkm;
+export default ManageUmkm;

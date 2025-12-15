@@ -7,6 +7,8 @@ use App\Models\Umkm;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str; // ✅ PENTING: Tambahkan ini untuk generate slug
+use Illuminate\Support\Facades\Log; // ✅ Tambahan untuk debugging error server
 
 class UmkmController extends Controller
 {
@@ -41,7 +43,7 @@ class UmkmController extends Controller
                             return $q->where('id', '!=', $featured->id);
                         })
                         ->ordered()
-                        ->paginate($request->per_page ??  12);
+                        ->paginate($request->per_page ?? 12);
 
             // Get category counts
             $categories = Umkm::getCategoryCounts();
@@ -63,6 +65,7 @@ class UmkmController extends Controller
             ], 200);
 
         } catch (\Exception $e) {
+            Log::error('Public UMKM Index Error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to retrieve UMKM',
@@ -127,11 +130,18 @@ class UmkmController extends Controller
 
             // Sorting
             $sortBy = $request->sort_by ?? 'created_at';
-            $sortOrder = $request->sort_order ??  'desc';
-            $query->orderBy($sortBy, $sortOrder);
+            $sortOrder = $request->sort_order ?? 'desc';
+            
+            // Validasi kolom sort untuk mencegah error SQL
+            $allowedSorts = ['name', 'created_at', 'year_started', 'views', 'category', 'status'];
+            if (in_array($sortBy, $allowedSorts)) {
+                $query->orderBy($sortBy, $sortOrder);
+            } else {
+                $query->orderBy('created_at', 'desc');
+            }
 
             // Pagination
-            $perPage = $request->per_page ??  999;
+            $perPage = $request->per_page ?? 20;
             $umkm = $query->paginate($perPage);
 
             return response()->json([
@@ -147,6 +157,7 @@ class UmkmController extends Controller
             ], 200);
 
         } catch (\Exception $e) {
+            Log::error('Admin UMKM Index Error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to retrieve UMKM',
@@ -170,9 +181,9 @@ class UmkmController extends Controller
             'shop_link' => 'nullable|url',
             'contact_number' => 'nullable|string|max:20',
             'status' => 'required|in:Aktif,Lulus Binaan,Dalam Proses',
-            'year_started' => 'required|integer|min:2020|max:' . (date('Y') + 1),
+            'year_started' => 'required|integer|min:2000|max:' . (date('Y') + 1),
             'achievement' => 'nullable|string',
-            'is_featured' => 'nullable|boolean',
+            'is_featured' => 'nullable', // Hapus validasi boolean strict agar menerima '0'/'1' string
             'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120', // 5MB
         ]);
 
@@ -185,7 +196,14 @@ class UmkmController extends Controller
         }
 
         try {
+            // Ambil semua data kecuali image
             $data = $request->except('image');
+
+            // ✅ FIX UTAMA: Generate SLUG otomatis
+            $data['slug'] = Str::slug($request->name);
+
+            // Handle Boolean is_featured (konversi string "true"/"1" ke boolean)
+            $data['is_featured'] = filter_var($request->is_featured, FILTER_VALIDATE_BOOLEAN);
 
             // Handle image upload
             if ($request->hasFile('image')) {
@@ -196,7 +214,7 @@ class UmkmController extends Controller
             }
 
             // If this is featured, unset other featured
-            if ($request->is_featured) {
+            if (!empty($data['is_featured']) && $data['is_featured'] == true) {
                 Umkm::where('is_featured', true)->update(['is_featured' => false]);
             }
 
@@ -205,14 +223,15 @@ class UmkmController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'UMKM created successfully',
-                'data' => $umkm,
+                'data' => $umkm->fresh(),
             ], 201);
 
         } catch (\Exception $e) {
+            Log::error('Create UMKM Error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to create UMKM',
-                'error' => $e->getMessage(),
+                'message' => 'Gagal menyimpan data ke Database',
+                'error' => $e->getMessage(), // Pesan error asli (SQL Error dll)
             ], 500);
         }
     }
@@ -232,9 +251,9 @@ class UmkmController extends Controller
             'shop_link' => 'nullable|url',
             'contact_number' => 'nullable|string|max:20',
             'status' => 'sometimes|required|in:Aktif,Lulus Binaan,Dalam Proses',
-            'year_started' => 'sometimes|required|integer|min:2020|max:' . (date('Y') + 1),
+            'year_started' => 'sometimes|required|integer',
             'achievement' => 'nullable|string',
-            'is_featured' => 'nullable|boolean',
+            'is_featured' => 'nullable',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
         ]);
 
@@ -248,7 +267,12 @@ class UmkmController extends Controller
 
         try {
             $umkm = Umkm::findOrFail($id);
-            $data = $request->except('image');
+            $data = $request->except(['image', '_method']);
+
+            // ✅ FIX: Update slug jika nama berubah
+            if ($request->has('name')) {
+                $data['slug'] = Str::slug($request->name);
+            }
 
             // Handle image upload
             if ($request->hasFile('image')) {
@@ -264,11 +288,15 @@ class UmkmController extends Controller
                 $data['image_path'] = $path;
             }
 
-            // If this is featured, unset other featured
-            if ($request->has('is_featured') && $request->is_featured) {
-                Umkm::where('is_featured', true)
-                    ->where('id', '!=', $id)
-                    ->update(['is_featured' => false]);
+            // Handle featured
+            if ($request->has('is_featured')) {
+                $data['is_featured'] = filter_var($request->is_featured, FILTER_VALIDATE_BOOLEAN);
+                
+                if ($data['is_featured']) {
+                    Umkm::where('is_featured', true)
+                        ->where('id', '!=', $id)
+                        ->update(['is_featured' => false]);
+                }
             }
 
             $umkm->update($data);
@@ -280,6 +308,7 @@ class UmkmController extends Controller
             ], 200);
 
         } catch (\Exception $e) {
+            Log::error('Update UMKM Error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to update UMKM',
@@ -295,7 +324,7 @@ class UmkmController extends Controller
     {
         try {
             $umkm = Umkm::findOrFail($id);
-            $umkm->delete(); // Soft delete
+            $umkm->delete(); // Soft delete (gambar dihapus via boot events di Model)
 
             return response()->json([
                 'success' => true,
@@ -303,6 +332,7 @@ class UmkmController extends Controller
             ], 200);
 
         } catch (\Exception $e) {
+            Log::error('Delete UMKM Error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to delete UMKM',

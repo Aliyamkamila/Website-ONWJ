@@ -10,6 +10,9 @@ const ManageBerita = () => {
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState(null);
     
+    // 1. Tambahkan State untuk Preview Modal
+    const [showPreview, setShowPreview] = useState(false); 
+    
     // State untuk data dari API
     const [beritaList, setBeritaList] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -358,13 +361,13 @@ const ManageBerita = () => {
         }
     };
 
-    // PERBAIKAN: Mengganti toast.info dengan toast() yang memiliki ikon
+    // 2. Update handlePreview Function
     const handlePreview = () => {
         if (!formData.title || !formData.content) {
             toast.error('Mohon isi minimal judul dan konten untuk preview!');
             return;
         }
-        toast('Preview feature coming soon!', { icon: '💡' });
+        setShowPreview(true); // ✅ Buka modal preview
     };
 
     // ===== RENDER =====
@@ -725,7 +728,6 @@ const ManageBerita = () => {
                         <div className="mb-8">
                             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                                 <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
-                                    {/* MENGGANTI SVG INLINE */}
                                     <FaCog className="w-4 h-4 text-orange-600" />
                                 </div>
                                 Pengaturan Publikasi
@@ -770,7 +772,6 @@ const ManageBerita = () => {
                         <div className="mb-8">
                             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                                 <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center">
-                                    {/* MENGGANTI SVG INLINE */}
                                     <FaGlobe className="w-4 h-4 text-indigo-600" />
                                 </div>
                                 Distribusi Konten
@@ -1015,6 +1016,135 @@ const ManageBerita = () => {
                             )}
                         </div>
                     )}
+                </div>
+            )}
+            
+            {/* 3. Tambahkan Preview Modal Component */}
+            {showPreview && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                        {/* Header Modal */}
+                        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center z-10">
+                            <h3 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                                <FaEye className="text-blue-600" />
+                                Preview Berita
+                            </h3>
+                            <button
+                                onClick={() => setShowPreview(false)}
+                                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                            >
+                                <FaTimes className="w-6 h-6 text-gray-600" />
+                            </button>
+                        </div>
+
+                        {/* Content Modal */}
+                        <div className="p-8">
+                            {/* Header Berita */}
+                            <div className="mb-6">
+                                <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600 mb-4">
+                                    <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full font-semibold">
+                                        {formData.category}
+                                    </span>
+                                    <span className="flex items-center gap-1">
+                                        <FaCalendar className="w-4 h-4" />
+                                        {new Date(formData.date).toLocaleDateString('id-ID', {
+                                            day: 'numeric',
+                                            month:  'long',
+                                            year: 'numeric'
+                                        })}
+                                    </span>
+                                    {formData.author && (
+                                        <span className="flex items-center gap-1">
+                                            <FaUser className="w-4 h-4" />
+                                            {formData.author}
+                                        </span>
+                                    )}
+                                    <span className={`px-3 py-1 rounded-full font-semibold text-xs ${
+                                        formData.status === 'published' 
+                                            ? 'bg-green-100 text-green-700' 
+                                            : 'bg-yellow-100 text-yellow-700'
+                                    }`}>
+                                        {formData.status === 'published' ? 'Published' : 'Draft'}
+                                    </span>
+                                </div>
+
+                                <h1 className="text-4xl font-bold text-gray-900 mb-4">
+                                    {formData.title || 'Judul Berita'}
+                                </h1>
+
+                                {formData.shortDescription && (
+                                    <p className="text-lg text-gray-600 italic border-l-4 border-blue-500 pl-4">
+                                        {formData.shortDescription}
+                                    </p>
+                                )}
+                            </div>
+
+                            {/* Gambar */}
+                            {formData.imagePreview && (
+                                <div className="mb-8">
+                                    <img
+                                        src={formData.imagePreview}
+                                        alt={formData.title}
+                                        className="w-full rounded-xl shadow-lg"
+                                    />
+                                </div>
+                            )}
+
+                            {/* Konten */}
+                            <div className="prose prose-lg max-w-none">
+                                <div className="text-gray-800 leading-relaxed whitespace-pre-wrap">
+                                    {formData.content || 'Konten berita... '}
+                                </div>
+                            </div>
+
+                            {/* Tags/Badges */}
+                            <div className="mt-8 pt-6 border-t border-gray-200">
+                                <h4 className="text-sm font-semibold text-gray-700 mb-3">Distribusi Konten: </h4>
+                                <div className="flex flex-wrap gap-2">
+                                    {formData.showInTJSL && (
+                                        <span className="text-xs bg-purple-100 text-purple-700 px-3 py-1 rounded-full font-semibold">
+                                            Berita TJSL
+                                        </span>
+                                    )}
+                                    {formData.showInMediaInformasi && (
+                                        <span className="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full font-semibold">
+                                            Media & Informasi
+                                        </span>
+                                    )}
+                                    {formData.showInDashboard && (
+                                        <span className="text-xs bg-teal-100 text-teal-700 px-3 py-1 rounded-full font-semibold">
+                                            Dashboard
+                                        </span>
+                                    )}
+                                    {formData.pinToHomepage && (
+                                        <span className="text-xs bg-orange-100 text-orange-700 px-3 py-1 rounded-full font-semibold">
+                                            PINNED - Homepage
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Footer Modal */}
+                        <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 flex justify-end gap-3">
+                            <button
+                                onClick={() => setShowPreview(false)}
+                                className="px-6 py-2 bg-white border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-all"
+                            >
+                                Tutup
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setShowPreview(false);
+                                    // Auto scroll ke form
+                                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                                }}
+                                className="px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-all"
+                            >
+                                Edit Berita
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>
