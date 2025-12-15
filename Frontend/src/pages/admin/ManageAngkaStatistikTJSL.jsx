@@ -1,18 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaSave, FaUsers, FaBuilding, FaSolarPanel, FaBook, FaHandsHelping, FaTimes, FaSpinner } from 'react-icons/fa';
-import axios from 'axios';
+import { tjslService } from '../../services/StaticTJSLService'; // ✅ Import tjslService
 import toast from 'react-hot-toast';
-
-const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
-
-const apiClient = axios.create({
-    baseURL: API_URL,
-    headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-    },
-    timeout: 15000,
-});
 
 const colorClasses = {
     orange: {
@@ -23,9 +12,9 @@ const colorClasses = {
     },
     blue: {
         bg: 'bg-blue-50',
-        icon: 'text-blue-600',
+        icon:  'text-blue-600',
         border: 'border-blue-200',
-        focus: 'focus:ring-blue-500 focus:border-blue-500'
+        focus:  'focus:ring-blue-500 focus:border-blue-500'
     },
     green: {
         bg: 'bg-green-50',
@@ -34,10 +23,10 @@ const colorClasses = {
         focus: 'focus:ring-green-500 focus:border-green-500'
     },
     purple: {
-        bg: 'bg-purple-50',
+        bg:  'bg-purple-50',
         icon: 'text-purple-600',
-        border: 'border-purple-200',
-        focus: 'focus:ring-purple-500 focus:border-purple-500'
+        border:  'border-purple-200',
+        focus: 'focus: ring-purple-500 focus: border-purple-500'
     }
 };
 
@@ -60,13 +49,14 @@ const ManageAngkaStatistikTJSL = () => {
         fetchStatistics();
     }, []);
 
+    // ✅ UPDATED: Using tjslService
     const fetchStatistics = async () => {
         try {
             setLoading(true);
-            const response = await apiClient.get('/v1/admin/tjsl/statistik');
+            const response = await tjslService. getAllStatistics();
             
-            if (response.data.success) {
-                const data = response.data.data;
+            if (response.success) {
+                const data = response.data;
                 const transformedData = {};
                 
                 Object.entries(data).forEach(([key, item]) => {
@@ -77,7 +67,7 @@ const ManageAngkaStatistikTJSL = () => {
                         label: item.label,
                         unit: item.unit || '',
                         icon: iconComponents[item.icon_name] || FaUsers,
-                        color: item. color || 'blue'
+                        color: item.color || 'blue'
                     };
                 });
 
@@ -86,7 +76,8 @@ const ManageAngkaStatistikTJSL = () => {
             }
         } catch (error) {
             console.error('❌ Error fetching statistics:', error);
-            toast.error('Gagal memuat data statistik');
+            const errorMsg = error.response?.data?.message || 'Gagal memuat data statistik';
+            toast. error(`❌ ${errorMsg}`);
         } finally {
             setLoading(false);
         }
@@ -94,15 +85,16 @@ const ManageAngkaStatistikTJSL = () => {
 
     const handleChange = (key, value) => {
         setFormData(prev => ({
-            ...prev,
+            ... prev,
             [key]: {
                 ...prev[key],
-                value: value === '' ? 0 : parseInt(value) || 0
+                value:  value === '' ? 0 : parseInt(value) || 0
             }
         }));
         setHasChanges(true);
     };
 
+    // ✅ UPDATED: Using tjslService
     const handleSave = async () => {
         if (!hasChanges) {
             toast.error('Tidak ada perubahan untuk disimpan');
@@ -116,15 +108,13 @@ const ManageAngkaStatistikTJSL = () => {
         try {
             setSaving(true);
             const statistics = Object.entries(formData).map(([key, item]) => ({
-                key: key,
+                key:  key,
                 value: item. value
             }));
 
-            const response = await apiClient.post('/v1/admin/tjsl/statistik/bulk-update', {
-                statistics
-            });
+            const response = await tjslService.bulkUpdateStatistics(statistics);
 
-            if (response.data.success) {
+            if (response.success) {
                 toast.success('✅ Statistik TJSL berhasil diupdate! ');
                 setHasChanges(false);
                 setOriginalData(JSON.parse(JSON.stringify(formData)));
@@ -139,6 +129,7 @@ const ManageAngkaStatistikTJSL = () => {
         }
     };
 
+    // ✅ UPDATED: Using tjslService
     const handleReset = async () => {
         if (!window.confirm('Reset semua ke nilai default?')) {
             return;
@@ -146,16 +137,17 @@ const ManageAngkaStatistikTJSL = () => {
 
         try {
             setSaving(true);
-            const response = await apiClient.post('/v1/admin/tjsl/statistik/reset');
+            const response = await tjslService.resetStatistics();
             
-            if (response.data.success) {
-                toast. success('✅ Statistik telah direset! ');
+            if (response.success) {
+                toast.success('✅ Statistik telah direset! ');
                 setHasChanges(false);
                 await fetchStatistics();
             }
         } catch (error) {
             console.error('❌ Error resetting statistics:', error);
-            toast.error('❌ Gagal reset statistik');
+            const errorMsg = error.response?.data?.message || 'Gagal reset statistik';
+            toast.error(`❌ ${errorMsg}`);
         } finally {
             setSaving(false);
         }
@@ -174,7 +166,7 @@ const ManageAngkaStatistikTJSL = () => {
             <div className="flex items-center justify-center py-20">
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                    <p className="text-gray-600">Memuat data statistik... </p>
+                    <p className="text-gray-600">Memuat data statistik...</p>
                 </div>
             </div>
         );
@@ -216,7 +208,7 @@ const ManageAngkaStatistikTJSL = () => {
                         {saving ? (
                             <>
                                 <FaSpinner className="animate-spin" />
-                                Menyimpan... 
+                                Menyimpan...
                             </>
                         ) : (
                             <>
@@ -232,10 +224,10 @@ const ManageAngkaStatistikTJSL = () => {
                 <div className="mb-8 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg">
                     <div className="flex items-center gap-3">
                         <svg className="w-5 h-5 text-yellow-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M8.257 3.099c. 765-1.36 2. 722-1.36 3. 486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                            <path fillRule="evenodd" d="M8.257 3.099c. 765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-. 213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                         </svg>
                         <p className="text-sm font-medium text-yellow-800">
-                            Ada perubahan yang belum disimpan.  Klik "Simpan Perubahan" untuk menyimpan.
+                            Ada perubahan yang belum disimpan. Klik "Simpan Perubahan" untuk menyimpan.
                         </p>
                     </div>
                 </div>
@@ -243,17 +235,17 @@ const ManageAngkaStatistikTJSL = () => {
 
             <div className="bg-white rounded-xl shadow-lg p-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {Object.entries(formData). map(([key, item]) => {
+                    {Object.entries(formData).map(([key, item]) => {
                         const IconComponent = item.icon;
-                        const colors = colorClasses[item. color];
+                        const colors = colorClasses[item.color];
                         
                         return (
                             <div 
                                 key={key}
-                                className={`${colors. bg} border-2 ${colors.border} rounded-xl p-6 transition-all hover:shadow-md`}
+                                className={`${colors.bg} border-2 ${colors.border} rounded-xl p-6 transition-all hover:shadow-md`}
                             >
                                 <div className="flex items-center gap-3 mb-4">
-                                    <div className={`p-3 bg-white rounded-lg shadow-sm ${colors. icon}`}>
+                                    <div className={`p-3 bg-white rounded-lg shadow-sm ${colors.icon}`}>
                                         <IconComponent className="w-6 h-6" />
                                     </div>
                                     <div>
@@ -263,12 +255,12 @@ const ManageAngkaStatistikTJSL = () => {
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs font-semibold text-gray-700 mb-2">Nilai:</label>
+                                    <label className="block text-xs font-semibold text-gray-700 mb-2">Nilai: </label>
                                     <input
                                         type="number"
-                                        value={item.value}
+                                        value={item. value}
                                         onChange={(e) => handleChange(key, e.target.value)}
-                                        className={`w-full px-4 py-3 text-2xl font-bold border-2 ${colors. border} rounded-lg ${colors. focus} transition-all bg-white`}
+                                        className={`w-full px-4 py-3 text-2xl font-bold border-2 ${colors.border} rounded-lg ${colors.focus} transition-all bg-white`}
                                         min="0"
                                         placeholder="0"
                                         disabled={saving}
@@ -278,11 +270,11 @@ const ManageAngkaStatistikTJSL = () => {
                                 <div className="mt-4 pt-4 border-t border-gray-200">
                                     <p className="text-xs text-gray-600 mb-1">Preview di Website:</p>
                                     <p className="text-3xl font-extrabold text-gray-900">
-                                        {item.value.toLocaleString('id-ID')}+
+                                        {item.value. toLocaleString('id-ID')}+
                                     </p>
                                 </div>
 
-                                {originalData[key] && item.value !== originalData[key].value && (
+                                {originalData[key] && item.value !== originalData[key]. value && (
                                     <div className="mt-3 text-xs text-orange-600 font-semibold flex items-center gap-1">
                                         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" />
@@ -317,7 +309,7 @@ const ManageAngkaStatistikTJSL = () => {
 
             {Object.keys(formData).length > 0 && (
                 <div className="mt-6 bg-gray-50 border border-gray-200 rounded-lg p-6">
-                    <h3 className="text-sm font-bold text-gray-700 mb-3">Total Impact TJSL:</h3>
+                    <h3 className="text-sm font-bold text-gray-700 mb-3">Total Impact TJSL: </h3>
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                         {Object.entries(formData).map(([key, item]) => (
                             <div key={key} className="text-center">

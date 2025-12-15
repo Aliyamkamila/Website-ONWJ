@@ -7,8 +7,8 @@ import {
 import * as XLSX from 'xlsx';
 import toast from 'react-hot-toast';
 
-// ✅ IMPORT SERVICE (Pastikan path sesuai struktur folder Anda)
-import { testimonialAdminApi } from './../services/TestimonialService';
+// ✅ IMPORT SERVICE (Pastikan path dan nama file sesuai)
+import { testimonialAdminApi } from '../../services/testimonialService';
 
 const ManageTestimonial = () => {
     const [showForm, setShowForm] = useState(false);
@@ -208,8 +208,8 @@ const ManageTestimonial = () => {
             }
 
             if (editingId) {
-                // Laravel biasanya butuh _method: 'PUT' atau 'PATCH' di FormData untuk update file
-                submitData.append('_method', 'POST'); 
+                // Catatan: Service testimonialAdminApi.update sudah menangani logic _method: PUT
+                // Jadi kita cukup kirim FormData biasa
                 await testimonialAdminApi.update(editingId, submitData);
                 toast.success('✅ Testimonial berhasil diupdate!');
             } else {
@@ -355,7 +355,7 @@ const ManageTestimonial = () => {
                 )}
             </div>
 
-            {/* Stats Cards (DIPERBAIKI: Menggunakan react-icons) */}
+            {/* Stats Cards (FIXED: Menggunakan react-icons untuk menghindari error SVG) */}
             {!showForm && (
                 <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
                     {/* Total */}
@@ -384,7 +384,6 @@ const ManageTestimonial = () => {
                     <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-xl shadow-lg p-6 text-white">
                         <div className="flex items-center justify-between mb-4">
                             <div className="p-3 bg-white bg-opacity-20 rounded-lg">
-                                {/* Fix: Use Icon instead of raw SVG */}
                                 <FaFileAlt className="w-6 h-6" /> 
                             </div>
                         </div>
@@ -396,7 +395,6 @@ const ManageTestimonial = () => {
                     <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 text-white">
                         <div className="flex items-center justify-between mb-4">
                             <div className="p-3 bg-white bg-opacity-20 rounded-lg">
-                                {/* Fix: Use Icon instead of raw SVG */}
                                 <FaCalendarAlt className="w-6 h-6" />
                             </div>
                         </div>
@@ -408,7 +406,6 @@ const ManageTestimonial = () => {
                     <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg p-6 text-white">
                         <div className="flex items-center justify-between mb-4">
                             <div className="p-3 bg-white bg-opacity-20 rounded-lg">
-                                {/* Fix: Use Icon instead of raw SVG */}
                                 <FaStar className="w-6 h-6" />
                             </div>
                         </div>
