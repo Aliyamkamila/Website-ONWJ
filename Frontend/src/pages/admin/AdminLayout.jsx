@@ -215,13 +215,13 @@ const AdminLayout = () => {
                         <NavLink to="/tukang-minyak-dan-gas/manage-contacts" className={subLinkClasses}>
                             Kelola Kontak Masuk
                         </NavLink>
+                        <NavLink to="/tukang-minyak-dan-gas/manage-manajemen" className={subLinkClasses}>
+                            Kelola Manajemen
+                        </NavLink>
 
                         {/* NEW — PENGATURAN WEBSITE */}
                         <NavLink to="/tukang-minyak-dan-gas/manage-settings" className={subLinkClasses}>
                             Pengaturan Website
-                        </NavLink>
-                        <NavLink to="/tukang-minyak-dan-gas/manage-manajemen" className={subLinkClasses}>
-                            Kelola Manajemen
                         </NavLink>
                     </SidebarDropdown>
                 </nav>

@@ -1,48 +1,34 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import heroBg from '../../assets/hero-bg.png';
-import videoSample from '../../assets/talk 1.MOV';
+import heroService from '../../services/heroService';
 
-// Carousel data - add your videos and images here
-const carouselItems = [
-  {
-    type: 'image',
-    src: heroBg,
-    duration: 5000, // 5 seconds for images
-    label: 'PT Migas Hulu Jabar ONWJ',
-    title: 'Energi Untuk\nKemakmuran Daerah',
-    description: 'Berkomitmen menghadirkan solusi energi berkelanjutan untuk kemajuan Indonesia.',
-  },
-  {
-    type: 'video',
-    src: videoSample,
-    duration: 8000, // 8 seconds - adjust based on actual video length
-    label: 'Inovasi Berkelanjutan',
-    title: 'Teknologi Terdepan\nuntuk Masa Depan',
-  },
-  {
-    type: 'image',
-    src: heroBg,
-    duration: 5000, // 5 seconds for images
-    label: 'Komitmen Sosial',
-    title: 'Memberdayakan\nMasyarakat Lokal',
-    description: 'Bersama komunitas membangun ekonomi yang kuat dan berkelanjutan di setiap daerah.',
-  },
-];
+// Helper function to get full media URL
+const getMediaUrl = (src) => {
+  if (!src) return '';
+  // If it's already a full URL (http/https), return as is
+  if (src.startsWith('http://') || src.startsWith('https://')) {
+    return src;
+  }
+  // Otherwise, it's a storage path - prepend the storage URL
+  return `http://localhost:8000/storage/${src}`;
+};
 
 const Hero = () => {
+  const [carouselItems, setCarouselItems] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [progress, setProgress] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const videoRef = useRef(null);
   const timerRef = useRef(null);
   const startTimeRef = useRef(null);
 
   const currentItem = carouselItems[currentIndex];
-  const isVideo = currentItem.type === 'video';
+  const isVideo = currentItem?.type === 'video';
 
   // Get duration for current item
   const getDuration = () => {
+    if (!currentItem) return 5000;
     if (isVideo && videoRef.current) {
       return videoRef.current.duration * 1000;
     }
@@ -86,6 +72,9 @@ const Hero = () => {
 
   // Auto-advance
   useEffect(() => {
+    // Don't run if no carousel items yet
+    if (carouselItems.length === 0) return;
+
     startTimeRef.current = Date.now();
     const duration = getDuration();
 
@@ -108,14 +97,16 @@ const Hero = () => {
         cancelAnimationFrame(timerRef.current);
       }
     };
-  }, [currentIndex, isVideo]);
+  }, [currentIndex, isVideo, carouselItems.length]);
 
   // Video playback control
   useEffect(() => {
     if (isVideo && videoRef.current) {
-      videoRef.current.play();
+      videoRef.current.play().catch(() => {
+        // Autoplay might be blocked, ignore error
+      });
     }
-  }, [isVideo]);
+  }, [isVideo, carouselItems.length]);
 
   // Reset progress on slide change
   useEffect(() => {
@@ -123,17 +114,63 @@ const Hero = () => {
     startTimeRef.current = Date.now();
   }, [currentIndex]);
 
+  // Fetch hero sections from backend on component mount
+  useEffect(() => {
+    const fetchHeroSections = async () => {
+      try {
+        setIsLoading(true);
+        const data = await heroService.getHeroSections();
+        if (data && data.length > 0) {
+          // Process the data to ensure proper URLs
+          const processedData = data.map(item => ({
+            ...item,
+            src: getMediaUrl(item.src)
+          }));
+          setCarouselItems(processedData);
+        }
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Failed to fetch hero sections:', error);
+        setIsLoading(false);
+      }
+    };
+
+    fetchHeroSections();
+  }, []);
+
+  // Show empty state if no items and not loading
+  if (!isLoading && carouselItems.length === 0) {
+    return (
+      <section 
+        id="hero-section" 
+        className="relative min-h-screen bg-gradient-to-r from-primary-600 to-primary-800 overflow-hidden flex items-center justify-center"
+      >
+        <div className="centered-content text-center text-white">
+          <h1 className="font-heading text-display-lg mb-4">PT Migas Hulu Jabar ONWJ</h1>
+          <p className="text-body-lg text-white/90">Hero sections belum dikonfigurasi.</p>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section 
       id="hero-section" 
       className="relative min-h-screen bg-gradient-to-r from-primary-600 to-primary-800 overflow-hidden"
     >
+      {/* Loading State */}
+      {isLoading && (
+        <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white"></div>
+        </div>
+      )}
+
       {/* Background Media */}
       <div className="fixed top-0 left-0 right-0 w-full h-screen z-0">
         {isVideo ? (
           <video
             ref={videoRef}
-            src={currentItem.src}
+            src={currentItem?.src}
             className="w-full h-full object-cover"
             onTimeUpdate={handleVideoTimeUpdate}
             onEnded={handleVideoEnd}
@@ -144,7 +181,7 @@ const Hero = () => {
           <div
             className="w-full h-full bg-cover bg-center bg-no-repeat"
             style={{
-              backgroundImage: `url(${currentItem.src})`,
+              backgroundImage: currentItem?.src ? `url(${currentItem.src})` : 'none',
               transition: 'background-image 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
             }}
           />
@@ -161,12 +198,12 @@ const Hero = () => {
             <div className="max-w-3xl space-y-grid-4">
               {/* Heading */}
               <h1 className="font-heading text-display-sm sm:text-display-lg lg:text-display-xl text-white text-balance animate-slide-up whitespace-pre-line">
-                {currentItem.title}
+                {currentItem?.title}
               </h1>
               
               {/* Description */}
               <p className="text-body-md sm:text-body-lg lg:text-body-xl text-white/90 max-w-2xl leading-relaxed animate-slide-up animate-stagger-1">
-                {currentItem.description}
+                {currentItem?.description}
               </p>
 
               {/* CTA Buttons */}

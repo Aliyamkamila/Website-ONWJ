@@ -263,7 +263,7 @@ class SettingController extends Controller
     {
         try {
             // Run seeder to reset to defaults
-            \Artisan::call('db:seed', ['--class' => 'SettingSeeder', '--force' => true]);
+            Artisan::call('db:seed', ['--class' => 'SettingSeeder', '--force' => true]);
 
             // Clear cache
             Cache::forget('site_settings');

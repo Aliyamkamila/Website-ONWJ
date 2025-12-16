@@ -8,6 +8,7 @@ use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\AdminController;
 
 // --- API/Public Controllers ---
+use App\Http\Controllers\Api\HeroSectionController;
 use App\Http\Controllers\Api\UmkmController;
 use App\Http\Controllers\Api\ProgramController;
 use App\Http\Controllers\Api\WilayahKerjaController;
@@ -82,6 +83,26 @@ Route::middleware(['auth:sanctum', 'admin_auth'])->group(function () {
         Route::patch('/{id}', [AdminController::class, 'update'])->name('patch');
         Route::delete('/{id}', [AdminController::class, 'destroy'])->name('destroy');
     });
+});
+
+// ========================================================================
+// HERO SECTION ROUTES
+// ========================================================================
+
+// Public - Get active hero sections
+Route::prefix('v1')->group(function () {
+    Route::get('/hero-sections', [HeroSectionController::class, 'index']);
+});
+
+// Admin - Manage hero sections (Protected)
+Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin_auth'])->group(function () {
+    Route::post('/hero-sections/upload-media', [HeroSectionController::class, 'uploadMedia']);
+    Route::delete('/hero-sections/delete-media', [HeroSectionController::class, 'deleteMedia']);
+    Route::get('/hero-sections', [HeroSectionController::class, 'getAll']);
+    Route::post('/hero-sections', [HeroSectionController::class, 'store']);
+    Route::put('/hero-sections/{heroSection}', [HeroSectionController::class, 'update']);
+    Route::delete('/hero-sections/{heroSection}', [HeroSectionController::class, 'destroy']);
+    Route::post('/hero-sections/reorder', [HeroSectionController::class, 'reorder']);
 });
 
 /*
