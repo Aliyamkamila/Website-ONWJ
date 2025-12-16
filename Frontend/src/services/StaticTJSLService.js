@@ -1,13 +1,14 @@
-import axios from 'axios';
-import Cookies from 'js-cookie';
+import axiosInstance from '../api/axios'; // ✅ CHANGED: Import the custom axios instance
+// import axios from 'axios'; // ❌ REMOVED: Not used
+// import Cookies from 'js-cookie'; // Optional: Keep if you plan to use Cookies directly, otherwise can be removed if handled by axios.js
 
-// Base API URL
+// Base API URL (Optional: strictly not needed if axiosInstance handles baseURL, but kept for logging)
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
 
 // ✅ DEBUG LOG
 console.log('🔧 tjslService initialized');
-console.log('📍 VITE_API_BASE_URL:', import.meta.env.VITE_API_BASE_URL);
-console.log('📍 API_BASE_URL:', API_BASE_URL);
+// console.log('📍 VITE_API_BASE_URL:', import.meta.env.VITE_API_BASE_URL); // Optional cleanup
+// console.log('📍 API_BASE_URL:', API_BASE_URL); // Optional cleanup
 
 // TJSL API Services
 export const tjslService = {
@@ -25,7 +26,7 @@ export const tjslService = {
             const response = await axiosInstance.get('/v1/admin/tjsl/statistik');
             return response.data;
         } catch (error) {
-            console. error('❌ Error in getAllStatistics:', error);
+            console.error('❌ Error in getAllStatistics:', error);
             throw error;
         }
     },
@@ -55,7 +56,7 @@ export const tjslService = {
     resetStatistics: async () => {
         try {
             console.log('📞 Calling resetStatistics');
-            const response = await axiosInstance. post('/v1/admin/tjsl/statistik/reset');
+            const response = await axiosInstance.post('/v1/admin/tjsl/statistik/reset');
             return response.data;
         } catch (error) {
             console.error('❌ Error in resetStatistics:', error);
@@ -88,7 +89,7 @@ export const tjslService = {
     updateStatistic: async (key, value) => {
         try {
             console.log('📞 Calling updateStatistic with key:', key, 'value:', value);
-            const response = await axiosInstance. put(`/v1/admin/tjsl/statistik/${key}`, {
+            const response = await axiosInstance.put(`/v1/admin/tjsl/statistik/${key}`, {
                 value
             });
             return response.data;
@@ -99,7 +100,7 @@ export const tjslService = {
     },
 
     // ========================================
-    // PROGRAM TJSL APIs (Jika ada)
+    // PROGRAM TJSL APIs
     // ========================================
     
     /**
@@ -139,7 +140,7 @@ export const tjslService = {
      * @param {FormData} formData - Program data (supports file upload)
      * @returns {Promise} Response with created program
      */
-    createProgram:  async (formData) => {
+    createProgram: async (formData) => {
         try {
             console.log('📞 Calling createProgram');
             const response = await axiosInstance.post('/v1/admin/tjsl/programs', formData, {
@@ -147,7 +148,7 @@ export const tjslService = {
                     'Content-Type': 'multipart/form-data',
                 },
             });
-            return response. data;
+            return response.data;
         } catch (error) {
             console.error('❌ Error in createProgram:', error);
             throw error;
@@ -162,13 +163,13 @@ export const tjslService = {
      */
     updateProgram: async (id, formData) => {
         try {
-            console. log('📞 Calling updateProgram with id:', id);
+            console.log('📞 Calling updateProgram with id:', id);
             // Laravel convention for PUT with FormData
             formData.append('_method', 'PUT');
             
             const response = await axiosInstance.post(`/v1/admin/tjsl/programs/${id}`, formData, {
                 headers: {
-                    'Content-Type':  'multipart/form-data',
+                    'Content-Type': 'multipart/form-data',
                 },
             });
             return response.data;
@@ -185,7 +186,7 @@ export const tjslService = {
      */
     deleteProgram: async (id) => {
         try {
-            console. log('📞 Calling deleteProgram with id:', id);
+            console.log('📞 Calling deleteProgram with id:', id);
             const response = await axiosInstance.delete(`/v1/admin/tjsl/programs/${id}`);
             return response.data;
         } catch (error) {
@@ -195,7 +196,7 @@ export const tjslService = {
     },
 
     // ========================================
-    // PUBLIC TJSL APIs (Jika ada endpoint public)
+    // PUBLIC TJSL APIs
     // ========================================
     
     /**

@@ -27,6 +27,7 @@ class WkTjsl extends Model
         'impact',
         'order',
         'is_active',
+        'related_news_id', // ✅ Ditambahkan
     ];
 
     protected $casts = [
@@ -35,7 +36,16 @@ class WkTjsl extends Model
         'position_y' => 'decimal:5',
         'order' => 'integer',
         'is_active' => 'boolean',
+        'related_news_id' => 'integer', // ✅ Ditambahkan
     ];
+
+    /**
+     * Relationship to Berita model
+     */
+    public function relatedNews() // ✅ Ditambahkan
+    {
+        return $this->belongsTo(Berita::class, 'related_news_id');
+    }
 
     // Scopes
     public function scopeActive($query)

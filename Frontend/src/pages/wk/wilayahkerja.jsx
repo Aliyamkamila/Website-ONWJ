@@ -41,21 +41,21 @@ const Wilayah = () => {
             facilities: area.facilities || [],
             production: area.production || '',
             wells: area.wells || 0,
-            depth: area. depth || '',
+            depth: area.depth || '',
             pressure: area.pressure || '',
-            temperature: area.temperature || '',
+            temperature: area. temperature || '',
             // TJSL fields
             programs: area.programs || [],
             beneficiaries: area.beneficiaries || '',
-            budget: area. budget || '',
+            budget: area.budget || '',
             duration: area.duration || '',
             impact: area.impact || '',
             // Common fields
             status: area.status,
-            // Related news (for future use)
+            // ✅ Related news fields
             related_news_id: area.related_news_id || null,
-            related_news_slug:  area.related_news_slug || null,
-            related_news_title: area.related_news_title || null,
+            related_news_slug: area.related_news?. slug || null,
+            related_news_title: area.related_news?.title || null,
           }));
           
           setAllData(transformedData);
@@ -132,7 +132,7 @@ const Wilayah = () => {
           <h3 className="text-xl font-bold text-gray-800 mb-2">Gagal Memuat Data</h3>
           <p className="text-gray-600 mb-4">{error}</p>
           <button
-            onClick={() => window.location.reload()}
+            onClick={() => window.location. reload()}
             className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             🔄 Muat Ulang Halaman
@@ -319,7 +319,7 @@ const MapMarker = ({ area, isHovered, onHover, onLeave, onClick }) => (
         transform: 'translateX(-50%)',
         backgroundColor: 'rgba(17, 24, 39, 0.95)',
         color: 'white',
-        padding:  '6px 12px',
+        padding: '6px 12px',
         borderRadius: '6px',
         fontSize: '13px',
         fontWeight: '600',
@@ -385,14 +385,14 @@ const LegendItem = ({ area }) => (
     <svg width="20" height="20" viewBox="0 0 24 24" fill={area.color} style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))' }}>
       <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
     </svg>
-    <span className="text-xs font-medium text-gray-700">{area. name}</span>
+    <span className="text-xs font-medium text-gray-700">{area.name}</span>
   </div>
 );
 
 // Modal Component
 const Modal = ({ area, onClose, onViewNews }) => {
   const [activeTab, setActiveTab] = useState(
-    area.category === 'TEKKOM' ? 'overview' : 'overview'
+    area.category === 'TEKKOM' ?  'overview' : 'overview'
   );
 
   const tabs = area.category === 'TEKKOM'
@@ -401,7 +401,7 @@ const Modal = ({ area, onClose, onViewNews }) => {
         { id: 'produksi', label: 'Produksi Bulanan' },
       ]
     : [
-        { id: 'overview', label: 'Ringkasan' },
+        { id: 'overview', label:  'Ringkasan' },
         { id: 'dokumentasi', label: 'Foto Dokumentasi' },
       ];
 
@@ -424,7 +424,7 @@ const Modal = ({ area, onClose, onViewNews }) => {
         background: 'rgba(17,24,39,0.7)',
         display: 'flex',
         alignItems: 'center',
-        justifyContent:  'center',
+        justifyContent: 'center',
         zIndex: 60,
         backdropFilter: 'blur(4px)'
       }}
@@ -448,9 +448,9 @@ const Modal = ({ area, onClose, onViewNews }) => {
               style={{
                 padding: '10px 14px',
                 borderRadius: '8px',
-                border: activeTab === tab.id ? '2px solid #2563eb' : '1px solid #e5e7eb',
+                border: activeTab === tab.id ? '2px solid #2563eb' :  '1px solid #e5e7eb',
                 backgroundColor: activeTab === tab.id ? '#eff6ff' : '#f9fafb',
-                color: activeTab === tab.id ? '#1d4ed8' : '#4b5563',
+                color:  activeTab === tab.id ? '#1d4ed8' : '#4b5563',
                 fontWeight: 700,
                 cursor: 'pointer',
                 transition: 'all 0.2s',
@@ -463,7 +463,7 @@ const Modal = ({ area, onClose, onViewNews }) => {
 
         {/* Modal Body */}
         <div className="modal-body" style={{ padding: '24px' }}>
-          {area.category === 'TEKKOM' ?  (
+          {area.category === 'TEKKOM' ? (
             <TekkomModalContent area={area} activeTab={activeTab} />
           ) : (
             <TjslModalContent area={area} onViewNews={onViewNews} activeTab={activeTab} />
@@ -509,7 +509,7 @@ const ModalHeader = ({ area, onClose }) => (
         transition: 'all 0.2s'
       }}
       onMouseEnter={(e) => {
-        e.target.style. backgroundColor = '#ef4444';
+        e.target.style.backgroundColor = '#ef4444';
         e.target.style.color = 'white';
       }}
       onMouseLeave={(e) => {
@@ -540,8 +540,8 @@ const TekkomModalContent = ({ area, activeTab }) => {
     const fetchLatest = async () => {
       try {
         const resp = await produksiBulananService.getAll({ wk_tekkom_id: area.dbId });
-        if (resp.data?.success) {
-          const items = Array.isArray(resp.data.data) ? resp.data.data.slice() : [];
+        if (resp.data?. success) {
+          const items = Array.isArray(resp.data. data) ? resp.data.data. slice() : [];
           items.sort((a, b) => (b.tahun - a.tahun) || (b.bulan - a.bulan));
           setLatestProd(items[0] || null);
         } else {
@@ -563,7 +563,7 @@ const TekkomModalContent = ({ area, activeTab }) => {
         tahun: new Date().getFullYear(),
       });
       
-      if (response.data.success) {
+      if (response.data. success) {
         setProduksiData(response.data.data);
       }
     } catch (error) {
@@ -577,7 +577,7 @@ const TekkomModalContent = ({ area, activeTab }) => {
   if (activeTab === 'produksi') {
     return (
       <div>
-        <h4 className="modal-section-title" style={{ fontSize: '16px', fontWeight: '700', marginBottom: '12px', color: '#111827' }}>
+        <h4 className="modal-section-title" style={{ fontSize: '16px', fontWeight:  '700', marginBottom: '12px', color: '#111827' }}>
           📊 Data Produksi Per Bulan
         </h4>
         
@@ -594,7 +594,7 @@ const TekkomModalContent = ({ area, activeTab }) => {
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ backgroundColor: '#f3f4f6', color: '#374151' }}>
-                  <th style={{ textAlign: 'left', padding: '10px', fontWeight: 700 }}>Bulan</th>
+                  <th style={{ textAlign: 'left', padding:  '10px', fontWeight: 700 }}>Bulan</th>
                   <th style={{ textAlign: 'right', padding: '10px', fontWeight: 700 }}>Minyak (BOPD)</th>
                   <th style={{ textAlign: 'right', padding: '10px', fontWeight: 700 }}>Gas (MMSCFD)</th>
                   <th style={{ textAlign: 'left', padding: '10px', fontWeight: 700 }}>Catatan</th>
@@ -603,11 +603,11 @@ const TekkomModalContent = ({ area, activeTab }) => {
               <tbody>
                 {produksiData.map((row) => (
                   <tr key={row.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
-                    <td style={{ padding: '10px', fontWeight: 600 }}>{row.periode}</td>
+                    <td style={{ padding:  '10px', fontWeight: 600 }}>{row.periode}</td>
                     <td style={{ padding: '10px', color: '#2563eb', fontWeight: 700, textAlign: 'right' }}>
-                      {row.produksi_minyak ? Number(row.produksi_minyak).toLocaleString('id-ID', { minimumFractionDigits: 2 }) : '-'}
+                      {row.produksi_minyak ?  Number(row.produksi_minyak).toLocaleString('id-ID', { minimumFractionDigits: 2 }) : '-'}
                     </td>
-                    <td style={{ padding: '10px', color: '#059669', fontWeight: 700, textAlign: 'right' }}>
+                    <td style={{ padding:  '10px', color: '#059669', fontWeight: 700, textAlign: 'right' }}>
                       {row.produksi_gas ? Number(row.produksi_gas).toLocaleString('id-ID', { minimumFractionDigits: 2 }) : '-'}
                     </td>
                     <td style={{ padding: '10px', color: '#6b7280' }}>{row.catatan || '-'}</td>
@@ -646,18 +646,18 @@ const TekkomModalContent = ({ area, activeTab }) => {
           <DataField label="ID Area" value={area.id} />
           <DataField 
             label="Status" 
-            value={latestProd?.status || '-'} 
-            color={latestProd?.status === 'Operasional' ? '#059669' : '#f59e0b'} 
+            value={latestProd?. status || '-'} 
+            color={latestProd?.status === 'Operasional' ? '#059669' :  '#f59e0b'} 
           />
-          {latestProd?.wells > 0 && <DataField label="Jumlah Sumur" value={`${latestProd.wells} sumur`} />}
+          {latestProd?. wells > 0 && <DataField label="Jumlah Sumur" value={`${latestProd.wells} sumur`} />}
           {latestProd?.depth && <DataField label="Kedalaman" value={latestProd.depth} />}
-          {latestProd?.pressure && <DataField label="Tekanan" value={latestProd.pressure} color="#dc2626" />}
+          {latestProd?. pressure && <DataField label="Tekanan" value={latestProd.pressure} color="#dc2626" />}
           {latestProd?.temperature && <DataField label="Temperatur" value={latestProd.temperature} color="#ea580c" />}
           {(latestProd?.produksi_minyak || latestProd?.produksi_gas) && (
             <div style={{ gridColumn: '1 / -1' }}>
               <DataField 
                 label="Produksi Terbaru" 
-                value={`Minyak: ${latestProd?.produksi_minyak ?? '-'} BOPD  •  Gas: ${latestProd?.produksi_gas ?? '-'} MMSCFD (${latestProd?.periode || ''})`} 
+                value={`Minyak: ${latestProd?. produksi_minyak ??  '-'} BOPD • Gas: ${latestProd?. produksi_gas ?? '-'} MMSCFD (${latestProd?.periode || ''})`} 
                 color="#2563eb" 
                 fontSize="16px" 
               />
@@ -671,9 +671,9 @@ const TekkomModalContent = ({ area, activeTab }) => {
         <h4 className="modal-section-title" style={{ fontSize: '16px', fontWeight: '600', marginBottom: '12px', color: '#374151' }}>
           🏭 Fasilitas & Infrastruktur
         </h4>
-        {latestProd?.facilities && latestProd.facilities.length > 0 ?  (
+        {latestProd?.facilities && latestProd.facilities.length > 0 ? (
           <ul style={{ listStyle: 'none', padding: 0, margin: 0, marginBottom: '20px' }}>
-            {latestProd.facilities.map((f, i) => (
+            {latestProd. facilities.map((f, i) => (
               <ListItem key={i} text={f} color={area.color} />
             ))}
           </ul>
@@ -736,11 +736,11 @@ const TjslModalContent = ({ area, onViewNews, activeTab }) => {
           <DataField label="ID Area" value={area.id} />
           <DataField 
             label="Status Program" 
-            value={area. status} 
+            value={area.status} 
             color={area.status === 'Aktif' ? '#059669' :  '#f59e0b'} 
           />
           {area.duration && <DataField label="Durasi Program" value={area.duration} />}
-          {area.beneficiaries && <DataField label="Penerima Manfaat" value={area. beneficiaries} color="#7c3aed" />}
+          {area.beneficiaries && <DataField label="Penerima Manfaat" value={area.beneficiaries} color="#7c3aed" />}
           {area.budget && <DataField label="Anggaran Program" value={area.budget} color="#2563eb" fontSize="16px" fontWeight="700" />}
           {area. impact && <DataField label="Dampak Utama" value={area.impact} color="#059669" />}
         </div>
@@ -753,36 +753,69 @@ const TjslModalContent = ({ area, onViewNews, activeTab }) => {
         </h4>
         {area.programs && area.programs.length > 0 ? (
           <ul style={{ listStyle: 'none', padding: 0, margin: 0, marginBottom: '20px' }}>
-            {area.programs.map((p, i) => (
+            {area. programs.map((p, i) => (
               <ListItem key={i} text={p} color={area.color} />
             ))}
           </ul>
         ) : (
-          <p className="modal-text text-gray-500">Tidak ada data program. </p>
+          <p className="modal-text text-gray-500">Tidak ada data program.</p>
         )}
 
-        <div style={{ marginTop: '20px', display: 'flex', gap: '8px', flexDirection: 'column' }}>
-          {area.related_news_slug ?  (
-            <ActionButton
-              primary
-              color="#059669"
-              hoverColor="#047857"
-              onClick={() => onViewNews(area.related_news_slug)}
-            >
-              📰 Lihat Berita Terkait
-            </ActionButton>
+        {/* ✅ Related News Section */}
+        <div style={{ marginTop: '20px' }}>
+          <h4 className="modal-section-title" style={{ fontSize: '16px', fontWeight: '600', marginBottom: '12px', color:  '#374151' }}>
+            📰 Berita Terkait
+          </h4>
+          
+          {area.related_news_slug && area.related_news_title ?  (
+            <div>
+              {/* News Card */}
+              <div style={{
+                padding: '16px',
+                backgroundColor: '#f0fdf4',
+                border: '2px solid #86efac',
+                borderRadius:  '10px',
+                marginBottom: '12px'
+              }}>
+                <div style={{
+                  fontSize: '14px',
+                  fontWeight: '700',
+                  color: '#166534',
+                  marginBottom:  '8px',
+                  lineHeight: '1.4'
+                }}>
+                  📄 {area.related_news_title}
+                </div>
+                <div style={{
+                  fontSize:  '12px',
+                  color: '#15803d'
+                }}>
+                  Klik tombol di bawah untuk membaca selengkapnya
+                </div>
+              </div>
+
+              {/* Action Button */}
+              <ActionButton
+                primary
+                color="#059669"
+                hoverColor="#047857"
+                onClick={() => onViewNews(area. related_news_slug)}
+              >
+                📖 Baca Berita Lengkap
+              </ActionButton>
+            </div>
           ) : (
             <div style={{
-              padding: '12px 16px',
-              borderRadius: '8px',
+              padding: '16px',
+              borderRadius: '10px',
               backgroundColor: '#f3f4f6',
               color: '#9ca3af',
-              fontSize:  '14px',
+              fontSize: '14px',
               fontWeight: '600',
               textAlign: 'center',
               border: '2px dashed #e5e7eb'
             }}>
-              📰 Belum ada berita terkait
+              📰 Belum ada berita terkait untuk program ini
             </div>
           )}
         </div>
@@ -796,7 +829,7 @@ const TjslModalContent = ({ area, onViewNews, activeTab }) => {
 // Data Field Component
 const DataField = ({ label, value, color = '#111827', fontSize = '14px', fontWeight = '600' }) => (
   <div>
-    <div style={{ fontSize:  '12px', color: '#9ca3af', marginBottom: '4px' }}>{label}:</div>
+    <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '4px' }}>{label}:</div>
     <div style={{ fontSize, fontWeight, color }}>{value}</div>
   </div>
 );
@@ -827,7 +860,7 @@ const ActionButton = ({
 }) => {
   const [isHovered, setIsHovered] = useState(false);
 
-  const baseStyle = primary ?  {
+  const baseStyle = primary ? {
     padding: '12px 16px',
     borderRadius: '8px',
     border: 'none',
@@ -837,7 +870,8 @@ const ActionButton = ({
     fontWeight: '600',
     cursor: 'pointer',
     transition: 'all 0.2s',
-    boxShadow: `0 2px 4px ${color}40`
+    boxShadow: `0 2px 4px ${color}40`,
+    width: '100%'
   } : {
     padding: '12px 16px',
     borderRadius: '8px',
@@ -847,7 +881,8 @@ const ActionButton = ({
     fontSize: '14px',
     fontWeight: '600',
     cursor: 'pointer',
-    transition: 'all 0.2s'
+    transition: 'all 0.2s',
+    width: '100%'
   };
 
   return (

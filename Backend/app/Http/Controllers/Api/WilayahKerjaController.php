@@ -35,7 +35,8 @@ class WilayahKerjaController extends Controller
 
             // Get TJSL if no category filter or category=TJSL
             if (!$request->has('category') || strtoupper($request->category) === 'TJSL') {
-                $tjslQuery = WkTjsl:: active()->ordered();
+                // ✅ Added with('relatedNews')
+                $tjslQuery = WkTjsl::with('relatedNews')->active()->ordered();
                 if ($request->has('status')) {
                     $tjslQuery->where('status', $request->status);
                 }
@@ -77,7 +78,8 @@ class WilayahKerjaController extends Controller
             if ($category === 'TEKKOM') {
                 $area = WkTekkom::findOrFail($id);
             } elseif ($category === 'TJSL') {
-                $area = WkTjsl::findOrFail($id);
+                // ✅ Added with('relatedNews')
+                $area = WkTjsl::with('relatedNews')->findOrFail($id);
             } else {
                 return response()->json([
                     'success' => false,
@@ -217,7 +219,8 @@ class WilayahKerjaController extends Controller
             if ($category === 'TEKKOM') {
                 $query = WkTekkom::query();
             } elseif ($category === 'TJSL') {
-                $query = WkTjsl::query();
+                // ✅ Added with('relatedNews')
+                $query = WkTjsl::with('relatedNews');
             } else {
                 return response()->json([
                     'success' => false,
@@ -312,20 +315,23 @@ class WilayahKerjaController extends Controller
             ];
         } else {
             $rules = [
-                'area_id' => 'required|string|max:255|unique: wk_tjsl,area_id',
-                'name' => 'required|string|max: 255',
+                // ✅ FIX: Removed extra space in table name 'wk_tjsl'
+                'area_id' => 'required|string|max:255|unique:wk_tjsl,area_id',
+                'name' => 'required|string|max:255',
                 'position_x' => 'required|numeric|between:0,100',
                 'position_y' => 'required|numeric|between:0,100',
                 'color' => 'required|string|regex:/^#[0-9A-Fa-f]{6}$/',
                 'description' => 'required|string',
                 'programs' => 'nullable|array',
-                'status' => 'required|in: Aktif,Non-Aktif',
+                'status' => 'required|in:Aktif,Non-Aktif',
                 'beneficiaries' => 'nullable|string',
                 'budget' => 'nullable|string',
                 'duration' => 'nullable|string',
                 'impact' => 'nullable|string',
                 'order' => 'nullable|integer|min:0',
                 'is_active' => 'nullable|boolean',
+                // ✅ ADDED: Validation for related_news_id
+                'related_news_id' => 'nullable|integer|exists:berita,id', 
             ];
         }
 
@@ -343,7 +349,7 @@ class WilayahKerjaController extends Controller
             DB::beginTransaction();
 
             if ($category === 'TEKKOM') {
-                $area = WkTekkom:: create($request->except('category'));
+                $area = WkTekkom::create($request->except('category'));
             } else {
                 $area = WkTjsl::create($request->except('category'));
             }
@@ -399,7 +405,8 @@ class WilayahKerjaController extends Controller
             } else {
                 $area = WkTjsl::findOrFail($id);
                 $rules = [
-                    'area_id' => 'required|string|max:255|unique:wk_tjsl,area_id,' .  $id,
+                    // ✅ FIX: Removed extra space in table name 'wk_tjsl'
+                    'area_id' => 'required|string|max:255|unique:wk_tjsl,area_id,' . $id,
                     'name' => 'required|string|max:255',
                     'position_x' => 'required|numeric|between:0,100',
                     'position_y' => 'required|numeric|between:0,100',
@@ -413,6 +420,8 @@ class WilayahKerjaController extends Controller
                     'impact' => 'nullable|string',
                     'order' => 'nullable|integer|min:0',
                     'is_active' => 'nullable|boolean',
+                    // ✅ ADDED: Validation for related_news_id
+                    'related_news_id' => 'nullable|integer|exists:berita,id',
                 ];
             }
 

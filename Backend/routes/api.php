@@ -18,17 +18,26 @@ use App\Http\Controllers\Api\TjslStatisticController;
 use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\SettingController;
 use App\Http\Controllers\Api\HargaMinyakController;
-use App\Http\Controllers\Api\GalleryController; // ← BARU
-use App\Http\Controllers\Api\GalleryCategoryController; // ← BARU
-use App\Http\Controllers\Api\ManagementController; // ← BARU
+use App\Http\Controllers\Api\ProduksiBulananController;
+use App\Http\Controllers\Api\GalleryController;
+use App\Http\Controllers\Api\GalleryCategoryController;
+use App\Http\Controllers\Api\ManagementController;
 
 /*
 |--------------------------------------------------------------------------
 | API Routes
 |--------------------------------------------------------------------------
+|
+| Here is where you can register API routes for your application. These
+| routes are loaded by the RouteServiceProvider within a group which
+| is assigned the "api" middleware group. Enjoy building your API!
+|
 */
 
-// Guest routes
+// ========================================================================
+// GUEST / PUBLIC GENERAL ROUTES
+// ========================================================================
+
 Route::middleware(['guest_only'])->group(function () {
     Route::get('/', function () {
         return response()->json([
@@ -37,10 +46,15 @@ Route::middleware(['guest_only'])->group(function () {
             'data' => [
                 'version' => '1.0.0',
                 'environment' => app()->environment(),
+                'server_time' => now()->toDateTimeString(),
             ]
         ]);
     });
 });
+
+// ========================================================================
+// AUTHENTICATION ROUTES
+// ========================================================================
 
 // Hidden admin login route
 Route::prefix('tukang-minyak-dan-gas')->group(function () {
@@ -49,12 +63,17 @@ Route::prefix('tukang-minyak-dan-gas')->group(function () {
         ->name('admin.login');
 });
 
-// Protected admin routes
+// ========================================================================
+// PROTECTED ADMIN MAIN ROUTES (Core Admin Features)
+// ========================================================================
+
 Route::middleware(['auth:sanctum', 'admin_auth'])->group(function () {
+    // Auth Management
     Route::post('/admin/logout', [AdminAuthController::class, 'logout'])->name('admin.logout');
     Route::get('/admin/me', [AdminAuthController::class, 'me'])->name('admin.me');
     Route::post('/admin/refresh', [AdminAuthController::class, 'refresh'])->name('admin.refresh');
 
+    // Admin Users Management
     Route::prefix('admin/admins')->name('admin.admins.')->group(function () {
         Route::get('/', [AdminController::class, 'index'])->name('index');
         Route::post('/', [AdminController::class, 'store'])->name('store');
@@ -62,21 +81,6 @@ Route::middleware(['auth:sanctum', 'admin_auth'])->group(function () {
         Route::put('/{id}', [AdminController::class, 'update'])->name('update');
         Route::patch('/{id}', [AdminController::class, 'update'])->name('patch');
         Route::delete('/{id}', [AdminController::class, 'destroy'])->name('destroy');
-    });
-
-    // Admin Gallery Routes (Protected Admin Group - Tambahan dari user)
-    Route::prefix('v1/admin')->group(function () {
-        // Gallery Categories CRUD
-        Route::post('/gallery-categories', [GalleryCategoryController::class, 'store']);
-        Route::put('/gallery-categories/{id}', [GalleryCategoryController::class, 'update']);
-        Route::patch('/gallery-categories/{id}', [GalleryCategoryController::class, 'update']);
-        Route::delete('/gallery-categories/{id}', [GalleryCategoryController::class, 'destroy']);
-        
-        // Gallery Images CRUD
-        Route::get('/gallery', [GalleryController::class, 'adminIndex']);
-        Route::post('/gallery', [GalleryController::class, 'store']);
-        Route::post('/gallery/{id}', [GalleryController::class, 'update']);
-        Route::delete('/gallery/{id}', [GalleryController::class, 'destroy']);
     });
 });
 
@@ -86,6 +90,7 @@ Route::middleware(['auth:sanctum', 'admin_auth'])->group(function () {
 |--------------------------------------------------------------------------
 */
 
+// Public
 Route::prefix('v1')->group(function () {
     Route::get('/umkm', [UmkmController::class, 'index']);
     Route::get('/umkm/{id}', [UmkmController::class, 'show']);
@@ -93,11 +98,12 @@ Route::prefix('v1')->group(function () {
     Route::get('/umkm-status-options', [UmkmController::class, 'statusOptions']);
 });
 
+// Admin (Protected)
 Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin_auth'])->group(function () {
     Route::get('/umkm', [UmkmController::class, 'adminIndex']);
     Route::post('/umkm', [UmkmController::class, 'store']);
     Route::get('/umkm/{id}', [UmkmController::class, 'show']);
-    Route::post('/umkm/{id}', [UmkmController::class, 'update']);
+    Route::post('/umkm/{id}', [UmkmController::class, 'update']); // Post for multipart/form-data update
     Route::delete('/umkm/{id}', [UmkmController::class, 'destroy']);
 });
 
@@ -107,6 +113,7 @@ Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin_auth'])->group(fun
 |--------------------------------------------------------------------------
 */
 
+// Public
 Route::prefix('v1')->group(function () {
     Route::get('/programs', [ProgramController::class, 'index']);
     Route::get('/programs/{slug}', [ProgramController::class, 'show']);
@@ -116,6 +123,7 @@ Route::prefix('v1')->group(function () {
     Route::get('/program-statistics', [ProgramController::class, 'statistics']);
 });
 
+// Admin (Protected)
 Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin_auth'])->group(function () {
     Route::get('/programs', [ProgramController::class, 'adminIndex']);
     Route::post('/programs', [ProgramController::class, 'store']);
@@ -130,6 +138,7 @@ Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin_auth'])->group(fun
 |--------------------------------------------------------------------------
 */
 
+// Public
 Route::prefix('v1')->group(function () {
     Route::get('/wilayah-kerja', [WilayahKerjaController::class, 'index']);
     Route::get('/wilayah-kerja/{id}', [WilayahKerjaController::class, 'show']);
@@ -138,6 +147,7 @@ Route::prefix('v1')->group(function () {
     Route::post('/wilayah-kerja-convert-coordinates', [WilayahKerjaController::class, 'convertCoordinates']);
 });
 
+// Admin (Protected)
 Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin_auth'])->group(function () {
     Route::get('/wilayah-kerja', [WilayahKerjaController::class, 'adminIndex']);
     Route::post('/wilayah-kerja', [WilayahKerjaController::class, 'store']);
@@ -153,6 +163,7 @@ Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin_auth'])->group(fun
 |--------------------------------------------------------------------------
 */
 
+// Public
 Route::prefix('v1')->group(function () {
     Route::get('/penghargaan', [PenghargaanController::class, 'index']);
     Route::get('/penghargaan/landing', [PenghargaanController::class, 'forLanding']);
@@ -161,6 +172,7 @@ Route::prefix('v1')->group(function () {
     Route::get('/penghargaan-categories', [PenghargaanController::class, 'getCategories']);
 });
 
+// Admin (Protected)
 Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin_auth'])->group(function () {
     Route::get('/penghargaan', [PenghargaanController::class, 'adminIndex']);
     Route::post('/penghargaan', [PenghargaanController::class, 'store']);
@@ -177,6 +189,7 @@ Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin_auth'])->group(fun
 |--------------------------------------------------------------------------
 */
 
+// Public
 Route::prefix('v1')->group(function () {
     Route::get('/berita', [BeritaController::class, 'index']);
     Route::get('/berita/media-informasi', [BeritaController::class, 'forMediaInformasi']);
@@ -186,6 +199,7 @@ Route::prefix('v1')->group(function () {
     Route::get('/berita-categories', [BeritaController::class, 'categories']);
 });
 
+// Admin (Protected)
 Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin_auth'])->group(function () {
     Route::get('/berita', [BeritaController::class, 'adminIndex']);
     Route::post('/berita', [BeritaController::class, 'store']);
@@ -201,6 +215,7 @@ Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin_auth'])->group(fun
 |--------------------------------------------------------------------------
 */
 
+// Public
 Route::prefix('v1')->group(function () {
     Route::get('/testimonials', [TestimonialController::class, 'index']);
     Route::get('/testimonials/featured', [TestimonialController::class, 'getFeatured']);
@@ -209,6 +224,7 @@ Route::prefix('v1')->group(function () {
     Route::get('/testimonial-programs', [TestimonialController::class, 'getPrograms']);
 });
 
+// Admin (Protected)
 Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin_auth'])->group(function () {
     Route::get('/testimonials', [TestimonialController::class, 'adminIndex']);
     Route::post('/testimonials', [TestimonialController::class, 'store']);
@@ -226,10 +242,12 @@ Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin_auth'])->group(fun
 |--------------------------------------------------------------------------
 */
 
+// Public
 Route::prefix('v1')->group(function () {
     Route::get('/tjsl/statistik', [TjslStatisticController::class, 'index']);
 });
 
+// Admin (Protected)
 Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin_auth'])->group(function () {
     Route::get('/tjsl/statistik', [TjslStatisticController::class, 'adminIndex']);
     Route::put('/tjsl/statistik/{id}', [TjslStatisticController::class, 'update']);
@@ -243,10 +261,12 @@ Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin_auth'])->group(fun
 |--------------------------------------------------------------------------
 */
 
+// Public
 Route::prefix('v1')->group(function () {
     Route::post('/contact', [ContactController::class, 'store']);
 });
 
+// Admin (Protected)
 Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin_auth'])->group(function () {
     Route::get('/contacts', [ContactController::class, 'index']);
     Route::get('/contacts/statistics', [ContactController::class, 'statistics']);
@@ -262,10 +282,12 @@ Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin_auth'])->group(fun
 |--------------------------------------------------------------------------
 */
 
+// Public
 Route::prefix('v1')->group(function () {
     Route::get('/settings', [SettingController::class, 'index']);
 });
 
+// Admin (Protected)
 Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin_auth'])->group(function () {
     Route::get('/settings', [SettingController::class, 'adminIndex']);
     Route::put('/settings', [SettingController::class, 'update']);
@@ -276,10 +298,11 @@ Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin_auth'])->group(fun
 
 /*
 |--------------------------------------------------------------------------
-| Harga Minyak Routes - PUBLIC
+| Harga Minyak Routes
 |--------------------------------------------------------------------------
 */
 
+// Public
 Route::prefix('v1')->group(function () {
     Route::get('/harga-minyak', [HargaMinyakController::class, 'index']);
     Route::get('/harga-minyak/{id}', [HargaMinyakController::class, 'show']);
@@ -287,12 +310,7 @@ Route::prefix('v1')->group(function () {
     Route::get('/harga-minyak-latest', [HargaMinyakController::class, 'latest']);
 });
 
-/*
-|--------------------------------------------------------------------------
-| Harga Minyak Routes - ADMIN
-|--------------------------------------------------------------------------
-*/
-
+// Admin (Protected)
 Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin_auth'])->group(function () {
     // Harga Minyak CRUD
     Route::get('/harga-minyak', [HargaMinyakController::class, 'adminIndex']);
@@ -314,26 +332,29 @@ Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin_auth'])->group(fun
 |--------------------------------------------------------------------------
 */
 
+// Public
 Route::prefix('v1')->group(function () {
-    Route::get('/produksi-bulanan', [\App\Http\Controllers\Api\ProduksiBulananController::class, 'index']);
-    Route::get('/produksi-bulanan-statistics', [\App\Http\Controllers\Api\ProduksiBulananController::class, 'statistics']);
+    Route::get('/produksi-bulanan', [ProduksiBulananController::class, 'index']);
+    Route::get('/produksi-bulanan-statistics', [ProduksiBulananController::class, 'statistics']);
 });
 
+// Admin (Protected)
 Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin_auth'])->group(function () {
-    Route::get('/produksi-bulanan', [\App\Http\Controllers\Api\ProduksiBulananController::class, 'adminIndex']);
-    Route::post('/produksi-bulanan', [\App\Http\Controllers\Api\ProduksiBulananController::class, 'store']);
-    Route::put('/produksi-bulanan/{id}', [\App\Http\Controllers\Api\ProduksiBulananController::class, 'update']);
-    Route::patch('/produksi-bulanan/{id}', [\App\Http\Controllers\Api\ProduksiBulananController::class, 'update']);
-    Route::delete('/produksi-bulanan/{id}', [\App\Http\Controllers\Api\ProduksiBulananController::class, 'destroy']);
-    Route::get('/produksi-bulanan/areas', [\App\Http\Controllers\Api\ProduksiBulananController::class, 'getAreas']);
+    Route::get('/produksi-bulanan', [ProduksiBulananController::class, 'adminIndex']);
+    Route::post('/produksi-bulanan', [ProduksiBulananController::class, 'store']);
+    Route::put('/produksi-bulanan/{id}', [ProduksiBulananController::class, 'update']);
+    Route::patch('/produksi-bulanan/{id}', [ProduksiBulananController::class, 'update']);
+    Route::delete('/produksi-bulanan/{id}', [ProduksiBulananController::class, 'destroy']);
+    Route::get('/produksi-bulanan/areas', [ProduksiBulananController::class, 'getAreas']);
 });
 
 /*
 |--------------------------------------------------------------------------
-| Gallery Routes - PUBLIC (TAMBAHAN)
+| Gallery Routes
 |--------------------------------------------------------------------------
 */
 
+// Public
 Route::prefix('v1')->group(function () {
     // Gallery Categories
     Route::get('/gallery-categories', [GalleryCategoryController::class, 'index']);
@@ -345,20 +366,35 @@ Route::prefix('v1')->group(function () {
     Route::get('/gallery/{slug}', [GalleryController::class, 'show']);
 });
 
+// Admin (Protected)
+Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin_auth'])->group(function () {
+    // Gallery Categories CRUD
+    Route::post('/gallery-categories', [GalleryCategoryController::class, 'store']);
+    Route::put('/gallery-categories/{id}', [GalleryCategoryController::class, 'update']);
+    Route::patch('/gallery-categories/{id}', [GalleryCategoryController::class, 'update']);
+    Route::delete('/gallery-categories/{id}', [GalleryCategoryController::class, 'destroy']);
+    
+    // Gallery Images CRUD
+    Route::get('/gallery', [GalleryController::class, 'adminIndex']);
+    Route::post('/gallery', [GalleryController::class, 'store']);
+    Route::post('/gallery/{id}', [GalleryController::class, 'update']); // Use post for method spoofing if handling files
+    Route::delete('/gallery/{id}', [GalleryController::class, 'destroy']);
+});
+
 /*
 |--------------------------------------------------------------------------
 | Management Routes
 |--------------------------------------------------------------------------
 */
 
-// Public routes
+// Public
 Route::prefix('v1')->group(function () {
     Route::get('/managements', [ManagementController::class, 'index']);
     Route::get('/managements/type/{type}', [ManagementController::class, 'getByType']);
 });
 
-// Admin routes (temporarily without auth for testing)
-Route::prefix('v1/admin')->group(function () {
+// Admin (Protected) - SUDAH DIAMANKAN
+Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin_auth'])->group(function () {
     Route::get('/managements', [ManagementController::class, 'adminIndex']);
     Route::post('/managements', [ManagementController::class, 'store']);
     Route::get('/managements/{id}', [ManagementController::class, 'show']);
@@ -366,3 +402,5 @@ Route::prefix('v1/admin')->group(function () {
     Route::patch('/managements/{id}', [ManagementController::class, 'update']);
     Route::delete('/managements/{id}', [ManagementController::class, 'destroy']);
 });
+
+// End of Routes

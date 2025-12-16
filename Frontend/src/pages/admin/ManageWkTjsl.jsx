@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { FaEdit, FaTrash, FaPlus, FaTimes, FaMapMarkerAlt, FaUsers, FaCheck, FaNewspaper, FaSearch, FaFilter, FaArrowLeft } from 'react-icons/fa';
-import axios from 'axios';
+import axiosInstance from '../../api/axios'; // ✅ CHANGED: Use centralized axios instance
 import toast from 'react-hot-toast';
 import MapClickSelector from '../../components/MapClickSelector';
 import PetaImage from '../wk/Peta.png';
 
-const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
+// ✅ REMOVED: API_URL constant (handled by axiosInstance)
 
 const ManageWkTjsl = () => {
   const [areas, setAreas] = useState([]);
@@ -39,12 +39,7 @@ const ManageWkTjsl = () => {
 
   const [programInput, setProgramInput] = useState('');
 
-  // ✅ Get Auth Token
-  const getAuthToken = () => {
-    return localStorage.getItem('token') || 
-           sessionStorage.getItem('token') || 
-           document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
-  };
+  // ✅ REMOVED: getAuthToken helper (handled by axiosInstance interceptors)
 
   useEffect(() => {
     fetchAreas();
@@ -81,19 +76,14 @@ const ManageWkTjsl = () => {
     setFilterActive('');
   };
 
-  // ✅ UPDATED:  Fetch TJSL areas
+  // ✅ UPDATED: Fetch TJSL areas using axiosInstance
   const fetchAreas = async () => {
     setLoading(true);
     try {
-      const token = getAuthToken();
-      
-      const response = await axios.get(`${API_URL}/v1/admin/wilayah-kerja`, {
+      const response = await axiosInstance.get('/v1/admin/wilayah-kerja', {
         params: {
           category: 'TJSL',  // ✅ Filter by TJSL
           per_page: 999
-        },
-        headers: {
-          'Authorization': token ?  `Bearer ${token}` : ''
         }
       });
 
@@ -101,37 +91,42 @@ const ManageWkTjsl = () => {
         const data = response.data.data || [];
         setAreas(data);
         setFilteredAreas(data);
-        console.log('✅ TJSL areas loaded:', data. length);
+        console.log('✅ TJSL areas loaded:', data.length);
       }
     } catch (error) {
       console.error('❌ Error fetching TJSL areas:', error);
       const errorMsg = error.response?.data?.message || 'Gagal memuat data program TJSL';
-      toast. error(errorMsg);
+      toast.error(errorMsg);
       
+      // 401 handling is now done centrally in axios.js, but explicit check here doesn't hurt
       if (error.response?.status === 401) {
-        toast.error('Session expired. Please login again.');
+        // Redirect handled by interceptor usually
       }
     } finally {
       setLoading(false);
     }
   };
 
+  // ✅ Update fetchBeritaList with better error handling
   const fetchBeritaList = async () => {
     try {
-      const token = getAuthToken();
-      
-      const response = await axios.get(`${API_URL}/v1/admin/berita`, {
-        params: { per_page: 999, status: 'published' },
-        headers: {
-          'Authorization': token ? `Bearer ${token}` : ''
-        }
+      const response = await axiosInstance.get('/v1/admin/berita', {
+        params: { per_page: 999, status: 'published' }
       });
 
+      console.log('📰 Berita response:', response.data);
+
       if (response.data.success) {
-        setBeritaList(response.data.data || []);
+        const beritaData = response.data.data || [];
+        setBeritaList(beritaData);
+        console.log('✅ Berita list loaded:', beritaData.length);
       }
     } catch (error) {
-      console.error('Error fetching berita list:', error);
+      console.error('❌ Error fetching berita list:', error);
+      console.error('❌ Error response:', error.response?.data);
+      
+      // Don't show error toast - berita is optional
+      // Just log it for debugging
     }
   };
 
@@ -168,7 +163,7 @@ const ManageWkTjsl = () => {
     }));
   };
 
-  // ✅ UPDATED: Handle Submit
+  // ✅ Update handleSubmit function
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -180,33 +175,34 @@ const ManageWkTjsl = () => {
     setLoading(true);
 
     try {
-      const token = getAuthToken();
-      
-      if (!token) {
-        toast.error('Unauthorized.  Please login first.');
-        return;
-      }
-
-      // ✅ Add category to formData
+      // ✅ Clean the data before sending
       const dataWithCategory = {
         ...formData,
         category: 'TJSL'
       };
 
+      // ✅ Remove related_news_id if it's empty string
+      if (!dataWithCategory.related_news_id || dataWithCategory.related_news_id === '') {
+        delete dataWithCategory.related_news_id;
+      } else {
+        // ✅ Convert to integer if exists
+        dataWithCategory.related_news_id = parseInt(dataWithCategory.related_news_id);
+      }
+
+      console.log('📤 Sending data:', dataWithCategory);
+
       const endpoint = editingArea
-        ? `${API_URL}/v1/admin/wilayah-kerja/${editingArea. id}? category=TJSL`
-        : `${API_URL}/v1/admin/wilayah-kerja`;
+        ? `/v1/admin/wilayah-kerja/${editingArea.id}`
+        : '/v1/admin/wilayah-kerja';
 
       const method = editingArea ? 'put' : 'post';
 
-      const response = await axios[method](endpoint, dataWithCategory, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      // ✅ Add category as query param for update
+      const config = editingArea ?  { params: { category: 'TJSL' } } : {};
 
-      if (response.data. success) {
+      const response = await axiosInstance[method](endpoint, dataWithCategory, config);
+
+      if (response.data.success) {
         toast.success(editingArea ? 'Program TJSL berhasil diperbarui!' : 'Program TJSL berhasil ditambahkan!');
         setShowForm(false);
         resetForm();
@@ -214,6 +210,8 @@ const ManageWkTjsl = () => {
       }
     } catch (error) {
       console.error('❌ Error saving TJSL area:', error);
+      console.error('❌ Error response:', error.response?.data);
+      
       const errorMessage = error.response?.data?.message || 'Gagal menyimpan data program TJSL';
       toast.error(errorMessage);
 
@@ -231,7 +229,7 @@ const ManageWkTjsl = () => {
   const handleEdit = (area) => {
     setEditingArea(area);
     setFormData({
-      area_id: area. area_id,
+      area_id: area.area_id,
       name: area.name,
       position_x: parseFloat(area.position_x),
       position_y: parseFloat(area.position_y),
@@ -251,27 +249,15 @@ const ManageWkTjsl = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // ✅ UPDATED: Handle Delete
+  // ✅ UPDATED: Handle Delete using axiosInstance
   const handleDelete = async (id) => {
     if (!window.confirm('Apakah Anda yakin ingin menghapus program TJSL ini?')) {
       return;
     }
 
     try {
-      const token = getAuthToken();
-      
-      if (! token) {
-        toast.error('Unauthorized. Please login first.');
-        return;
-      }
-
-      const response = await axios.delete(
-        `${API_URL}/v1/admin/wilayah-kerja/${id}? category=TJSL`,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        }
+      const response = await axiosInstance.delete(
+        `/v1/admin/wilayah-kerja/${id}?category=TJSL`
       );
 
       if (response.data.success) {

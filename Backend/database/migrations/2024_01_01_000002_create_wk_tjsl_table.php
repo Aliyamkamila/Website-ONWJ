@@ -24,6 +24,10 @@ return new class extends Migration
             $table->string('impact')->nullable(); // Impact description
             $table->integer('order')->default(0); // Display order
             $table->boolean('is_active')->default(true);
+            
+            // ✅ Kolom Berita Terkait ditambahkan di sini
+            $table->unsignedBigInteger('related_news_id')->nullable();
+            
             $table->timestamps();
             $table->softDeletes();
         });
