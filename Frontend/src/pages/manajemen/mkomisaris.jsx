@@ -1,24 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import managementService from '../../services/managementService';
 import Cosmas from '../../assets/Manajemen/Cosmas.jpeg';
-import Dwi from '../../assets/Manajemen/Dwi.jpeg';
 
 const Komisaris = () => {
+  const [commissioners, setCommissioners] = useState([]);
   const [selectedCommissioner, setSelectedCommissioner] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const commissioners = [
-    {
-      name: 'Dwi',
-      position: 'President Commissioner',
-      image: Dwi,
-      description: 'Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.'
-    },
-    {
-      name: 'Cosmas',
-      position: 'Commissioner',
-      image: Cosmas,
-      description: 'Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt.'
+  useEffect(() => {
+    fetchCommissioners();
+  }, []);
+
+  const fetchCommissioners = async () => {
+    try {
+      setLoading(true);
+      const response = await managementService.getByType('commissioner');
+      if (response.success) {
+        setCommissioners(response.data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching commissioners:', error);
+      setCommissioners([]);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
   const openModal = (commissioner) => setSelectedCommissioner(commissioner);
   const closeModal = () => setSelectedCommissioner(null);
@@ -37,33 +43,45 @@ const Komisaris = () => {
         
         {/* Compact Card Grid */}
         <div className="grid sm:grid-cols-2 gap-5 max-w-2xl">
-          {commissioners.map((commissioner, index) => (
-            <div 
-              key={index} 
-              onClick={() => openModal(commissioner)}
-              className="group bg-white border border-secondary-200 rounded-lg overflow-hidden cursor-pointer transition-all duration-200 hover:border-primary-600 hover:shadow-md"
-            >
-              {/* Compact Image */}
-              <div className="aspect-[4/4.5] overflow-hidden bg-secondary-50">
-                <img
-                  src={commissioner.image}
-                  alt={commissioner.name}
-                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                  loading="lazy"
-                />
-              </div>
-              
-              {/* Compact Info */}
-              <div className="p-4 border-t border-secondary-100">
-                <p className="text-xs font-heading font-semibold text-primary-600 uppercase tracking-wide mb-1">
-                  {commissioner.position}
-                </p>
-                <h3 className="text-base font-heading font-bold text-secondary-900 leading-snug">
-                  {commissioner.name}
-                </h3>
-              </div>
+          {loading ? (
+            <div className="flex items-center justify-center h-64 col-span-full">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
             </div>
-          ))}
+          ) : (
+            commissioners.map((commissioner) => (
+              <div 
+                key={commissioner.id} 
+                onClick={() => openModal(commissioner)}
+                className="group bg-white border border-secondary-200 rounded-lg overflow-hidden cursor-pointer transition-all duration-200 hover:border-primary-600 hover:shadow-md"
+              >
+                {/* Compact Image */}
+                <div className="aspect-[4/4.5] overflow-hidden bg-secondary-50">
+                  {commissioner.image_url ? (
+                    <img
+                      src={commissioner.image_url}
+                      alt={commissioner.name}
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
+                      <span className="text-white text-6xl font-bold">{commissioner.name?.charAt(0)}</span>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Compact Info */}
+                <div className="p-4 border-t border-secondary-100">
+                  <p className="text-xs font-heading font-semibold text-primary-600 uppercase tracking-wide mb-1">
+                    {commissioner.position}
+                  </p>
+                  <h3 className="text-base font-heading font-bold text-secondary-900 leading-snug">
+                    {commissioner.name}
+                  </h3>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
 
@@ -91,11 +109,17 @@ const Komisaris = () => {
             {/* Compact Content */}
             <div className="flex flex-col sm:flex-row">
               <div className="sm:w-2/5">
-                <img
-                  src={selectedCommissioner.image}
-                  alt={selectedCommissioner.name}
-                  className="w-full h-48 sm:h-full object-cover"
-                />
+                {selectedCommissioner.image_url ? (
+                  <img
+                    src={selectedCommissioner.image_url}
+                    alt={selectedCommissioner.name}
+                    className="w-full h-48 sm:h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-48 sm:h-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
+                    <span className="text-white text-8xl font-bold">{selectedCommissioner.name?.charAt(0)}</span>
+                  </div>
+                )}
               </div>
               <div className="p-6 sm:w-3/5">
                 <p className="text-xs font-heading font-semibold text-primary-600 uppercase tracking-wide mb-1.5">

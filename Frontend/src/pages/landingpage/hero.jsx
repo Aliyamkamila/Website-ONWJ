@@ -57,43 +57,6 @@ const Hero = () => {
           </div>
         </div>
       </div>
-
-      {/* ✅ OPSI 1:  Animated Arrow Scroll Indicator */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2 cursor-pointer group">
-        <span className="text-white/70 text-sm font-medium uppercase tracking-wider group-hover:text-white transition-colors">
-          Scroll
-        </span>
-        <div className="flex flex-col gap-1 animate-bounce">
-          <svg 
-            className="w-6 h-6 text-white/70 group-hover:text-white transition-colors" 
-            fill="none" 
-            viewBox="0 0 24 24" 
-            stroke="currentColor"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
-          <svg 
-            className="w-6 h-6 text-white/70 group-hover:text-white transition-colors -mt-3" 
-            fill="none" 
-            viewBox="0 0 24 24" 
-            stroke="currentColor"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
-        </div>
-      </div>
-
-      {/* Add Custom Animation */}
-      <style>{`
-        @keyframes bounce {
-          0%, 100% {
-            transform: translateY(0);
-          }
-          50% {
-            transform: translateY(-10px);
-          }
-        }
-      `}</style>
     </section>
   );
 };

@@ -1,27 +1,44 @@
-import React, { useState } from 'react';
-import Firdaus from '../../assets/Manajemen/Firdaus.jpeg';
-import Edi from '../../assets/Manajemen/Edi.jpeg';
+import React, { useState, useEffect } from 'react';
+import managementService from '../../services/managementService';
 
 const Direksi = () => {
+  const [directors, setDirectors] = useState([]);
   const [selectedDirector, setSelectedDirector] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const directors = [
-    {
-      name: 'Firdaus Maulana Yusuf',
-      position: 'President Director',
-      image: Firdaus,
-      description: 'Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur.Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur.'
-    },
-    {
-      name: 'Edi Alpian Chaniago',
-      position: 'Director of Operations',
-      image: Edi,
-      description: 'Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur.At vero eos et accusamus et iusto odio dignissimos ducimus.'
+  useEffect(() => {
+    fetchDirectors();
+  }, []);
+
+  const fetchDirectors = async () => {
+    try {
+      setLoading(true);
+      const response = await managementService.getByType('director');
+      if (response.success) {
+        setDirectors(response.data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching directors:', error);
+      setDirectors([]);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
   const openModal = (director) => setSelectedDirector(director);
   const closeModal = () => setSelectedDirector(null);
+
+  if (loading) {
+    return (
+      <section className="py-12 bg-secondary-50">
+        <div className="section-container">
+          <div className="flex items-center justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="py-12 bg-secondary-50">
@@ -37,16 +54,16 @@ const Direksi = () => {
         
         {/* Compact Card Grid */}
         <div className="grid sm:grid-cols-2 gap-5 max-w-2xl">
-          {directors.map((director, index) => (
+          {directors.map((director) => (
             <div 
-              key={index} 
+              key={director.id} 
               onClick={() => openModal(director)}
               className="group bg-white border border-secondary-200 rounded-lg overflow-hidden cursor-pointer transition-all duration-200 hover:border-primary-600 hover:shadow-md"
             >
               {/* Compact Image */}
               <div className="aspect-[4/4.5] overflow-hidden bg-secondary-50">
                 <img
-                  src={director.image}
+                  src={director.image_url || 'https://via.placeholder.com/300x350?text=No+Image'}
                   alt={director.name}
                   className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                   loading="lazy"
@@ -92,7 +109,7 @@ const Direksi = () => {
             <div className="flex flex-col sm:flex-row">
               <div className="sm:w-2/5">
                 <img
-                  src={selectedDirector.image}
+                  src={selectedDirector.image_url || 'https://via.placeholder.com/300x350?text=No+Image'}
                   alt={selectedDirector.name}
                   className="w-full h-48 sm:h-full object-cover"
                 />

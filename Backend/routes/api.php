@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\SettingController;
 use App\Http\Controllers\Api\HargaMinyakController;
 use App\Http\Controllers\Api\GalleryController; // ← BARU
 use App\Http\Controllers\Api\GalleryCategoryController; // ← BARU
+use App\Http\Controllers\Api\ManagementController; // ← BARU
 
 /*
 |--------------------------------------------------------------------------
@@ -344,3 +345,24 @@ Route::prefix('v1')->group(function () {
     Route::get('/gallery/{slug}', [GalleryController::class, 'show']);
 });
 
+/*
+|--------------------------------------------------------------------------
+| Management Routes
+|--------------------------------------------------------------------------
+*/
+
+// Public routes
+Route::prefix('v1')->group(function () {
+    Route::get('/managements', [ManagementController::class, 'index']);
+    Route::get('/managements/type/{type}', [ManagementController::class, 'getByType']);
+});
+
+// Admin routes (temporarily without auth for testing)
+Route::prefix('v1/admin')->group(function () {
+    Route::get('/managements', [ManagementController::class, 'adminIndex']);
+    Route::post('/managements', [ManagementController::class, 'store']);
+    Route::get('/managements/{id}', [ManagementController::class, 'show']);
+    Route::put('/managements/{id}', [ManagementController::class, 'update']);
+    Route::patch('/managements/{id}', [ManagementController::class, 'update']);
+    Route::delete('/managements/{id}', [ManagementController::class, 'destroy']);
+});

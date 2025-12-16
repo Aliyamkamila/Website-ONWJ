@@ -48,6 +48,7 @@ import ManageGallery from "./pages/admin/Gallery/ManageGallery";
 import ManagePenghargaan from './pages/admin/ManagePenghargaan';
 import ManageLaporan from './pages/admin/ManageLaporan';
 import ManageStatistikLanding from './pages/admin/ManageStatistikLanding';
+import ManageManagement from './pages/admin/ManageManagement';
 
 // Keuangan
 import ManageKeuangan from './pages/admin/ManageKeuangan';
@@ -136,6 +137,7 @@ const router = createBrowserRouter([
       { path: 'manage-penghargaan', element: <ManagePenghargaan /> },
       { path: 'manage-laporan', element: <ManageLaporan /> },
       { path: 'manage-statistik-landing', element: <ManageStatistikLanding /> },
+      { path: 'manage-manajemen', element: <ManageManagement /> },
 
       // Keuangan
       { path: 'manage-keuangan', element: <ManageKeuangan /> },
