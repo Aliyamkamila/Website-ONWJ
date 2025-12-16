@@ -69,7 +69,6 @@ const Header = () => {
         { label: 'Program TJSL', path: '/tjsl', desc: 'Tanggung Jawab Sosial & Lingkungan' },
         { label: 'Berita TJSL', path: '/berita-tjsl', desc: 'Update kegiatan program sosial' },
         { label: 'UMKM Binaan', path: '/umkm-binaan', desc: 'Program pemberdayaan UMKM' },
-        { label: 'Semua Program', path: '/program-berkelanjutan', desc: 'Daftar lengkap program' }
       ]
     },
     media: {
