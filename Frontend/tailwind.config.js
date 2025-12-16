@@ -81,8 +81,8 @@ export default {
 
       fontFamily: {
         heading: ['Montserrat', 'system-ui', 'sans-serif'],
-        body: ['Inter', 'system-ui', 'sans-serif'],
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        body: ['Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif'],
+        sans: ['Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif'],
       },
 
       // ============================================

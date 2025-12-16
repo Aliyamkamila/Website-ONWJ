@@ -109,71 +109,6 @@ const useInfiniteCarousel = (itemsCount) => {
   return { trackRef, duplicateCount };
 };
 
-const useCenterFocus = (carouselRef) => {
-  const rafRef = useRef(null);
-  const lastUpdateRef = useRef(0);
-
-  useEffect(() => {
-    const updateCenterFocus = () => {
-      const now = Date.now();
-      
-      if (now - lastUpdateRef.current < CAROUSEL_CONFIG.UPDATE_INTERVAL) {
-        rafRef.current = requestAnimationFrame(updateCenterFocus);
-        return;
-      }
-
-      lastUpdateRef.current = now;
-
-      if (! carouselRef.current) {
-        rafRef.current = requestAnimationFrame(updateCenterFocus);
-        return;
-      }
-
-      const container = carouselRef.current;
-      const items = container.querySelectorAll('.award-item');
-      const containerRect = container.getBoundingClientRect();
-      const containerCenter = containerRect.left + containerRect.width / 2;
-
-      items.forEach((item) => {
-        const itemRect = item.getBoundingClientRect();
-        const itemCenter = itemRect.left + itemRect.width / 2;
-        const distanceFromCenter = Math.abs(containerCenter - itemCenter);
-        const maxDistance = containerRect.width / 2;
-
-        item.classList.remove('center-focus', 'near-center', 'far');
-
-        if (distanceFromCenter < 120) {
-          item.classList.add('center-focus');
-        } else if (distanceFromCenter < maxDistance * 0.45) {
-          item.classList.add('near-center');
-        } else {
-          item.classList.add('far');
-        }
-      });
-
-      rafRef.current = requestAnimationFrame(updateCenterFocus);
-    };
-
-    rafRef.current = requestAnimationFrame(updateCenterFocus);
-
-    const handleResize = () => {
-      if (rafRef.current) {
-        cancelAnimationFrame(rafRef.current);
-      }
-      rafRef.current = requestAnimationFrame(updateCenterFocus);
-    };
-
-    window.addEventListener('resize', handleResize);
-
-    return () => {
-      if (rafRef.current) {
-        cancelAnimationFrame(rafRef.current);
-      }
-      window.removeEventListener('resize', handleResize);
-    };
-  }, [carouselRef]);
-};
-
 // ============================================
 // SUB-COMPONENTS
 // ============================================
@@ -231,6 +166,7 @@ const InfiniteCarousel = ({ items, onItemClick }) => {
         '--gap': `${CAROUSEL_CONFIG.GAP}px`,
         '--card-width': `${CAROUSEL_CONFIG.CARD_WIDTH}px`,
         '--card-height': `${CAROUSEL_CONFIG.CARD_HEIGHT}px`,
+        '--duplicate-count': duplicateCount,
       }}
     >
       {Array.from({ length: duplicateCount }).map((_, setIndex) => (
@@ -272,48 +208,48 @@ const AwardModal = ({ award, isOpen, onClose }) => {
 
   return (
     <div 
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-secondary-900/70 backdrop-blur-sm animate-fade-in"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-secondary-900/50 backdrop-blur-sm animate-fade-in"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
       aria-labelledby="modal-title"
     >
       <div 
-        className="relative bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl animate-slide-up"
+        className="relative bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-xl animate-slide-up"
         onClick={(e) => e.stopPropagation()}
       >
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-50 w-10 h-10 rounded-full bg-secondary-900 text-white flex items-center justify-center hover:bg-primary-600 hover:rotate-90 transition-all duration-300 shadow-lg"
+          className="absolute top-4 right-4 z-50 w-10 h-10 rounded-full bg-secondary-900 text-white flex items-center justify-center hover:bg-primary-600 transition-colors duration-200 shadow-lg"
           aria-label="Close modal"
         >
           <CloseIcon />
         </button>
 
         <div className="flex flex-col md:flex-row overflow-y-auto custom-scrollbar max-h-[90vh]">
-          <div className="relative w-full md:w-96 bg-gradient-to-br from-secondary-50 to-secondary-100 p-8 flex items-center justify-center min-h-80 md:min-h-[500px]">
+          <div className="relative w-full md:w-96 bg-secondary-50 p-8 flex items-center justify-center min-h-80 md:min-h-[500px]">
             <img
               src={imageUrl}
               alt={award.title}
-              className="w-full h-auto max-h-96 object-contain rounded-xl shadow-lg"
+              className="w-full h-auto max-h-96 object-contain rounded-lg shadow-md"
               onError={(e) => {
                 e.target.src = FALLBACK_IMAGES[0];
               }}
             />
-            <div className="absolute top-4 left-4 px-4 py-2 rounded-full bg-primary-600 text-white font-heading font-bold text-sm shadow-lg">
+            <div className="absolute top-4 left-4 px-4 py-2 rounded-lg bg-primary-600 text-white font-heading font-bold text-sm shadow-lg">
               {award.year}
             </div>
           </div>
 
           <div className="flex-1 p-8">
-            <h3 id="modal-title" className="font-heading font-bold text-2xl sm:text-3xl text-secondary-900 mb-2">
+            <h3 id="modal-title" className="font-heading font-bold text-2xl sm:text-3xl text-secondary-900 mb-3">
               {award.title}
             </h3>
-            <p className="font-heading font-bold text-xs uppercase tracking-wider text-primary-600 mb-4">
+            <p className="font-heading font-semibold text-xs uppercase tracking-wider text-primary-600 mb-4">
               {award.given_by} • {award.month} {award.year}
             </p>
-            <div className="w-16 h-1 rounded-full bg-gradient-to-r from-primary-600 to-primary-400 mb-6" />
-            <p className="text-base sm:text-lg text-secondary-600 leading-relaxed">
+            <div className="w-12 h-1 rounded-full bg-primary-600 mb-6" />
+            <p className="text-base sm:text-lg text-secondary-700 leading-relaxed">
               {award.description}
             </p>
           </div>
@@ -325,20 +261,17 @@ const AwardModal = ({ award, isOpen, onClose }) => {
 
 const StatisticCard = ({ stat, index }) => (
   <div 
-    className="text-center p-5 rounded-xl bg-white border border-secondary-200 hover:border-primary-600 hover:-translate-y-1 transition-all duration-300 hover:shadow-lg relative overflow-hidden group"
+    className="statistic-card"
     role="article"
     aria-labelledby={`stat-label-${stat.id}`}
   >
-    <div className="absolute inset-0 bg-gradient-to-br from-primary-50/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-    
-    <div className="relative font-heading font-bold text-4xl sm:text-5xl text-primary-600 mb-2 flex items-center justify-center gap-1 group-hover:scale-105 transition-transform duration-300">
+    <div className="statistic-value">
       <CountUp to={stat.value} from={0} delay={index * 0.2} duration={2} separator={stat.separator || ''} />
-      <span>{stat.suffix}</span>
+      <span className="statistic-suffix">{stat.suffix}</span>
     </div>
-    
-    <div id={`stat-label-${stat.id}`} className="relative font-body text-sm sm:text-base text-secondary-600 font-medium">
+    <p id={`stat-label-${stat.id}`} className="statistic-label">
       {stat.label}
-    </div>
+    </p>
   </div>
 );
 
@@ -352,8 +285,6 @@ const Penghargaan = () => {
   const [loading, setLoading] = useState(true);
   const [statistics, setStatistics] = useState(STATISTICS_DATA);
   const carouselRef = useRef(null);
-
-  useCenterFocus(carouselRef);
 
   // ✅ Fetch penghargaan from API
   useEffect(() => {
@@ -398,24 +329,22 @@ const Penghargaan = () => {
     return (
       <section 
         id="awards" 
-        className="py-16 sm:py-20 lg:py-24 bg-gradient-to-b from-white to-secondary-50"
+        className="py-16 sm:py-20 lg:py-24 bg-white"
       >
         <div className="section-container">
           <div className="flex flex-col items-center text-center mb-12 sm:mb-16">
-            <span className="section-label">OUR AWARDS</span>
+            <span className="section-label">PENGHARGAAN</span>
             <h2 className="font-heading font-bold text-3xl sm:text-4xl lg:text-5xl text-secondary-900 mt-2">
-              Awards & Recognition
+              Penghargaan & Pengakuan
             </h2>
             <p className="text-base sm:text-lg text-secondary-600 max-w-3xl mx-auto mt-4">
-              Our commitment to excellence has been acknowledged by industry leaders
+              Komitmen kami terhadap keunggulan telah diakui oleh para pemimpin industri
             </p>
           </div>
 
-          {/* Loading Skeleton */}
-          <div className="mb-10 sm:mb-12">
-            <div className="flex items-center justify-center py-20">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-            </div>
+          {/* Loading Spinner */}
+          <div className="flex justify-center py-24">
+            <div className="spinner"></div>
           </div>
         </div>
       </section>
@@ -427,21 +356,21 @@ const Penghargaan = () => {
     return (
       <section 
         id="awards" 
-        className="py-16 sm:py-20 lg:py-24 bg-gradient-to-b from-white to-secondary-50"
+        className="py-16 sm:py-20 lg:py-24 bg-white"
       >
         <div className="section-container">
           <div className="flex flex-col items-center text-center mb-12 sm:mb-16">
-            <span className="section-label">OUR AWARDS</span>
+            <span className="section-label">PENGHARGAAN</span>
             <h2 className="font-heading font-bold text-3xl sm:text-4xl lg:text-5xl text-secondary-900 mt-2">
-              Awards & Recognition
+              Penghargaan & Pengakuan
             </h2>
             <p className="text-base sm:text-lg text-secondary-600 max-w-3xl mx-auto mt-4">
-              Our commitment to excellence has been acknowledged by industry leaders
+              Komitmen kami terhadap keunggulan telah diakui oleh para pemimpin industri
             </p>
           </div>
 
           <div className="text-center py-20">
-            <p className="text-secondary-600">Belum ada data penghargaan</p>
+            <p className="text-secondary-600 text-lg">Belum ada data penghargaan</p>
           </div>
         </div>
       </section>
@@ -451,26 +380,25 @@ const Penghargaan = () => {
   return (
     <section 
       id="awards" 
-      className="py-16 sm:py-20 lg:py-24 bg-gradient-to-b from-white to-secondary-50"
+      className="py-16 sm:py-20 lg:py-24 bg-white"
       aria-labelledby="awards-heading"
     >
       <div className="section-container">
         <div className="flex flex-col items-center text-center mb-12 sm:mb-16">
-          <span className="section-label">OUR AWARDS</span>
+          <span className="section-label">PENGHARGAAN</span>
           <h2 
             id="awards-heading" 
-            className="font-heading font-bold text-3xl sm:text-4xl lg:text-5xl text-secondary-900 mt-2 text-center"
-            style={{ textAlign: 'center' }}
+            className="font-heading font-bold text-3xl sm:text-4xl lg:text-5xl text-secondary-900 mt-2"
           >
-            Awards & Recognition
+            Penghargaan & Pengakuan
           </h2>
-          <p className="text-base sm:text-lg text-secondary-600 max-w-3xl mx-auto mt-4 text-center">
-            Our commitment to excellence has been acknowledged by industry leaders
+          <p className="text-base sm:text-lg text-secondary-600 max-w-3xl mx-auto mt-4">
+            Komitmen kami terhadap keunggulan telah diakui oleh para pemimpin industri
           </p>
         </div>
 
         {/* Carousel */}
-        <div className="mb-10 sm:mb-12">
+        <div className="mb-6 sm:mb-8">
           <div 
             ref={carouselRef}
             className="award-carousel-wrapper"
@@ -482,8 +410,8 @@ const Penghargaan = () => {
         </div>
 
         {/* Statistics */}
-        <div className="pt-8 sm:pt-10">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 max-w-6xl mx-auto">
+        <div className="pt-6 sm:pt-8 lg:pt-10">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
             {statistics.map((stat, index) => (
               <StatisticCard key={stat.id} stat={stat} index={index} />
             ))}

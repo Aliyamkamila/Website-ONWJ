@@ -13,46 +13,44 @@ const AwardCard = ({ award, index, visible }) => {
 
   return (
     <div
-      className={`bg-white border border-secondary-200 rounded-lg overflow-hidden transition-all duration-300 hover:border-primary-600 hover:shadow-md`}
+      className="transition-all duration-300"
       style={{
         opacity: visible ? 1 : 0,
-        transform: visible ?  'translateY(0)' : 'translateY(20px)',
-        transitionDelay: `${index * 60}ms`,
+        transform: visible ? 'translateY(0)' : 'translateY(20px)',
+        transitionDelay: `${index * 50}ms`,
       }}
     >
       {/* Image Section */}
-      <div className="relative h-52 overflow-hidden bg-secondary-100">
+      <div className="relative h-56 overflow-hidden rounded-lg mb-5 group">
         <img
           src={imageUrl}
           alt={award.title}
-          className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+          className="w-full h-full object-cover transition-transform duration-400 group-hover:scale-105"
           loading="lazy"
           onError={(e) => {
-            e.target.src = awardImage; // Fallback if image fails to load
+            e.target.src = awardImage;
           }}
         />
         
         {/* Year Badge */}
-        <div className="absolute top-3 right-3 px-3 py-1.5 bg-white rounded-lg shadow-md">
-          <p className="text-sm font-heading font-bold text-primary-600">{award.year}</p>
+        <div className="absolute top-4 right-4 px-3 py-1.5 bg-primary-600 text-white rounded text-xs font-heading font-bold shadow-lg">
+          {award.year}
         </div>
       </div>
       
       {/* Content Section */}
-      <div className="p-5 border-t border-secondary-100">
-        <div className="flex items-center gap-2 mb-2">
-          <FaTrophy className="w-3.5 h-3.5 text-amber-500" />
-          <p className="text-xs font-heading font-semibold text-secondary-500">
+      <div className="space-y-3 pb-5 border-b-2 border-secondary-200 transition-colors duration-300 hover:border-primary-600 group cursor-pointer">
+        <div>
+          <p className="text-xs font-heading font-semibold text-secondary-500 uppercase tracking-wider mb-1">
             {award.month} {award.year}
           </p>
+          <h3 className="text-lg font-heading font-bold text-secondary-900 line-clamp-2 group-hover:text-primary-600 transition-colors duration-300">
+            {award.title}
+          </h3>
         </div>
-
-        <h3 className="text-base font-heading font-bold text-secondary-900 mb-3 leading-tight">
-          {award.title}
-        </h3>
         
-        <p className="text-xs text-secondary-600">
-          <span className="font-semibold">Diberikan oleh:</span> {award.given_by}
+        <p className="text-sm text-secondary-600 line-clamp-2">
+          {award.given_by}
         </p>
       </div>
     </div>
@@ -60,12 +58,12 @@ const AwardCard = ({ award, index, visible }) => {
 };
 
 const SubNav = () => {
-  const activeStyle = "font-heading font-semibold text-primary-600 border-b-2 border-primary-600 py-4 transition-colors duration-200";
-  const inactiveStyle = "font-heading font-medium text-secondary-600 hover:text-primary-600 border-b-2 border-transparent py-4 transition-colors duration-200";
+  const activeStyle = "font-heading font-semibold text-primary-600 border-b-2 border-primary-600 py-4 px-0 transition-colors duration-200";
+  const inactiveStyle = "font-heading font-medium text-secondary-600 hover:text-primary-600 border-b-2 border-transparent py-4 px-0 transition-colors duration-200";
 
   return (
-    <div className="sticky top-0 z-40 bg-white border-b border-secondary-200">
-      <nav className="section-container flex space-x-8">
+    <div className="bg-white border-b border-secondary-100">
+      <nav className="section-container flex gap-8">
         <NavLink 
           to="/media-informasi" 
           end
@@ -156,54 +154,52 @@ const PenghargaanPage = () => {
       <MediaHero />
       <SubNav />
       
-      <div className="section-container py-12">
+      <div className="section-container py-16">
         
         {/* Header Section */}
-        <div className="max-w-4xl mx-auto text-center mb-10">
-          <h2 className="text-2xl lg:text-3xl font-heading font-bold text-secondary-900 mb-3">
-            Koleksi Penghargaan
+        <div className="max-w-3xl mx-auto text-center mb-14">
+          <h2 className="text-3xl lg:text-4xl font-heading font-bold text-secondary-900 mb-4">
+            Penghargaan & Prestasi
           </h2>
-          <p className="text-sm text-secondary-600 mb-6">
-            Pencapaian dan apresiasi yang kami terima dari berbagai institusi
+          <p className="text-base text-secondary-600 mb-8">
+            Koleksi penghargaan yang kami terima sebagai bukti dedikasi dan keunggulan
           </p>
 
           {/* Year Filter */}
-          <div className="flex items-center justify-center gap-2 flex-wrap">
+          <div className="flex items-center justify-center gap-2.5 flex-wrap">
             {years.map((year) => (
               <button
                 key={year}
                 onClick={() => setSelectedYear(year)}
-                className={`px-4 py-2 rounded-lg text-sm font-heading font-semibold transition-all duration-200 ${
+                className={`px-4 py-2 text-sm font-heading font-semibold rounded transition-all duration-300 border-b-2 ${
                   selectedYear === year
-                    ? 'bg-primary-600 text-white'
-                    : 'bg-secondary-100 text-secondary-700 hover:bg-secondary-200'
+                    ? 'text-primary-600 border-primary-600 bg-primary-50'
+                    : 'text-secondary-600 border-transparent hover:text-primary-600 hover:border-primary-300'
                 }`}
               >
-                {year === 'all' ? 'Semua Tahun' : year}
+                {year === 'all' ? 'Semua' : year}
               </button>
             ))}
           </div>
         </div>
 
         {/* Awards Grid */}
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
-                <p className="text-secondary-600">Memuat data penghargaan...</p>
-              </div>
+            <div className="flex flex-col items-center justify-center py-20">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mb-4"></div>
+              <p className="text-secondary-600 text-base">Memuat penghargaan...</p>
             </div>
           ) : filteredAwards.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-10">
               {filteredAwards.map((award, index) => (
                 <AwardCard key={award.id} award={award} index={index} visible={visible} />
               ))}
             </div>
           ) : (
-            <div className="text-center py-12">
-              <FaTrophy className="w-12 h-12 text-secondary-300 mx-auto mb-4" />
-              <p className="text-secondary-600">
+            <div className="flex flex-col items-center justify-center py-20">
+              <FaTrophy className="w-16 h-16 text-secondary-200 mb-4" />
+              <p className="text-secondary-600 text-base font-heading font-semibold">
                 {selectedYear === 'all' 
                   ? 'Belum ada data penghargaan' 
                   : `Tidak ada penghargaan untuk tahun ${selectedYear}`

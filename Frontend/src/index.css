@@ -28,7 +28,7 @@
   
   /* === TYPOGRAPHY === */
   --font-heading: 'Montserrat', system-ui, sans-serif;
-  --font-body: 'Inter', system-ui, sans-serif;
+  --font-body: 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif;
   
   /* === DISPLAY FONT SIZES (COMPACT SCALE) === */
   --text-display-2xl: 3rem;      /* 48px */
