@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { FaHome, FaStore, FaBookOpen, FaPhone, FaWhatsapp, FaSpinner } from 'react-icons/fa';
 import { umkmService } from '../services/umkmService';
 import toast from 'react-hot-toast';
+import PageHero from '../components/PageHero';
 
 // --- Aset Placeholder ---
 import bannerImage from '../assets/hero-bg.png';
@@ -11,29 +12,17 @@ import productImage from '../assets/rectangle.png';
 
 // --- SUB-KOMPONEN HALAMAN ---
 const UmkmHero = () => (
-    <div className="relative h-[60vh] overflow-hidden">
-        <div className="absolute inset-0">
-            <img src={bannerImage} alt="Banner UMKM" className="w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-black/50" />
-        </div>
-        <div className="relative container mx-auto px-8 lg:px-16 h-full flex items-center">
-            <div className="max-w-3xl text-white">
-                <div className="flex items-center gap-2 mb-4 text-sm">
-                    <Link to="/" className="text-gray-300 hover:text-white flex items-center gap-1">
-                        <FaHome /> Home
-                    </Link>
-                    <span>/</span>
-                    <Link to="/tjsl" className="text-gray-300 hover:text-white">TJSL</Link>
-                    <span>/</span>
-                    <span className="font-semibold text-white">UMKM Binaan</span>
-                </div>
-                <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">UMKM Binaan</h1>
-                <p className="text-lg text-gray-200 leading-relaxed">
-                    Etalase produk dan cerita sukses dari para mitra binaan UMKM kami yang berdaya dan mandiri.
-                </p>
-            </div>
-        </div>
-    </div>
+    <PageHero
+        title="UMKM Binaan"
+        description="Etalase produk dan cerita sukses dari para mitra binaan UMKM kami yang berdaya dan mandiri."
+        backgroundImage={bannerImage}
+        heightClass="h-[45vh] min-h-[320px] max-h-[420px]"
+        breadcrumbs={[
+            { label: 'Beranda', to: '/', icon: 'home' },
+            { label: 'TJSL', to: '/tjsl' },
+            { label: 'UMKM Binaan' },
+        ]}
+    />
 );
 
 const FeaturedUmkm = ({ item }) => {

@@ -51,8 +51,7 @@ const Struktur = () => {
               </div>
             ) : (
               <div className="bg-white rounded-lg shadow-lg p-12 text-center border border-gray-200">
-                <p className="text-gray-500 text-lg">Belum ada struktur organisasi yang diupload</p>
-                <p className="text-gray-400 text-sm mt-2">Silakan upload gambar struktur organisasi melalui panel admin</p>
+                <p className="text-gray-500 text-lg">Belum ada struktur organisasi</p>
               </div>
             )}
           </div>

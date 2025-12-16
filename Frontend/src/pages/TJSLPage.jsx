@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
+import PageHero from '../components/PageHero';
 import platformImage from '../assets/contoh1.png';
 import programImage from '../assets/rectangle.png';
 import carouselImg1 from '../assets/contoh2.png';
@@ -128,22 +129,16 @@ const dummyTestimonials = [
 ];
 
 const TJSLHero = () => (
-  <div className="relative h-[60vh] overflow-hidden">
-    <div className="absolute inset-0">
-      <img src={platformImage} alt="Platform" className="w-full h-full object-cover"/>
-      <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-black/50"/>
-    </div>
-    <div className="relative container mx-auto px-8 lg:px-16 h-full flex items-center">
-      <div className="max-w-3xl text-white">
-        <div className="flex items-center gap-2 mb-4 text-sm">
-          <Link to="/" className="text-gray-300 hover:text-white flex items-center gap-1"><FaHome /> Home</Link>
-          <span>/</span><span className="font-semibold text-white">TJSL</span>
-        </div>
-        <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">Tanggung Jawab Sosial & Lingkungan</h1>
-        <p className="text-lg text-gray-200 leading-relaxed">Komitmen PT Migas Hulu Jabar ONWJ untuk tumbuh bersama masyarakat dan menjaga kelestarian lingkungan demi masa depan yang berkelanjutan.</p>
-      </div>
-    </div>
-  </div>
+  <PageHero
+    title="Tanggung Jawab Sosial & Lingkungan"
+    description="Komitmen PT Migas Hulu Jabar ONWJ untuk tumbuh bersama masyarakat dan menjaga kelestarian lingkungan demi masa depan yang berkelanjutan."
+    backgroundImage={platformImage}
+    heightClass="h-[45vh] min-h-[320px] max-h-[420px]"
+    breadcrumbs={[
+      { label: 'Beranda', to: '/' },
+      { label: 'TJSL' },
+    ]}
+  />
 );
 
 const TJSLProfile = ({ quickFacts }) => (

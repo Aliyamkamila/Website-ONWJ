@@ -117,7 +117,9 @@ const ManageManagement = () => {
 
       // Validate unique order
       const isDuplicateOrder = managements.some(m => 
-        m.order === parseInt(formData.order) && m.id !== editingId
+        m.type === formData.type &&
+        m.order === parseInt(formData.order) &&
+        m.id !== editingId
       );
       if (isDuplicateOrder) {
         toast.error('Urutan sudah digunakan oleh data lain');
@@ -360,7 +362,7 @@ const ManageManagement = () => {
                     name="order"
                     value={formData.order}
                     onChange={handleInputChange}
-                    min="0"
+                    placeholder='0'
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                   <p className="text-xs text-gray-500 mt-1">Urutan tampilan (harus unik, tidak boleh sama dengan data lain)</p>

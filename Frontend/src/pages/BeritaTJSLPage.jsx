@@ -1,32 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { FaHome, FaSpinner } from 'react-icons/fa'; 
+import PageHero from '../components/PageHero';
 import bannerImage from '../assets/hero-bg.png';
 import { beritaApi } from '../services/BeritaService'; 
 import toast from 'react-hot-toast';
 
 const BeritaHero = () => (
-    <div className="relative h-[60vh] overflow-hidden">
-        <div className="absolute inset-0">
-            <img src={bannerImage} alt="Banner Berita" className="w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-black/50" />
-        </div>
-        <div className="relative container mx-auto px-8 lg:px-16 h-full flex items-center">
-            <div className="max-w-3xl text-white">
-                <div className="flex items-center gap-2 mb-4 text-sm">
-                    <Link to="/" className="text-gray-300 hover:text-white flex items-center gap-1">
-                        <FaHome /> Home
-                    </Link>
-                    <span>/</span>
-                    <span className="font-semibold text-white">Berita TJSL</span>
-                </div>
-                <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">Berita TJSL</h1>
-                <p className="text-lg text-gray-200 leading-relaxed">
-                    Ikuti perkembangan terbaru mengenai program Tanggung Jawab Sosial dan Lingkungan kami. 
-                </p>
-            </div>
-        </div>
-    </div>
+    <PageHero
+        title="Berita TJSL"
+        description="Ikuti perkembangan terbaru mengenai program Tanggung Jawab Sosial dan Lingkungan kami."
+        backgroundImage={bannerImage}
+        heightClass="h-[45vh] min-h-[320px] max-h-[420px]"
+        breadcrumbs={[
+            { label: 'Beranda', to: '/', icon: 'home' },
+            { label: 'Berita TJSL' },
+        ]}
+    />
 );
 
 const BeritaFilter = ({ categories, selected, onSelect, onSearch, searchTerm }) => (

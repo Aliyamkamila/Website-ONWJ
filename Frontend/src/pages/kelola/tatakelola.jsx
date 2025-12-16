@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FaHome, FaChevronDown, FaFileDownload, FaFileAlt, FaInfoCircle } from 'react-icons/fa';
+import PageHero from '../../components/PageHero';
 import officeImage from '../../assets/contoh3.png';
 
 const TataKelola = () => {
@@ -87,41 +88,16 @@ const TataKelola = () => {
     <div className="min-h-screen bg-white">
       
       {/* Hero Section */}
-      <div className="relative h-[60vh] overflow-hidden" id="hero-section">
-        <div className="absolute inset-0">
-          <img 
-            src={officeImage}
-            alt="Office Building"
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-secondary-900/70 to-secondary-900/50" />
-        </div>
-        
-        <div className="relative section-container h-full flex items-center">
-          <div className="max-w-2xl text-white">
-            <div className="flex items-center gap-2 mb-4 text-body-sm">
-              <Link 
-                to="/" 
-                className="text-white/70 hover:text-white flex items-center gap-1 transition-colors duration-200"
-              >
-                <FaHome className="w-4 h-4" /> 
-                <span>Home</span>
-              </Link>
-              <span className="text-white/50">/</span>
-              <span className="font-semibold text-white">Tata Kelola</span>
-            </div>
-            
-            <h1 className="text-display-lg lg:text-display-xl font-heading font-bold mb-6 text-white leading-tight">
-              Kebijakan Tata Kelola Perusahaan
-            </h1>
-            
-            <p className="text-body-lg text-white/90 leading-relaxed">
-              Komitmen kami dalam menjalankan praktik tata kelola perusahaan yang baik
-              untuk mencapai pertumbuhan berkelanjutan
-            </p>
-          </div>
-        </div>
-      </div>
+      <PageHero
+        title="Kebijakan Tata Kelola Perusahaan"
+        description="Komitmen kami dalam menjalankan praktik tata kelola perusahaan yang baik untuk mencapai pertumbuhan berkelanjutan"
+        backgroundImage={officeImage}
+        heightClass="h-[45vh] min-h-[320px] max-h-[420px]"
+        breadcrumbs={[
+          { label: 'Beranda', to: '/', icon: 'home' },
+          { label: 'Tata Kelola' },
+        ]}
+      />
 
       {/* Main Content */}
       <div className="section-container py-12">
