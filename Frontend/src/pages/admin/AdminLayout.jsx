@@ -33,6 +33,7 @@ const SidebarLink = ({ to, icon, label, badge }) => {
 };
 
 // Sidebar Dropdown
+// Sidebar Dropdown
 const SidebarDropdown = ({ title, children }) => {
     const [isOpen, setIsOpen] = useState(false);
 
@@ -40,7 +41,10 @@ const SidebarDropdown = ({ title, children }) => {
         <div>
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center justify-between px-4 py-3 w-full rounded-lg text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors"
+                // PERUBAHAN DISINI:
+                // 1. Hapus 'justify-between'
+                // 2. Tambah 'gap-2' (atau gap-3 sesuai selera)
+                className="flex items-center gap-2 px-4 py-3 w-full rounded-lg text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors"
             >
                 <span className="font-medium">{title}</span>
                 <FaChevronDown
