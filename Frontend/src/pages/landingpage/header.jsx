@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useSettings } from '../../hooks/useSettings';
+import logoHero from '../../assets/logo.webp';
 import logoDefault from '../../assets/LOGO-HD.webp';
 
 const Header = () => {
@@ -11,9 +12,18 @@ const Header = () => {
   const location = useLocation();
   const { settings, loading } = useSettings();
 
-  const logoUrl = settings.logo?.main
-    ? `http://localhost:8000${settings.logo.main}`
-    : logoDefault;
+  const getLogoUrl = () => {
+    // Di hero section gunakan logo.webp
+    if (isInHero && !isScrolled) {
+      return logoHero;
+    }
+    // Di non-hero gunakan LOGO-HD.webp atau dari settings
+    return settings.logo?.main
+      ? `http://localhost:8000${settings.logo.main}`
+      : logoDefault;
+  };
+
+  const logoUrl = getLogoUrl();
 
   const handleScroll = useCallback(() => {
     const currentScrollPos = window.scrollY;
