@@ -90,39 +90,39 @@ export const testimonialApi = {
 // ===== ADMIN API =====
 export const testimonialAdminApi = {
     getAll: (params = {}) => {
-        return apiClient.get('/v1/admin/testimonials', { params });
+        return apiClient.get('/admin/testimonials', { params });
     },
 
     getById: (id) => {
-        return apiClient.get(`/v1/admin/testimonials/${id}`);
+        return apiClient.get(`/admin/testimonials/${id}`);
     },
 
     create: (formData) => {
-        return apiClient.post('/v1/admin/testimonials', formData, {
+        return apiClient.post('/admin/testimonials', formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
         });
     },
 
     update: (id, formData) => {
-        return apiClient. post(`/v1/admin/testimonials/${id}`, formData, {
+        return apiClient. post(`/admin/testimonials/${id}`, formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
         });
     },
 
     delete:  (id) => {
-        return apiClient.delete(`/v1/admin/testimonials/${id}`);
+        return apiClient.delete(`/admin/testimonials/${id}`);
     },
 
     bulkDelete: (ids) => {
-        return apiClient.post('/v1/admin/testimonials/bulk-delete', { ids });
+        return apiClient.post('/admin/testimonials/bulk-delete', { ids });
     },
 
     toggleFeatured: (id) => {
-        return apiClient.post(`/v1/admin/testimonials/${id}/toggle-featured`);
+        return apiClient.post(`/admin/testimonials/${id}/toggle-featured`);
     },
 
     getStatistics: () => {
-        return apiClient.get('/v1/admin/testimonial-statistics');
+        return apiClient.get('/admin/testimonial-statistics');
     },
 };
 

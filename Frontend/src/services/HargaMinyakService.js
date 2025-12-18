@@ -12,22 +12,22 @@ export const hargaMinyakService = {
 
   // Admin:  CRUD operations
   admin:  {
-    getAll: (params) => api.get('/v1/admin/harga-minyak', { params }),
+    getAll: (params) => api.get('/admin/harga-minyak', { params }),
     
-    create: (data) => api.post('/v1/admin/harga-minyak', data),
+    create: (data) => api.post('/admin/harga-minyak', data),
     
-    update: (id, data) => api.put(`/v1/admin/harga-minyak/${id}`, data),
+    update: (id, data) => api.put(`/admin/harga-minyak/${id}`, data),
     
-    delete: (id) => api.delete(`/v1/admin/harga-minyak/${id}`),
+    delete: (id) => api.delete(`/admin/harga-minyak/${id}`),
     
-    bulkStore: (data) => api.post('/v1/admin/harga-minyak/bulk-store', data),
+    bulkStore: (data) => api.post('/admin/harga-minyak/bulk-store', data),
     
-    bulkDelete: (ids) => api.post('/v1/admin/harga-minyak/bulk-delete', { ids }),
+    bulkDelete: (ids) => api.post('/admin/harga-minyak/bulk-delete', { ids }),
 
-    // Realisasi Bulanan
-    getRealisasi: (params) => api.get('/v1/admin/realisasi-bulanan', { params }),
+    // Produksi bulanan (realisasi)
+    getRealisasi: (params) => api.get('/admin/produksi-bulanan', { params }),
     
-    storeRealisasi: (data) => api.post('/v1/admin/realisasi-bulanan', data),
+    storeRealisasi: (data) => api.post('/admin/produksi-bulanan', data),
   }
 };
 

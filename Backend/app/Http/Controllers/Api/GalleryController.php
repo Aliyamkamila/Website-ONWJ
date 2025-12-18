@@ -5,14 +5,23 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Gallery;
 use App\Models\GalleryCategory;
+use App\Services\ImageCompressionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
-use Intervention\Image\Facades\Image;
+use Intervention\Image\ImageManager;
 
 class GalleryController extends Controller
 {
+    protected ImageCompressionService $imageCompressionService;
+
+    public function __construct(ImageCompressionService $imageCompressionService)
+    {
+        $this->imageCompressionService = $imageCompressionService;
+    }
+    
     /**
      * Get all gallery images (Public)
      * GET /api/v1/gallery
@@ -240,8 +249,11 @@ class GalleryController extends Controller
             if ($request->hasFile('image')) {
                 $image = $request->file('image');
                 
+                // Compress image before storing
+                $image = $this->imageCompressionService->compress($image, maxWidth: 2000, quality: 80);
+                
                 // Generate unique filename
-                $filename = time() . '_' . Str::random(10) . '.' . $image->getClientOriginalExtension();
+                $filename = time() .'_' .Str::random(10) .'.' .$image->getClientOriginalExtension();
                 
                 // Store original image
                 $imagePath = $image->storeAs('gallery', $filename, 'public');
@@ -304,8 +316,11 @@ class GalleryController extends Controller
 
             foreach ($request->file('images') as $index => $image) {
                 try {
+                    // Compress image before storing
+                    $image = $this->imageCompressionService->compress($image, maxWidth: 2000, quality: 80);
+                    
                     // Generate unique filename
-                    $filename = time() . '_' . Str::random(10) . '.' . $image->getClientOriginalExtension();
+                    $filename = time() .'_' .Str::random(10) .'.' .$image->getClientOriginalExtension();
                     
                     // Store original image
                     $imagePath = $image->storeAs('gallery', $filename, 'public');
@@ -319,7 +334,7 @@ class GalleryController extends Controller
                     // Create gallery record
                     $gallery = Gallery:: create([
                         'category_id' => $request->category_id,
-                        'title' => 'Image ' . ($index + 1),
+                        'title' => 'Image ' .($index + 1),
                         'image_path' => $imagePath,
                         'thumbnail_path' => $thumbnailPath,
                         'file_size' => $image->getSize(),
@@ -332,13 +347,13 @@ class GalleryController extends Controller
                     $uploadedImages[] = $gallery;
 
                 } catch (\Exception $e) {
-                    $errors[] = "Image {$index}:  " . $e->getMessage();
+                    $errors[] = "Image {$index}:  " .$e->getMessage();
                 }
             }
 
             return response()->json([
                 'success' => true,
-                'message' => count($uploadedImages) . ' images uploaded successfully',
+                'message' => count($uploadedImages) .' images uploaded successfully',
                 'data' => $uploadedImages,
                 'errors' => $errors
             ], 201);
@@ -361,7 +376,7 @@ class GalleryController extends Controller
         $validator = Validator::make($request->all(), [
             'category_id' => 'required|exists:gallery_categories,id',
             'title' => 'required|string|max: 255',
-            'slug' => 'nullable|string|max: 255|unique:gallery,slug,' . $id,
+            'slug' => 'nullable|string|max: 255|unique:gallery,slug,' .$id,
             'caption' => 'nullable|string',
             'description' => 'nullable|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
@@ -398,7 +413,7 @@ class GalleryController extends Controller
                 }
 
                 $image = $request->file('image');
-                $filename = time() . '_' . Str::random(10) . '.' . $image->getClientOriginalExtension();
+                $filename = time() .'_' .Str::random(10) .'.' .$image->getClientOriginalExtension();
                 
                 $imagePath = $image->storeAs('gallery', $filename, 'public');
                 $thumbnailPath = $this->createThumbnail($image, $filename);
@@ -531,22 +546,22 @@ class GalleryController extends Controller
     }
 
     /**
-     * Create thumbnail
+     * Create thumbnail using Intervention Image v3
      * @param $image
      * @param $filename
-     * @return string
+     * @return string|null
      */
     private function createThumbnail($image, $filename)
     {
         try {
-            $thumbnailFilename = 'thumb_' . $filename;
-            $thumbnailPath = 'gallery/' . $thumbnailFilename;
+            $manager = new ImageManager('gd');
             
-            // Create thumbnail (400x400)
-            $img = Image::make($image->getRealPath());
-            $img->fit(400, 400, function ($constraint) {
-                $constraint->upsize();
-            });
+            $thumbnailFilename = 'thumb_' .$filename;
+            $thumbnailPath = 'gallery/' .$thumbnailFilename;
+            
+            // Create thumbnail (400x400) using v3 API
+            $img = $manager->read($image->getRealPath());
+            $img = $img->cover(400, 400);
             
             // Save thumbnail
             Storage::disk('public')->put($thumbnailPath, (string) $img->encode());
@@ -555,6 +570,7 @@ class GalleryController extends Controller
 
         } catch (\Exception $e) {
             // If thumbnail creation fails, return original path
+            Log::warning('Thumbnail creation failed', ['error' => $e->getMessage()]);
             return null;
         }
     }

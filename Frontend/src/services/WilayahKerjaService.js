@@ -21,14 +21,14 @@ export const wilayahKerjaService = {
   admin: {
     getAll: (params) => {
       console.log('📋 Fetching admin wilayah-kerja with params:', params);
-      return api.get('/v1/admin/wilayah-kerja', { params });
+      return api.get('/admin/wilayah-kerja', { params });
     },
-    create: (data) => api.post('/v1/admin/wilayah-kerja', data),
-    update: (id, data) => api.put(`/v1/admin/wilayah-kerja/${id}`, data),
-    delete: (id, category) => api.delete(`/v1/admin/wilayah-kerja/${id}`, {
+    create: (data) => api.post('/admin/wilayah-kerja', data),
+    update: (id, data) => api.put(`/admin/wilayah-kerja/${id}`, data),
+    delete: (id, category) => api.delete(`/admin/wilayah-kerja/${id}`, {
       params: { category }
     }),
-    restore: (id, category) => api.post(`/v1/admin/wilayah-kerja/${id}/restore`, null, {
+    restore: (id, category) => api.post(`/admin/wilayah-kerja/${id}/restore`, null, {
       params: { category }
     }),
   },

@@ -28,11 +28,6 @@ use App\Http\Controllers\Api\ManagementController;
 |--------------------------------------------------------------------------
 | API Routes
 |--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| is assigned the "api" middleware group. Enjoy building your API!
-|
 */
 
 // ========================================================================
@@ -57,7 +52,6 @@ Route::middleware(['guest_only'])->group(function () {
 // AUTHENTICATION ROUTES
 // ========================================================================
 
-// Hidden admin login route
 Route::prefix('tukang-minyak-dan-gas')->group(function () {
     Route::post('/login', [AdminAuthController::class, 'login'])
         ->middleware('throttle:5,1')
@@ -86,342 +80,237 @@ Route::middleware(['auth:sanctum', 'admin_auth'])->group(function () {
 });
 
 // ========================================================================
-// HERO SECTION ROUTES
+// PUBLIC API V1 ROUTES (WITH RESPONSE CACHE)
 // ========================================================================
 
-// Public - Get active hero sections
 Route::prefix('v1')->group(function () {
+
+    // --- HERO SECTIONS ---
     Route::get('/hero-sections', [HeroSectionController::class, 'index']);
-});
 
-// Admin - Manage hero sections (Protected)
-Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin_auth'])->group(function () {
-    Route::post('/hero-sections/upload-media', [HeroSectionController::class, 'uploadMedia']);
-    Route::delete('/hero-sections/delete-media', [HeroSectionController::class, 'deleteMedia']);
-    Route::get('/hero-sections', [HeroSectionController::class, 'getAll']);
-    Route::post('/hero-sections', [HeroSectionController::class, 'store']);
-    Route::put('/hero-sections/{heroSection}', [HeroSectionController::class, 'update']);
-    Route::delete('/hero-sections/{heroSection}', [HeroSectionController::class, 'destroy']);
-    Route::post('/hero-sections/reorder', [HeroSectionController::class, 'reorder']);
-});
+    // --- PROGRAMS (TJSL) ---
+    Route::get('/programs', [ProgramController::class, 'index']);
+    Route::get('/programs/{slug}', [ProgramController::class, 'show']);
+    Route::get('/programs/category/{categoryId}', [ProgramController::class, 'byCategory']);
+    Route::get('/programs-statistics', [ProgramController::class, 'statistics']);
 
-/*
-|--------------------------------------------------------------------------
-| UMKM Routes
-|--------------------------------------------------------------------------
-*/
+    // --- BERITA (NEWS) ---
+    Route::get('/berita', [BeritaController::class, 'index']);
+    Route::get('/berita/{slug}', [BeritaController::class, 'show']);
+    Route::get('/berita-latest', [BeritaController::class, 'latest']);
+    Route::get('/berita-recent', [BeritaController::class, 'latest']); // Alias for latest
+    Route::get('/berita-categories', [BeritaController::class, 'categories']);
 
-// Public
-Route::prefix('v1')->group(function () {
+    // --- UMKM ---
     Route::get('/umkm', [UmkmController::class, 'index']);
     Route::get('/umkm/{id}', [UmkmController::class, 'show']);
     Route::get('/umkm-categories', [UmkmController::class, 'categories']);
     Route::get('/umkm-status-options', [UmkmController::class, 'statusOptions']);
-});
 
-// Admin (Protected)
-Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin_auth'])->group(function () {
-    Route::get('/umkm', [UmkmController::class, 'adminIndex']);
-    Route::post('/umkm', [UmkmController::class, 'store']);
-    Route::get('/umkm/{id}', [UmkmController::class, 'show']);
-    Route::post('/umkm/{id}', [UmkmController::class, 'update']); // Post for multipart/form-data update
-    Route::delete('/umkm/{id}', [UmkmController::class, 'destroy']);
-});
-
-/*
-|--------------------------------------------------------------------------
-| Program TJSL Routes
-|--------------------------------------------------------------------------
-*/
-
-// Public
-Route::prefix('v1')->group(function () {
-    Route::get('/programs', [ProgramController::class, 'index']);
-    Route::get('/programs/{slug}', [ProgramController::class, 'show']);
-    Route::get('/programs-recent', [ProgramController::class, 'recent']);
-    Route::get('/program-categories', [ProgramController::class, 'categories']);
-    Route::get('/program-status-options', [ProgramController::class, 'statusOptions']);
-    Route::get('/program-statistics', [ProgramController::class, 'statistics']);
-});
-
-// Admin (Protected)
-Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin_auth'])->group(function () {
-    Route::get('/programs', [ProgramController::class, 'adminIndex']);
-    Route::post('/programs', [ProgramController::class, 'store']);
-    Route::get('/programs/{id}', [ProgramController::class, 'show']);
-    Route::post('/programs/{id}', [ProgramController::class, 'update']);
-    Route::delete('/programs/{id}', [ProgramController::class, 'destroy']);
-});
-
-/*
-|--------------------------------------------------------------------------
-| Wilayah Kerja Routes
-|--------------------------------------------------------------------------
-*/
-
-// Public
-Route::prefix('v1')->group(function () {
+    // --- WILAYAH KERJA ---
     Route::get('/wilayah-kerja', [WilayahKerjaController::class, 'index']);
     Route::get('/wilayah-kerja/{id}', [WilayahKerjaController::class, 'show']);
     Route::get('/wilayah-kerja-statistics', [WilayahKerjaController::class, 'statistics']);
-    Route::get('/wilayah-kerja-status-options', [WilayahKerjaController::class, 'statusOptions']);
-    Route::post('/wilayah-kerja-convert-coordinates', [WilayahKerjaController::class, 'convertCoordinates']);
-});
 
-// Admin (Protected)
-Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin_auth'])->group(function () {
-    Route::get('/wilayah-kerja', [WilayahKerjaController::class, 'adminIndex']);
-    Route::post('/wilayah-kerja', [WilayahKerjaController::class, 'store']);
-    Route::put('/wilayah-kerja/{id}', [WilayahKerjaController::class, 'update']);
-    Route::patch('/wilayah-kerja/{id}', [WilayahKerjaController::class, 'update']);
-    Route::delete('/wilayah-kerja/{id}', [WilayahKerjaController::class, 'destroy']);
-    Route::post('/wilayah-kerja/{id}/restore', [WilayahKerjaController::class, 'restore']);
-});
-
-/*
-|--------------------------------------------------------------------------
-| Penghargaan Routes
-|--------------------------------------------------------------------------
-*/
-
-// Public
-Route::prefix('v1')->group(function () {
+    // --- PENGHARGAAN (AWARDS) ---
     Route::get('/penghargaan', [PenghargaanController::class, 'index']);
+    // Landing-specific endpoint expected by frontend
     Route::get('/penghargaan/landing', [PenghargaanController::class, 'forLanding']);
-    Route::get('/penghargaan/{id}', [PenghargaanController::class, 'show']);
     Route::get('/penghargaan-years', [PenghargaanController::class, 'getYears']);
     Route::get('/penghargaan-categories', [PenghargaanController::class, 'getCategories']);
-});
 
-// Admin (Protected)
-Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin_auth'])->group(function () {
-    Route::get('/penghargaan', [PenghargaanController::class, 'adminIndex']);
-    Route::post('/penghargaan', [PenghargaanController::class, 'store']);
-    Route::get('/penghargaan/{id}', [PenghargaanController::class, 'show']);
-    Route::post('/penghargaan/{id}', [PenghargaanController::class, 'update']);
-    Route::delete('/penghargaan/{id}', [PenghargaanController::class, 'destroy']);
-    Route::post('/penghargaan/bulk-delete', [PenghargaanController::class, 'bulkDestroy']);
-    Route::get('/penghargaan-statistics', [PenghargaanController::class, 'getStatistics']);
-});
-
-/*
-|--------------------------------------------------------------------------
-| Berita Routes
-|--------------------------------------------------------------------------
-*/
-
-// Public
-Route::prefix('v1')->group(function () {
-    Route::get('/berita', [BeritaController::class, 'index']);
-    Route::get('/berita/media-informasi', [BeritaController::class, 'forMediaInformasi']);
-    Route::get('/berita/homepage', [BeritaController::class, 'forHomepage']);
-    Route::get('/berita/{slug}', [BeritaController::class, 'show'])->where('slug', '[a-z0-9\-]+');
-    Route::get('/berita-recent', [BeritaController::class, 'recent']);
-    Route::get('/berita-categories', [BeritaController::class, 'categories']);
-});
-
-// Admin (Protected)
-Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin_auth'])->group(function () {
-    Route::get('/berita', [BeritaController::class, 'adminIndex']);
-    Route::post('/berita', [BeritaController::class, 'store']);
-    Route::get('/berita/{id}', [BeritaController::class, 'show'])->where('id', '[0-9]+');
-    Route::post('/berita/{id}', [BeritaController::class, 'update'])->where('id', '[0-9]+');
-    Route::delete('/berita/{id}', [BeritaController::class, 'destroy'])->where('id', '[0-9]+');
-    Route::get('/berita-statistics', [BeritaController::class, 'getStatistics']);
-});
-
-/*
-|--------------------------------------------------------------------------
-| Testimonials Routes
-|--------------------------------------------------------------------------
-*/
-
-// Public
-Route::prefix('v1')->group(function () {
+    // --- TESTIMONIALS ---
     Route::get('/testimonials', [TestimonialController::class, 'index']);
     Route::get('/testimonials/featured', [TestimonialController::class, 'getFeatured']);
     Route::get('/testimonials/program/{program}', [TestimonialController::class, 'getByProgram']);
-    Route::get('/testimonials/{id}', [TestimonialController::class, 'show']);
     Route::get('/testimonial-programs', [TestimonialController::class, 'getPrograms']);
-});
-
-// Admin (Protected)
-Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin_auth'])->group(function () {
-    Route::get('/testimonials', [TestimonialController::class, 'adminIndex']);
-    Route::post('/testimonials', [TestimonialController::class, 'store']);
     Route::get('/testimonials/{id}', [TestimonialController::class, 'show']);
-    Route::post('/testimonials/{id}', [TestimonialController::class, 'update']);
-    Route::delete('/testimonials/{id}', [TestimonialController::class, 'destroy']);
-    Route::post('/testimonials/bulk-delete', [TestimonialController::class, 'bulkDelete']);
-    Route::post('/testimonials/{id}/toggle-featured', [TestimonialController::class, 'toggleFeatured']);
-    Route::get('/testimonial-statistics', [TestimonialController::class, 'getStatistics']);
-});
 
-/*
-|--------------------------------------------------------------------------
-| TJSL Statistics Routes
-|--------------------------------------------------------------------------
-*/
-
-// Public
-Route::prefix('v1')->group(function () {
+    // --- TJSL STATISTICS ---
+    Route::get('/tjsl-statistics', [TjslStatisticController::class, 'index']);
+    // Alias to match frontend expectation
     Route::get('/tjsl/statistik', [TjslStatisticController::class, 'index']);
-});
+    // Optional english alias for consistency
+    Route::get('/tjsl/statistics', [TjslStatisticController::class, 'index']);
 
-// Admin (Protected)
-Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin_auth'])->group(function () {
-    Route::get('/tjsl/statistik', [TjslStatisticController::class, 'adminIndex']);
-    Route::put('/tjsl/statistik/{id}', [TjslStatisticController::class, 'update']);
-    Route::post('/tjsl/statistik/bulk-update', [TjslStatisticController::class, 'bulkUpdate']);
-    Route::post('/tjsl/statistik/reset', [TjslStatisticController::class, 'reset']);
-});
-
-/*
-|--------------------------------------------------------------------------
-| Contact Form Routes
-|--------------------------------------------------------------------------
-*/
-
-// Public
-Route::prefix('v1')->group(function () {
-    Route::post('/contact', [ContactController::class, 'store']);
-});
-
-// Admin (Protected)
-Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin_auth'])->group(function () {
-    Route::get('/contacts', [ContactController::class, 'index']);
-    Route::get('/contacts/statistics', [ContactController::class, 'statistics']);
-    Route::get('/contacts/{id}', [ContactController::class, 'show']);
-    Route::patch('/contacts/{id}/status', [ContactController::class, 'updateStatus']);
-    Route::delete('/contacts/{id}', [ContactController::class, 'destroy']);
-    Route::post('/contacts/bulk-delete', [ContactController::class, 'bulkDelete']);
-});
-
-/*
-|--------------------------------------------------------------------------
-| Site Settings Routes
-|--------------------------------------------------------------------------
-*/
-
-// Public
-Route::prefix('v1')->group(function () {
+    // --- SETTINGS ---
     Route::get('/settings', [SettingController::class, 'index']);
-});
 
-// Admin (Protected)
-Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin_auth'])->group(function () {
-    Route::get('/settings', [SettingController::class, 'adminIndex']);
-    Route::put('/settings', [SettingController::class, 'update']);
-    Route::post('/settings/upload', [SettingController::class, 'uploadImage']);
-    Route::delete('/settings/image/{key}', [SettingController::class, 'deleteImage']);
-    Route::post('/settings/reset', [SettingController::class, 'reset']);
-});
-
-/*
-|--------------------------------------------------------------------------
-| Harga Minyak Routes
-|--------------------------------------------------------------------------
-*/
-
-// Public
-Route::prefix('v1')->group(function () {
+    // --- HARGA MINYAK ---
     Route::get('/harga-minyak', [HargaMinyakController::class, 'index']);
-    Route::get('/harga-minyak/{id}', [HargaMinyakController::class, 'show']);
-    Route::get('/harga-minyak-statistics', [HargaMinyakController::class, 'statistics']);
     Route::get('/harga-minyak-latest', [HargaMinyakController::class, 'latest']);
-});
 
-// Admin (Protected)
-Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin_auth'])->group(function () {
-    // Harga Minyak CRUD
-    Route::get('/harga-minyak', [HargaMinyakController::class, 'adminIndex']);
-    Route::post('/harga-minyak', [HargaMinyakController::class, 'store']);
-    Route::put('/harga-minyak/{id}', [HargaMinyakController::class, 'update']);
-    Route::patch('/harga-minyak/{id}', [HargaMinyakController::class, 'update']);
-    Route::delete('/harga-minyak/{id}', [HargaMinyakController::class, 'destroy']);
-    Route::post('/harga-minyak/bulk-store', [HargaMinyakController::class, 'bulkStore']);
-    Route::post('/harga-minyak/bulk-delete', [HargaMinyakController::class, 'bulkDelete']);
-
-    // Realisasi Bulanan
-    Route::get('/realisasi-bulanan', [HargaMinyakController::class, 'getRealisasiBulanan']);
-    Route::post('/realisasi-bulanan', [HargaMinyakController::class, 'storeRealisasiBulanan']);
-});
-
-/*
-|--------------------------------------------------------------------------
-| Produksi Bulanan Routes
-|--------------------------------------------------------------------------
-*/
-
-// Public
-Route::prefix('v1')->group(function () {
+    // --- PRODUKSI BULANAN ---
     Route::get('/produksi-bulanan', [ProduksiBulananController::class, 'index']);
-    Route::get('/produksi-bulanan-statistics', [ProduksiBulananController::class, 'statistics']);
-});
+    Route::get('/produksi-statistics', [ProduksiBulananController::class, 'statistics']);
 
-// Admin (Protected)
-Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin_auth'])->group(function () {
-    Route::get('/produksi-bulanan', [ProduksiBulananController::class, 'adminIndex']);
-    Route::post('/produksi-bulanan', [ProduksiBulananController::class, 'store']);
-    Route::put('/produksi-bulanan/{id}', [ProduksiBulananController::class, 'update']);
-    Route::patch('/produksi-bulanan/{id}', [ProduksiBulananController::class, 'update']);
-    Route::delete('/produksi-bulanan/{id}', [ProduksiBulananController::class, 'destroy']);
-    Route::get('/produksi-bulanan/areas', [ProduksiBulananController::class, 'getAreas']);
-});
-
-/*
-|--------------------------------------------------------------------------
-| Gallery Routes
-|--------------------------------------------------------------------------
-*/
-
-// Public
-Route::prefix('v1')->group(function () {
-    // Gallery Categories
-    Route::get('/gallery-categories', [GalleryCategoryController::class, 'index']);
-    Route::get('/gallery-categories/{slug}', [GalleryCategoryController::class, 'show']);
-    
-    // Gallery Images
+    // --- GALLERY ---
     Route::get('/gallery', [GalleryController::class, 'index']);
-    Route::get('/gallery/featured', [GalleryController::class, 'featured']);
-    Route::get('/gallery/{slug}', [GalleryController::class, 'show']);
+    Route::get('/gallery/{id}', [GalleryController::class, 'show']);
+    Route::get('/gallery-categories', [GalleryCategoryController::class, 'index']);
+
+    // --- MANAGEMENT ---
+    Route::get('/management', [ManagementController::class, 'index']);
+
+    // --- CONTACT (NO CACHE for form submission) ---
+    Route::post('/contact', [ContactController::class, 'store']);
+    Route::get('/contact-info', [ContactController::class, 'info']);
+
 });
 
-// Admin (Protected)
-Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin_auth'])->group(function () {
-    // Gallery Categories CRUD
-    Route::post('/gallery-categories', [GalleryCategoryController::class, 'store']);
-    Route::put('/gallery-categories/{id}', [GalleryCategoryController::class, 'update']);
-    Route::patch('/gallery-categories/{id}', [GalleryCategoryController::class, 'update']);
-    Route::delete('/gallery-categories/{id}', [GalleryCategoryController::class, 'destroy']);
-    
-    // Gallery Images CRUD
-    Route::get('/gallery', [GalleryController::class, 'adminIndex']);
-    Route::post('/gallery', [GalleryController::class, 'store']);
-    Route::post('/gallery/{id}', [GalleryController::class, 'update']); // Use post for method spoofing if handling files
-    Route::delete('/gallery/{id}', [GalleryController::class, 'destroy']);
+// ========================================================================
+// ADMIN PROTECTED ROUTES (NO CACHE)
+// ========================================================================
+
+Route::middleware(['auth:sanctum', 'admin_auth'])->prefix('admin')->group(function () {
+
+    // --- PROGRAMS MANAGEMENT ---
+    Route::prefix('programs')->group(function () {
+        Route::post('/', [ProgramController::class, 'store']);
+        Route::put('/{id}', [ProgramController::class, 'update']);
+        Route::delete('/{id}', [ProgramController::class, 'destroy']);
+        Route::patch('/{id}/toggle-publish', [ProgramController::class, 'togglePublish']);
+    });
+
+    // --- BERITA MANAGEMENT ---
+    Route::prefix('berita')->group(function () {
+        Route::get('/', [BeritaController::class, 'adminIndex']);
+        Route::get('/statistics', [BeritaController::class, 'statistics']);
+        Route::post('/', [BeritaController::class, 'store']);
+        Route::put('/{id}', [BeritaController::class, 'update']);
+        Route::delete('/{id}', [BeritaController::class, 'destroy']);
+        Route::patch('/{id}/toggle-publish', [BeritaController::class, 'togglePublish']);
+    });
+
+    // Backward compatibility path expected by frontend
+    Route::get('/berita-statistics', [BeritaController::class, 'statistics']);
+
+    // --- UMKM MANAGEMENT ---
+    Route::prefix('umkm')->group(function () {
+        Route::get('/', [UmkmController::class, 'adminIndex']);
+        Route::get('/{id}', [UmkmController::class, 'show']);
+        Route::post('/', [UmkmController::class, 'store']);
+        Route::post('/{id}', [UmkmController::class, 'update']); // allow form-data without _method
+        Route::put('/{id}', [UmkmController::class, 'update']);
+        Route::delete('/{id}', [UmkmController::class, 'destroy']);
+    });
+
+    // --- HERO SECTIONS MANAGEMENT ---
+    Route::prefix('hero-sections')->group(function () {
+            Route::get('/', [HeroSectionController::class, 'adminIndex']);
+            Route::get('/{id}', [HeroSectionController::class, 'show']);
+        Route::post('/', [HeroSectionController::class, 'store']);
+            Route::post('/{id}', [HeroSectionController::class, 'update']); // allow form-data without _method
+        Route::put('/{id}', [HeroSectionController::class, 'update']);
+        Route::delete('/{id}', [HeroSectionController::class, 'destroy']);
+        Route::patch('/{id}/toggle-active', [HeroSectionController::class, 'toggleActive']);
+    });
+
+    // --- WILAYAH KERJA MANAGEMENT ---
+    Route::prefix('wilayah-kerja')->group(function () {
+        Route::get('/', [WilayahKerjaController::class, 'adminIndex']);
+        Route::get('/{id}', [WilayahKerjaController::class, 'show']);
+        Route::post('/', [WilayahKerjaController::class, 'store']);
+        Route::put('/{id}', [WilayahKerjaController::class, 'update']);
+        Route::delete('/{id}', [WilayahKerjaController::class, 'destroy']);
+        Route::post('/{id}/restore', [WilayahKerjaController::class, 'restore']);
+    });
+
+    // --- PENGHARGAAN MANAGEMENT ---
+    Route::prefix('penghargaan')->group(function () {
+        Route::get('/', [PenghargaanController::class, 'adminIndex']);
+        Route::get('/statistics', [PenghargaanController::class, 'statistics']);
+        Route::get('/{id}', [PenghargaanController::class, 'show']);
+        Route::post('/', [PenghargaanController::class, 'store']);
+        Route::post('/{id}', [PenghargaanController::class, 'update']); // allow form-data without _method
+        Route::put('/{id}', [PenghargaanController::class, 'update']);
+        Route::delete('/{id}', [PenghargaanController::class, 'destroy']);
+        Route::post('/bulk-delete', [PenghargaanController::class, 'bulkDelete']);
+    });
+
+    // Backward compatibility path expected by frontend
+    Route::get('/penghargaan-statistics', [PenghargaanController::class, 'statistics']);
+
+    // --- TESTIMONIALS MANAGEMENT ---
+    Route::prefix('testimonials')->group(function () {
+        Route::get('/', [TestimonialController::class, 'adminIndex']);
+        Route::get('/statistics', [TestimonialController::class, 'statistics']);
+        Route::get('/{id}', [TestimonialController::class, 'adminShow']);
+        Route::post('/', [TestimonialController::class, 'store']);
+        Route::post('/{id}', [TestimonialController::class, 'update']); // allow form-data without _method
+        Route::put('/{id}', [TestimonialController::class, 'update']);
+        Route::post('/{id}/toggle-featured', [TestimonialController::class, 'toggleFeatured']);
+        Route::post('/bulk-delete', [TestimonialController::class, 'bulkDelete']);
+        Route::delete('/{id}', [TestimonialController::class, 'destroy']);
+    });
+
+    // Backward compatibility path expected by frontend
+    Route::get('/testimonial-statistics', [TestimonialController::class, 'statistics']);
+
+    // --- TJSL STATISTICS MANAGEMENT ---
+    Route::prefix('tjsl')->group(function () {
+        Route::get('/statistik', [TjslStatisticController::class, 'adminIndex']);
+        Route::put('/statistik/{id}', [TjslStatisticController::class, 'update']);
+        Route::post('/statistik/bulk-update', [TjslStatisticController::class, 'bulkUpdate']);
+        Route::post('/statistik/reset', [TjslStatisticController::class, 'reset']);
+    });
+
+    // --- SETTINGS MANAGEMENT ---
+    Route::prefix('settings')->group(function () {
+        Route::get('/', [SettingController::class, 'adminIndex']);
+        Route::put('/', [SettingController::class, 'update']);
+    });
+
+    // --- HARGA MINYAK MANAGEMENT ---
+    Route::prefix('harga-minyak')->group(function () {
+        Route::get('/', [HargaMinyakController::class, 'adminIndex']);
+        Route::get('/{id}', [HargaMinyakController::class, 'show']);
+        Route::post('/', [HargaMinyakController::class, 'store']);
+        Route::post('/bulk', [HargaMinyakController::class, 'bulkStore']);
+        Route::post('/bulk-delete', [HargaMinyakController::class, 'bulkDelete']);
+        Route::put('/{id}', [HargaMinyakController::class, 'update']);
+        Route::delete('/{id}', [HargaMinyakController::class, 'destroy']);
+        
+        // Realisasi bulanan endpoints
+        Route::get('/realisasi-bulanan', [HargaMinyakController::class, 'getRealisasiBulanan']);
+        Route::post('/realisasi-bulanan', [HargaMinyakController::class, 'storeRealisasiBulanan']);
+    });
+
+    // --- PRODUKSI MANAGEMENT ---
+    Route::prefix('produksi-bulanan')->group(function () {
+        Route::get('/', [ProduksiBulananController::class, 'adminIndex']);
+        Route::get('/areas', [ProduksiBulananController::class, 'getAreas']);
+        Route::get('/{id}', [ProduksiBulananController::class, 'show']);
+        Route::post('/', [ProduksiBulananController::class, 'store']);
+        Route::put('/{id}', [ProduksiBulananController::class, 'update']);
+        Route::delete('/{id}', [ProduksiBulananController::class, 'destroy']);
+    });
+
+    // --- GALLERY MANAGEMENT ---
+    Route::prefix('gallery')->group(function () {
+        Route::post('/', [GalleryController::class, 'store']);
+        Route::put('/{id}', [GalleryController::class, 'update']);
+        Route::delete('/{id}', [GalleryController::class, 'destroy']);
+    });
+
+    // --- MANAGEMENT TEAM ---
+    Route::prefix('management')->group(function () {
+        Route::get('/', [ManagementController::class, 'adminIndex']);
+        Route::get('/{id}', [ManagementController::class, 'show']);
+        Route::post('/', [ManagementController::class, 'store']);
+        Route::post('/{id}', [ManagementController::class, 'update']); // allow form-data without _method
+        Route::put('/{id}', [ManagementController::class, 'update']);
+        Route::delete('/{id}', [ManagementController::class, 'destroy']);
+    });
+
+    // --- CONTACTS MANAGEMENT ---
+    Route::prefix('contacts')->group(function () {
+        Route::get('/', [ContactController::class, 'index']);
+        Route::get('/statistics', [ContactController::class, 'statistics']);
+        Route::get('/{id}', [ContactController::class, 'show']);
+        Route::delete('/{id}', [ContactController::class, 'destroy']);
+        Route::patch('/{id}/mark-read', [ContactController::class, 'markAsRead']);
+        Route::post('/bulk-delete', [ContactController::class, 'bulkDelete']);
+    });
+
 });
-
-/*
-|--------------------------------------------------------------------------
-| Management Routes
-|--------------------------------------------------------------------------
-*/
-
-// Public
-Route::prefix('v1')->group(function () {
-    Route::get('/managements', [ManagementController::class, 'index']);
-    Route::get('/managements/type/{type}', [ManagementController::class, 'getByType']);
-});
-
-// Admin (temporarily open for testing; re-enable auth when ready)
-Route::prefix('v1/admin')->group(function () {
-    Route::get('/managements', [ManagementController::class, 'adminIndex']);
-    Route::post('/managements', [ManagementController::class, 'store']);
-    Route::get('/managements/{id}', [ManagementController::class, 'show']);
-    Route::put('/managements/{id}', [ManagementController::class, 'update']);
-    Route::patch('/managements/{id}', [ManagementController::class, 'update']);
-    Route::delete('/managements/{id}', [ManagementController::class, 'destroy']);
-});
-
-// End of Routes

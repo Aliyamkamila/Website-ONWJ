@@ -94,7 +94,7 @@ const programService = {
      */
     adminGetAllPrograms: async (params = {}) => {
         try {
-            const response = await axiosInstance.get('/v1/admin/programs', { params });
+            const response = await axiosInstance.get('/admin/programs', { params });
             return response.data;
         } catch (error) {
             console.error('Error fetching programs:', error);
@@ -134,7 +134,7 @@ const programService = {
                 formData.append('image', programData.image);
             }
 
-            const response = await axiosInstance.post('/v1/admin/programs', formData, {
+            const response = await axiosInstance.post('/admin/programs', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 }
@@ -184,7 +184,7 @@ const programService = {
                 formData.append('remove_image', '1');
             }
 
-            const response = await axiosInstance.post(`/v1/admin/programs/${id}`, formData, {
+            const response = await axiosInstance.post(`/admin/programs/${id}`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 }
@@ -202,7 +202,7 @@ const programService = {
      */
     adminDeleteProgram: async (id) => {
         try {
-            const response = await axiosInstance.delete(`/v1/admin/programs/${id}`);
+            const response = await axiosInstance.delete(`/admin/programs/${id}`);
             return response.data;
         } catch (error) {
             console.error('Error deleting program:', error);

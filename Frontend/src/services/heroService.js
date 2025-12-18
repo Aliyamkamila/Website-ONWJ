@@ -28,7 +28,7 @@ const heroService = {
    */
   async getAllHeroSections() {
     try {
-      const response = await axios.get('/v1/admin/hero-sections');
+      const response = await axios.get('/admin/hero-sections');
       if (response.data.success) {
         return response.data.data || [];
       }
@@ -46,7 +46,7 @@ const heroService = {
    */
   async createHeroSection(data) {
     try {
-      const response = await axios.post('/v1/admin/hero-sections', data);
+      const response = await axios.post('/admin/hero-sections', data);
       if (response.data.success) {
         return response.data.data;
       }
@@ -65,7 +65,7 @@ const heroService = {
    */
   async updateHeroSection(id, data) {
     try {
-      const response = await axios.put(`/v1/admin/hero-sections/${id}`, data);
+      const response = await axios.put(`/admin/hero-sections/${id}`, data);
       if (response.data.success) {
         return response.data.data;
       }
@@ -83,7 +83,7 @@ const heroService = {
    */
   async deleteHeroSection(id) {
     try {
-      const response = await axios.delete(`/v1/admin/hero-sections/${id}`);
+      const response = await axios.delete(`/admin/hero-sections/${id}`);
       if (response.data.success) {
         return response.data;
       }
@@ -101,7 +101,7 @@ const heroService = {
    */
   async reorderHeroSections(items) {
     try {
-      const response = await axios.post('/v1/admin/hero-sections/reorder', { items });
+      const response = await axios.post('/admin/hero-sections/reorder', { items });
       if (response.data.success) {
         return response.data;
       }

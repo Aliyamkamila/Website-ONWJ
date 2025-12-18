@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
+import axiosInstance from '../../api/axios';
 import { 
     FaClock, FaCalendar, FaNewspaper, FaStore, FaQuoteLeft, 
     FaTrophy, FaFilePdf, FaMapMarkerAlt, FaChartBar, FaUsers,
@@ -35,35 +36,38 @@ const DashboardPage = () => {
     const fetchAllStats = async () => {
         try {
             setLoading(true);
-            const API_URL = import.meta.env.VITE_API_URL;
 
-            const [beritaRes, umkmRes, testimonialRes, laporanRes, penghargaanRes, wkTjslRes] = await Promise.all([
-                fetch(`${API_URL}/v1/admin/berita? per_page=999`). then(r => r.json()). catch(() => ({ data: [] })),
-                fetch(`${API_URL}/v1/admin/umkm?per_page=999`).then(r => r.json()).catch(() => ({ data: [] })),
-                fetch(`${API_URL}/v1/admin/testimonial? per_page=999`).then(r => r.json()).catch(() => ({ data: [] })),
-                fetch(`${API_URL}/v1/admin/laporan?per_page=999`).then(r => r.json()).catch(() => ({ data: [] })),
-                fetch(`${API_URL}/v1/admin/penghargaan?per_page=999`).then(r => r.json()).catch(() => ({ data: [] })),
-                fetch(`${API_URL}/v1/admin/wk-tjsl?per_page=999`). then(r => r.json()). catch(() => ({ data: [] })),
+            const [
+                beritaResp,
+                umkmResp,
+                testimonialResp,
+                penghargaanResp,
+                wilayahKerjaResp
+            ] = await Promise.all([
+                axiosInstance.get('/v1/berita', { params: { per_page: 999 } }).catch(() => ({ data: { success: false, data: [] } })),
+                axiosInstance.get('/v1/umkm', { params: { per_page: 999 } }).catch(() => ({ data: { success: false, data: [] } })),
+                axiosInstance.get('/v1/testimonials', { params: { per_page: 999 } }).catch(() => ({ data: { success: false, data: [] } })),
+                axiosInstance.get('/v1/penghargaan', { params: { per_page: 999 } }).catch(() => ({ data: { success: false, data: [] } })),
+                axiosInstance.get('/v1/wilayah-kerja', { params: { per_page: 999 } }).catch(() => ({ data: { success: false, data: [] } })),
             ]);
 
-            const berita = beritaRes.data || [];
-            const umkm = umkmRes.data || [];
-            const testimonial = testimonialRes.data || [];
-            const laporan = laporanRes.data || [];
-            const penghargaan = penghargaanRes.data || [];
-            const wkTjsl = wkTjslRes.data || [];
+            const berita = beritaResp?.data?.data ?? [];
+            const umkm = umkmResp?.data?.data ?? [];
+            const testimonial = testimonialResp?.data?.data ?? [];
+            const penghargaan = penghargaanResp?.data?.data ?? [];
+            const wilayahKerja = wilayahKerjaResp?.data?.data ?? [];
 
             setStats({
                 totalBerita: berita.length,
-                beritaPublished: berita.filter(b => b. status === 'Published').length,
+                beritaPublished: berita.filter(b => b.status === 'Published').length,
                 beritaDraft: berita.filter(b => b.status === 'Draft').length,
                 totalUMKM: umkm.length,
-                umkmFeatured: umkm.filter(u => u.is_featured). length,
+                umkmFeatured: umkm.filter(u => u.is_featured).length,
                 totalTestimonial: testimonial.length,
                 testimonialPublished: testimonial.filter(t => t.status === 'Published').length,
                 totalPenghargaan: penghargaan.length,
-                totalLaporan: laporan.length,
-                totalWkTjsl: wkTjsl.length,
+                totalLaporan: 0,
+                totalWkTjsl: wilayahKerja.length,
                 totalWkTekkom: 0,
             });
 

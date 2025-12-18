@@ -23,7 +23,7 @@ export const tjslService = {
     getAllStatistics: async () => {
         try {
             console.log('📞 Calling getAllStatistics');
-            const response = await axiosInstance.get('/v1/admin/tjsl/statistik');
+            const response = await axiosInstance.get('/admin/tjsl/statistik');
             return response.data;
         } catch (error) {
             console.error('❌ Error in getAllStatistics:', error);
@@ -39,7 +39,7 @@ export const tjslService = {
     bulkUpdateStatistics: async (statistics) => {
         try {
             console.log('📞 Calling bulkUpdateStatistics with data:', statistics);
-            const response = await axiosInstance.post('/v1/admin/tjsl/statistik/bulk-update', {
+            const response = await axiosInstance.post('/admin/tjsl/statistik/bulk-update', {
                 statistics
             });
             return response.data;
@@ -56,7 +56,7 @@ export const tjslService = {
     resetStatistics: async () => {
         try {
             console.log('📞 Calling resetStatistics');
-            const response = await axiosInstance.post('/v1/admin/tjsl/statistik/reset');
+            const response = await axiosInstance.post('/admin/tjsl/statistik/reset');
             return response.data;
         } catch (error) {
             console.error('❌ Error in resetStatistics:', error);
@@ -72,7 +72,7 @@ export const tjslService = {
     getStatisticByKey: async (key) => {
         try {
             console.log('📞 Calling getStatisticByKey with key:', key);
-            const response = await axiosInstance.get(`/v1/admin/tjsl/statistik/${key}`);
+            const response = await axiosInstance.get(`/admin/tjsl/statistik/${key}`);
             return response.data;
         } catch (error) {
             console.error('❌ Error in getStatisticByKey:', error);
@@ -89,7 +89,7 @@ export const tjslService = {
     updateStatistic: async (key, value) => {
         try {
             console.log('📞 Calling updateStatistic with key:', key, 'value:', value);
-            const response = await axiosInstance.put(`/v1/admin/tjsl/statistik/${key}`, {
+            const response = await axiosInstance.put(`/admin/tjsl/statistik/${key}`, {
                 value
             });
             return response.data;
@@ -111,7 +111,7 @@ export const tjslService = {
     getAllPrograms: async (params = {}) => {
         try {
             console.log('📞 Calling getAllPrograms with params:', params);
-            const response = await axiosInstance.get('/v1/admin/tjsl/programs', { params });
+            const response = await axiosInstance.get('/admin/tjsl/programs', { params });
             return response.data;
         } catch (error) {
             console.error('❌ Error in getAllPrograms:', error);
@@ -127,7 +127,7 @@ export const tjslService = {
     getProgramById: async (id) => {
         try {
             console.log('📞 Calling getProgramById with id:', id);
-            const response = await axiosInstance.get(`/v1/admin/tjsl/programs/${id}`);
+            const response = await axiosInstance.get(`/admin/tjsl/programs/${id}`);
             return response.data;
         } catch (error) {
             console.error('❌ Error in getProgramById:', error);
@@ -143,7 +143,7 @@ export const tjslService = {
     createProgram: async (formData) => {
         try {
             console.log('📞 Calling createProgram');
-            const response = await axiosInstance.post('/v1/admin/tjsl/programs', formData, {
+            const response = await axiosInstance.post('/admin/tjsl/programs', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },
@@ -167,7 +167,7 @@ export const tjslService = {
             // Laravel convention for PUT with FormData
             formData.append('_method', 'PUT');
             
-            const response = await axiosInstance.post(`/v1/admin/tjsl/programs/${id}`, formData, {
+            const response = await axiosInstance.post(`/admin/tjsl/programs/${id}`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },
@@ -187,7 +187,7 @@ export const tjslService = {
     deleteProgram: async (id) => {
         try {
             console.log('📞 Calling deleteProgram with id:', id);
-            const response = await axiosInstance.delete(`/v1/admin/tjsl/programs/${id}`);
+            const response = await axiosInstance.delete(`/admin/tjsl/programs/${id}`);
             return response.data;
         } catch (error) {
             console.error('❌ Error in deleteProgram:', error);

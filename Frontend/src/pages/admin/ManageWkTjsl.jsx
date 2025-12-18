@@ -80,7 +80,7 @@ const ManageWkTjsl = () => {
   const fetchAreas = async () => {
     setLoading(true);
     try {
-      const response = await axiosInstance.get('/v1/admin/wilayah-kerja', {
+      const response = await axiosInstance.get('/admin/wilayah-kerja', {
         params: {
           category: 'TJSL',  // ✅ Filter by TJSL
           per_page: 999
@@ -110,7 +110,7 @@ const ManageWkTjsl = () => {
   // ✅ Update fetchBeritaList with better error handling
   const fetchBeritaList = async () => {
     try {
-      const response = await axiosInstance.get('/v1/admin/berita', {
+      const response = await axiosInstance.get('/admin/berita', {
         params: { per_page: 999, status: 'published' }
       });
 
@@ -192,8 +192,8 @@ const ManageWkTjsl = () => {
       console.log('📤 Sending data:', dataWithCategory);
 
       const endpoint = editingArea
-        ? `/v1/admin/wilayah-kerja/${editingArea.id}`
-        : '/v1/admin/wilayah-kerja';
+        ? `/admin/wilayah-kerja/${editingArea.id}`
+        : '/admin/wilayah-kerja';
 
       const method = editingArea ? 'put' : 'post';
 
@@ -257,7 +257,7 @@ const ManageWkTjsl = () => {
 
     try {
       const response = await axiosInstance.delete(
-        `/v1/admin/wilayah-kerja/${id}?category=TJSL`
+        `/admin/wilayah-kerja/${id}?category=TJSL`
       );
 
       if (response.data.success) {

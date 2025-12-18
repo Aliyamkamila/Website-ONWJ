@@ -201,8 +201,9 @@ class TestimonialController extends Controller
 
             // Sorting
             $sortBy = $request->input('sort_by', 'created_at');
-            $sortOrder = $request->input('sort_order', 'desc');
-            $query->orderBy($sortBy, $sortOrder);
+            $sortOrder = strtolower($request->input('sort_order', 'desc')) === 'asc' ? 'asc' : 'desc';
+            $allowedSort = ['created_at', 'published_at', 'display_order', 'name', 'program'];
+            $query->orderBy(in_array($sortBy, $allowedSort, true) ? $sortBy : 'created_at', $sortOrder);
 
             // Pagination
             $perPage = $request->input('per_page', 15);
@@ -225,6 +226,33 @@ class TestimonialController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to retrieve testimonials',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * ADMIN: Get single testimonial by ID
+     */
+    public function adminShow($id)
+    {
+        try {
+            $testimonial = Testimonial::findOrFail($id);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Testimonial retrieved successfully',
+                'data' => $testimonial,
+            ], 200);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Testimonial not found',
+            ], 404);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve testimonial',
                 'error' => $e->getMessage(),
             ], 500);
         }
@@ -256,9 +284,12 @@ class TestimonialController extends Controller
             }
 
             $data = $request->except('avatar');
+
+            // Normalize booleans
+            $data['featured'] = filter_var($request->input('featured', false), FILTER_VALIDATE_BOOLEAN);
             
-            // Set created_by if admin info available
-            $data['created_by'] = auth()->user()->name ??  'Admin';
+            // Set created_by if admin info available (Sanctum user)
+            $data['created_by'] = $request->user()->name ?? 'Admin';
 
             // Handle avatar upload
             if ($request->hasFile('avatar')) {
@@ -312,7 +343,12 @@ class TestimonialController extends Controller
                 ], 422);
             }
 
-            $data = $request->except('avatar');
+            $data = $request->except('avatar', '_method');
+
+            // Normalize booleans
+            if ($request->has('featured')) {
+                $data['featured'] = filter_var($request->input('featured'), FILTER_VALIDATE_BOOLEAN);
+            }
 
             // Handle avatar upload
             if ($request->hasFile('avatar')) {
@@ -410,29 +446,6 @@ class TestimonialController extends Controller
     }
 
     /**
-     * Get statistics for admin dashboard
-     */
-    public function getStatistics()
-    {
-        try {
-            $stats = Testimonial::getStatistics();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Statistics retrieved successfully',
-                'data' => $stats,
-            ], 200);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to retrieve statistics',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
-    }
-
-    /**
      * Bulk delete testimonials
      */
     public function bulkDelete(Request $request)
@@ -465,6 +478,26 @@ class TestimonialController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to delete testimonials',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * ADMIN: Basic statistics
+     */
+    public function statistics()
+    {
+        try {
+            return response()->json([
+                'success' => true,
+                'message' => 'Testimonial statistics retrieved',
+                'data' => Testimonial::getStatistics(),
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve testimonial statistics',
                 'error' => $e->getMessage(),
             ], 500);
         }

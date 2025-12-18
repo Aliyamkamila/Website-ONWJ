@@ -16,7 +16,7 @@ export const contactService = {
      * @param {Object} params - { page, per_page, search, status, date_from, date_to }
      */
     getAll: (params = {}) => {
-      return api.get('/v1/admin/contacts', { params });
+      return api.get('/admin/contacts', { params });
     },
 
     /**
@@ -24,7 +24,7 @@ export const contactService = {
      * @param {number} id - Contact ID
      */
     getById: (id) => {
-      return api.get(`/v1/admin/contacts/${id}`);
+      return api.get(`/admin/contacts/${id}`);
     },
 
     /**
@@ -33,7 +33,7 @@ export const contactService = {
      * @param {Object} data - { status, admin_notes }
      */
     updateStatus: (id, data) => {
-      return api.patch(`/v1/admin/contacts/${id}/status`, data);
+      return api.patch(`/admin/contacts/${id}/status`, data);
     },
 
     /**
@@ -41,7 +41,7 @@ export const contactService = {
      * @param {number} id - Contact ID
      */
     delete: (id) => {
-      return api.delete(`/v1/admin/contacts/${id}`);
+      return api.delete(`/admin/contacts/${id}`);
     },
 
     /**
@@ -49,14 +49,14 @@ export const contactService = {
      * @param {Array<number>} ids - Array of contact IDs
      */
     bulkDelete: (ids) => {
-      return api.post('/v1/admin/contacts/bulk-delete', { ids });
+      return api.post('/admin/contacts/bulk-delete', { ids });
     },
 
     /**
      * Get contact statistics
      */
     getStatistics: () => {
-      return api.get('/v1/admin/contacts/statistics');
+      return api.get('/admin/contacts/statistics');
     },
   },
 };

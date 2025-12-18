@@ -2,9 +2,7 @@ import React, { useState } from 'react';
 import { FaFileExcel, FaUpload, FaDownload, FaCheckCircle, FaTimesCircle, FaSpinner } from 'react-icons/fa';
 import * as XLSX from 'xlsx';
 import toast from 'react-hot-toast';
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+import axiosInstance from '../../api/axios';
 
 const UnifiedImportExport = () => {
   const [importing, setImporting] = useState(false);
@@ -198,7 +196,7 @@ const UnifiedImportExport = () => {
                 continue;
               }
 
-              const response = await axios.post(`${API_URL}/v1/admin/berita`, beritaPayload);
+              const response = await axiosInstance.post('/admin/berita', beritaPayload);
               if (response.data.success) {
                 results.berita.success++;
               } else {
@@ -239,7 +237,7 @@ const UnifiedImportExport = () => {
                 continue;
               }
 
-              const response = await axios.post(`${API_URL}/v1/admin/umkm`, umkmPayload);
+              const response = await axiosInstance.post('/admin/umkm', umkmPayload);
               if (response.data.success) {
                 results.umkm.success++;
               } else {
@@ -279,7 +277,7 @@ const UnifiedImportExport = () => {
                 continue;
               }
 
-              const response = await axios.post(`${API_URL}/v1/admin/testimonial`, testimonialPayload);
+              const response = await axiosInstance.post('/admin/testimonials', testimonialPayload);
               if (response.data.success) {
                 results.testimonial.success++;
               } else {
@@ -318,7 +316,7 @@ const UnifiedImportExport = () => {
                 continue;
               }
 
-              const response = await axios.post(`${API_URL}/v1/admin/laporan`, laporanPayload);
+              const response = await axiosInstance.post('/admin/laporan', laporanPayload);
               if (response.data.success) {
                 results.laporan.success++;
               } else {
@@ -364,7 +362,7 @@ const UnifiedImportExport = () => {
                 continue;
               }
 
-              const response = await axios.post(`${API_URL}/v1/admin/wk-tjsl`, tjslPayload);
+              const response = await axiosInstance.post('/admin/wilayah-kerja', tjslPayload);
               if (response.data.success) {
                 results.tjsl.success++;
               } else {

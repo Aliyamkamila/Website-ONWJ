@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Penghargaan;
 use App\Services\ResponseService;
+use App\Services\ImageCompressionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
@@ -12,6 +13,12 @@ use Illuminate\Support\Str;
 
 class PenghargaanController extends Controller
 {
+    protected ImageCompressionService $imageCompressionService;
+
+    public function __construct(ImageCompressionService $imageCompressionService)
+    {
+        $this->imageCompressionService = $imageCompressionService;
+    }
     /**
      * Display a listing of the resource for public (Media Informasi Page).
      */
@@ -168,6 +175,10 @@ class PenghargaanController extends Controller
             $imagePath = null;
             if ($request->hasFile('image')) {
                 $image = $request->file('image');
+                
+                // Compress image before storing
+                $image = $this->imageCompressionService->compress($image, maxWidth: 2000, quality: 80);
+                
                 $imageName = time() .'_' .Str::slug($request->title) .'.' .$image->getClientOriginalExtension();
                 $imagePath = $image->storeAs('penghargaan', $imageName, 'public');
             }
@@ -263,6 +274,10 @@ class PenghargaanController extends Controller
             $imagePath = $oldImage;
             if ($request->hasFile('image')) {
                 $image = $request->file('image');
+                
+                // Compress image before storing
+                $image = $this->imageCompressionService->compress($image, maxWidth: 2000, quality: 80);
+                
                 $imageName = time() .'_' .Str::slug($request->title) .'.' .$image->getClientOriginalExtension();
                 $imagePath = $image->storeAs('penghargaan', $imageName, 'public');
 

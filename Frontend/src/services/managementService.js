@@ -1,7 +1,4 @@
-import axios from 'axios';
-
-const API_BASE_URL = 'http://localhost:8000/api/v1';
-const API_ADMIN_URL = 'http://localhost:8000/api/v1/admin';
+import axios from '../api/axios';
 
 const managementService = {
   /**
@@ -9,7 +6,7 @@ const managementService = {
    */
   getAll: async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/managements`);
+      const response = await axios.get('/v1/management');
       return response.data;
     } catch (error) {
       throw error;
@@ -21,7 +18,7 @@ const managementService = {
    */
   getByType: async (type) => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/managements/type/${type}`);
+      const response = await axios.get('/v1/management', { params: { type } });
       return response.data;
     } catch (error) {
       throw error;
@@ -35,12 +32,7 @@ const managementService = {
      */
     getAll: async () => {
       try {
-        const token = localStorage.getItem('admin_token');
-        const response = await axios.get(`${API_ADMIN_URL}/managements`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await axios.get('/admin/management');
         return response.data;
       } catch (error) {
         throw error;
@@ -52,12 +44,7 @@ const managementService = {
      */
     get: async (id) => {
       try {
-        const token = localStorage.getItem('admin_token');
-        const response = await axios.get(`${API_ADMIN_URL}/managements/${id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await axios.get(`/admin/management/${id}`);
         return response.data;
       } catch (error) {
         throw error;
@@ -69,11 +56,9 @@ const managementService = {
      */
     create: async (formData) => {
       try {
-        const token = localStorage.getItem('admin_token');
-        const response = await axios.post(`${API_ADMIN_URL}/managements`, formData, {
+        const response = await axios.post('/admin/management', formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
-            Authorization: `Bearer ${token}`,
           },
         });
         return response.data;
@@ -87,11 +72,9 @@ const managementService = {
      */
     update: async (id, formData) => {
       try {
-        const token = localStorage.getItem('admin_token');
-        const response = await axios.post(`${API_ADMIN_URL}/managements/${id}`, formData, {
+        const response = await axios.post(`/admin/management/${id}`, formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
-            Authorization: `Bearer ${token}`,
           },
         });
         return response.data;
@@ -105,12 +88,7 @@ const managementService = {
      */
     delete: async (id) => {
       try {
-        const token = localStorage.getItem('admin_token');
-        const response = await axios.delete(`${API_ADMIN_URL}/managements/${id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await axios.delete(`/admin/management/${id}`);
         return response.data;
       } catch (error) {
         throw error;

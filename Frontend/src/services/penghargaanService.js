@@ -81,7 +81,7 @@ const penghargaanService = {
      */
     adminGetAllPenghargaan: async (params = {}) => {
         try {
-            const response = await axiosInstance.get('/v1/admin/penghargaan', { params });
+            const response = await axiosInstance.get('/admin/penghargaan', { params });
             return response.data;
         } catch (error) {
             console.error('Error fetching penghargaan (admin):', error);
@@ -95,7 +95,7 @@ const penghargaanService = {
      */
     adminCreatePenghargaan: async (penghargaanData) => {
         try {
-            const response = await axiosInstance.post('/v1/admin/penghargaan', penghargaanData, {
+            const response = await axiosInstance.post('/admin/penghargaan', penghargaanData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 }
@@ -114,7 +114,7 @@ const penghargaanService = {
      */
     adminUpdatePenghargaan: async (id, penghargaanData) => {
         try {
-            const response = await axiosInstance.post(`/v1/admin/penghargaan/${id}`, penghargaanData, {
+            const response = await axiosInstance.post(`/admin/penghargaan/${id}`, penghargaanData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 }
@@ -132,7 +132,7 @@ const penghargaanService = {
      */
     adminDeletePenghargaan: async (id) => {
         try {
-            const response = await axiosInstance.delete(`/v1/admin/penghargaan/${id}`);
+            const response = await axiosInstance.delete(`/admin/penghargaan/${id}`);
             return response.data;
         } catch (error) {
             console.error('Error deleting penghargaan:', error);
@@ -146,7 +146,7 @@ const penghargaanService = {
      */
     adminBulkDeletePenghargaan: async (ids) => {
         try {
-            const response = await axiosInstance.post('/v1/admin/penghargaan/bulk-delete', { ids });
+            const response = await axiosInstance.post('/admin/penghargaan/bulk-delete', { ids });
             return response.data;
         } catch (error) {
             console.error('Error bulk deleting penghargaan:', error);
@@ -159,7 +159,7 @@ const penghargaanService = {
      */
     getStatistics: async () => {
         try {
-            const response = await axiosInstance.get('/v1/admin/penghargaan-statistics');
+            const response = await axiosInstance.get('/admin/penghargaan-statistics');
             return response.data;
         } catch (error) {
             console.error('Error fetching penghargaan statistics:', error);

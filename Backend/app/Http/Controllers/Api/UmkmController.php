@@ -65,7 +65,7 @@ class UmkmController extends Controller
             ], 200);
 
         } catch (\Exception $e) {
-            Log::error('Public UMKM Index Error: ' . $e->getMessage());
+            Log::error('Public UMKM Index Error: ' .$e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to retrieve UMKM',
@@ -98,6 +98,44 @@ class UmkmController extends Controller
                 'error' => $e->getMessage(),
             ], 404);
         }
+    }
+
+    /**
+     * PUBLIC: Get distinct UMKM categories
+     */
+    public function categories()
+    {
+        try {
+            $categories = Umkm::getCategories();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'UMKM categories retrieved successfully',
+                'data' => $categories,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('UMKM categories error: '.$e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve UMKM categories',
+                'error' => app()->environment('local') ? $e->getMessage() : null,
+            ], 500);
+        }
+    }
+
+    /**
+     * PUBLIC: Get allowed status options
+     */
+    public function statusOptions()
+    {
+        $options = ['Aktif', 'Lulus Binaan', 'Dalam Proses'];
+
+        return response()->json([
+            'success' => true,
+            'message' => 'UMKM status options retrieved successfully',
+            'data' => $options,
+        ]);
     }
 
     /**
@@ -157,7 +195,7 @@ class UmkmController extends Controller
             ], 200);
 
         } catch (\Exception $e) {
-            Log::error('Admin UMKM Index Error: ' . $e->getMessage());
+            Log::error('Admin UMKM Index Error: ' .$e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to retrieve UMKM',
@@ -181,7 +219,7 @@ class UmkmController extends Controller
             'shop_link' => 'nullable|url',
             'contact_number' => 'nullable|string|max:20',
             'status' => 'required|in:Aktif,Lulus Binaan,Dalam Proses',
-            'year_started' => 'required|integer|min:2000|max:' . (date('Y') + 1),
+            'year_started' => 'required|integer|min:2000|max:' .(date('Y') + 1),
             'achievement' => 'nullable|string',
             'is_featured' => 'nullable', // Hapus validasi boolean strict agar menerima '0'/'1' string
             'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120', // 5MB
@@ -208,7 +246,7 @@ class UmkmController extends Controller
             // Handle image upload
             if ($request->hasFile('image')) {
                 $image = $request->file('image');
-                $filename = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
+                $filename = time() .'_' .uniqid() .'.' .$image->getClientOriginalExtension();
                 $path = $image->storeAs('umkm', $filename, 'public');
                 $data['image_path'] = $path;
             }
@@ -227,7 +265,7 @@ class UmkmController extends Controller
             ], 201);
 
         } catch (\Exception $e) {
-            Log::error('Create UMKM Error: ' . $e->getMessage());
+            Log::error('Create UMKM Error: ' .$e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal menyimpan data ke Database',
@@ -283,7 +321,7 @@ class UmkmController extends Controller
 
                 // Upload new image
                 $image = $request->file('image');
-                $filename = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
+                $filename = time() .'_' .uniqid() .'.' .$image->getClientOriginalExtension();
                 $path = $image->storeAs('umkm', $filename, 'public');
                 $data['image_path'] = $path;
             }
@@ -308,7 +346,7 @@ class UmkmController extends Controller
             ], 200);
 
         } catch (\Exception $e) {
-            Log::error('Update UMKM Error: ' . $e->getMessage());
+            Log::error('Update UMKM Error: ' .$e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to update UMKM',
@@ -332,7 +370,7 @@ class UmkmController extends Controller
             ], 200);
 
         } catch (\Exception $e) {
-            Log::error('Delete UMKM Error: ' . $e->getMessage());
+            Log::error('Delete UMKM Error: ' .$e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to delete UMKM',
@@ -341,37 +379,4 @@ class UmkmController extends Controller
         }
     }
 
-    /**
-     * Get categories for filter
-     */
-    public function categories()
-    {
-        try {
-            $categories = Umkm::getCategories();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Categories retrieved successfully',
-                'data' => $categories,
-            ], 200);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to retrieve categories',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
-    }
-
-    /**
-     * Get status options
-     */
-    public function statusOptions()
-    {
-        return response()->json([
-            'success' => true,
-            'data' => ['Aktif', 'Lulus Binaan', 'Dalam Proses'],
-        ], 200);
-    }
 }

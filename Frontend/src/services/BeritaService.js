@@ -152,7 +152,7 @@ export const beritaAdminApi = {
      * @returns {Promise}
      */
     getAll:  (params = {}) => {
-        return apiClient.get('/v1/admin/berita', { params });
+        return apiClient.get('/admin/berita', { params });
     },
 
     /**
@@ -161,7 +161,7 @@ export const beritaAdminApi = {
      * @returns {Promise}
      */
     getById:  (id) => {
-        return apiClient.get(`/v1/admin/berita/${id}`);
+        return apiClient.get(`/admin/berita/${id}`);
     },
 
     /**
@@ -170,7 +170,7 @@ export const beritaAdminApi = {
      * @returns {Promise}
      */
     create: (formData) => {
-        return apiClient. post('/v1/admin/berita', formData, {
+        return apiClient. post('/admin/berita', formData, {
             headers: {
                 'Content-Type': 'multipart/form-data',
             },
@@ -184,7 +184,7 @@ export const beritaAdminApi = {
      * @returns {Promise}
      */
     update: (id, formData) => {
-        return apiClient. post(`/v1/admin/berita/${id}`, formData, {
+        return apiClient. post(`/admin/berita/${id}`, formData, {
             headers: {
                 'Content-Type': 'multipart/form-data',
             },
@@ -197,7 +197,7 @@ export const beritaAdminApi = {
      * @returns {Promise}
      */
     delete: (id) => {
-        return apiClient. delete(`/v1/admin/berita/${id}`);
+        return apiClient. delete(`/admin/berita/${id}`);
     },
 
     /**
@@ -205,7 +205,7 @@ export const beritaAdminApi = {
      * @returns {Promise}
      */
     getStatistics: () => {
-        return apiClient.get('/v1/admin/berita-statistics');
+        return apiClient.get('/admin/berita-statistics');
     },
 
     /**
@@ -214,7 +214,7 @@ export const beritaAdminApi = {
      * @returns {Promise}
      */
     bulkDelete:  (ids) => {
-        return apiClient.post('/v1/admin/berita/bulk-delete', { ids });
+        return apiClient.post('/admin/berita/bulk-delete', { ids });
     },
 };
 

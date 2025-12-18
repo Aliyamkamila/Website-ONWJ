@@ -132,7 +132,7 @@ const ManageSettings = () => {
       formData.append('file', file);
       formData.append('type', item.type);
 
-      const response = await api.post('/v1/admin/hero-sections/upload-media', formData, {
+        const response = await api.post('/admin/hero-sections/upload-media', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -271,7 +271,7 @@ const ManageSettings = () => {
       // Delete uploaded media file if it's not an external URL
       if (item.src && !item.src.startsWith('http')) {
         try {
-          await api.delete('/v1/admin/hero-sections/delete-media', {
+            await api.delete('/admin/hero-sections/delete-media', {
             data: { path: item.src }
           });
         } catch (err) {

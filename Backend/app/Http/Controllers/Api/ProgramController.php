@@ -3,540 +3,475 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Program;
+use App\Repositories\ProgramRepository;
+use App\Services\ImageCompressionService;
+use App\Jobs\ClearCacheJob;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
+/**
+ * Program Controller dengan Repository Pattern & Cache Strategy
+ * 
+ * Features:
+ * - Multi-layer caching (Query cache + Response cache)
+ * - Repository pattern untuk reusable queries
+ * - Async cache invalidation via queues
+ * - Proper error handling
+ * - Image upload dengan optimization
+ */
 class ProgramController extends Controller
 {
+    protected ProgramRepository $programRepository;
+    protected ImageCompressionService $imageCompressionService;
+
     /**
-     * Display a listing of programs for public.
+     * Inject ProgramRepository via constructor
      */
-    public function index(Request $request)
+    public function __construct(ProgramRepository $programRepository, ImageCompressionService $imageCompressionService)
+    {
+        $this->programRepository = $programRepository;
+        $this->imageCompressionService = $imageCompressionService;
+    }
+
+    /**
+     * Display a listing of published programs
+     * 
+     * @return JsonResponse
+     * 
+     * Cache Strategy:
+     * - Response cache: 30 minutes (via middleware)
+     * - Query cache:  30 minutes (via repository)
+     */
+    public function index(): JsonResponse
     {
         try {
-            $query = Program::query();
-
-            // Filter by category
-            if ($request->has('category') && $request->category != '') {
-                $query->byCategory($request->category);
-            }
-
-            // Filter by status
-            if ($request->has('status') && $request->status != '') {
-                $query->byStatus($request->status);
-            }
-
-            // Filter by year
-            if ($request->has('year') && $request->year != '') {
-                $query->byYear($request->year);
-            }
-
-            // Search by name or location
-            if ($request->has('search') && $request->search != '') {
-                $search = $request->search;
-                $query->where(function ($q) use ($search) {
-                    $q->where('name', 'LIKE', "%{$search}%")
-                      ->orWhere('location', 'LIKE', "%{$search}%")
-                      ->orWhere('description', 'LIKE', "%{$search}%");
-                });
-            }
-
-            // Sort
-            $sortBy = $request->get('sort_by', 'created_at');
-            $sortOrder = $request->get('sort_order', 'desc');
-            $query->orderBy($sortBy, $sortOrder);
-
-            // Pagination
-            $perPage = $request->get('per_page', 6);
-            $programs = $query->paginate($perPage);
-
-            // Transform data for frontend
-            $programs->getCollection()->transform(function ($program) {
-                return [
-                    'id' => $program->id,
-                    'slug' => $program->slug,
-                    'category' => $program->category,
-                    'title' => $program->name,
-                    'date' => $program->formatted_date,
-                    'image' => $program->image_url_full ?? asset('assets/rectangle.png'),
-                    'description' => Str::limit($program->description, 100, '...'),
-                    'location' => $program->location,
-                    'status' => $program->status,
-                    'year' => $program->year,
-                ];
-            });
+            $programs = $this->programRepository->getPublished();
 
             return response()->json([
                 'success' => true,
                 'message' => 'Programs retrieved successfully',
                 'data' => $programs,
+                'meta' => [
+                    'total' => $programs->count(),
+                    'cached_at' => now()->toIso8601String(),
+                    'cache_ttl' => 1800, // 30 minutes
+                ]
             ]);
+
         } catch (\Exception $e) {
+            Log::error('Error fetching programs', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to retrieve programs',
-                'error' => $e->getMessage(),
+                'error' => app()->environment('local') ? $e->getMessage() : null
             ], 500);
         }
     }
 
     /**
-     * Display the specified program by slug.
+     * Display the specified program by slug
+     * 
+     * @param string $slug
+     * @return JsonResponse
      */
-    public function show($slug)
+    public function show(string $slug): JsonResponse
     {
         try {
-            $program = Program::where('slug', $slug)->firstOrFail();
+            $program = $this->programRepository->findBySlug($slug);
 
-            $data = [
-                'id' => $program->id,
-                'slug' => $program->slug,
-                'name' => $program->name,
-                'category' => $program->category,
-                'location' => $program->location,
-                'latitude' => $program->latitude,
-                'longitude' => $program->longitude,
-                'description' => $program->description,
-                'facilities' => $program->facilities,
-                'status' => $program->status,
-                'year' => $program->year,
-                'target' => $program->target,
-                'image' => $program->image_url_full,
-                'date' => $program->formatted_date,
-                'created_at' => $program->created_at,
-            ];
+            if (! $program) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Program not found'
+                ], 404);
+            }
 
             return response()->json([
                 'success' => true,
                 'message' => 'Program retrieved successfully',
-                'data' => $data,
+                'data' => $program
             ]);
+
         } catch (\Exception $e) {
+            Log::error('Error fetching program', [
+                'slug' => $slug,
+                'error' => $e->getMessage()
+            ]);
+
             return response()->json([
                 'success' => false,
-                'message' => 'Program not found',
-                'error' => $e->getMessage(),
-            ], 404);
-        }
-    }
-
-    /**
-     * Get recent programs (for sidebar)
-     */
-    public function recent(Request $request)
-    {
-        try {
-            $limit = $request->get('limit', 3);
-            $programs = Program::recent($limit)->get();
-
-            $data = $programs->map(function ($program) {
-                return [
-                    'id' => $program->id,
-                    'slug' => $program->slug,
-                    'title' => $program->name,
-                    'date' => $program->formatted_date,
-                    'image' => $program->image_url_full ?? asset('assets/rectangle.png'),
-                ];
-            });
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Recent programs retrieved successfully',
-                'data' => $data,
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to retrieve recent programs',
-                'error' => $e->getMessage(),
+                'message' => 'Failed to retrieve program',
+                'error' => app()->environment('local') ? $e->getMessage() : null
             ], 500);
         }
     }
 
     /**
-     * Get categories list
+     * Get programs by category
+     * 
+     * @param int $categoryId
+     * @return JsonResponse
      */
-    public function categories()
-    {
-        $categories = [
-            'Kesehatan',
-            'Pendidikan',
-            'Lingkungan',
-            'Ekonomi',
-            'Sosial',
-            'Infrastruktur'
-        ];
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Categories retrieved successfully',
-            'data' => $categories,
-        ]);
-    }
-
-    /**
-     * Get status options
-     */
-    public function statusOptions()
-    {
-        $statuses = ['Aktif', 'Selesai', 'Dalam Proses'];
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Status options retrieved successfully',
-            'data' => $statuses,
-        ]);
-    }
-
-    /**
-     * Get statistics (for dashboard/sidebar)
-     */
-    public function statistics()
+    public function byCategory(int $categoryId): JsonResponse
     {
         try {
-            $stats = [
-                'total_programs' => Program::count(),
-                'active_programs' => Program::active()->count(),
-                'programs_by_category' => Program::selectRaw('category, COUNT(*) as count')
-                    ->groupBy('category')
-                    ->pluck('count', 'category'),
-                'programs_by_year' => Program::selectRaw('year, COUNT(*) as count')
-                    ->groupBy('year')
-                    ->orderBy('year', 'desc')
-                    ->pluck('count', 'year'),
-            ];
+            $programs = $this->programRepository->getByCategory($categoryId);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Programs retrieved successfully',
+                'data' => $programs,
+                'meta' => [
+                    'category_id' => $categoryId,
+                    'total' => $programs->count(),
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error fetching programs by category', [
+                'category_id' => $categoryId,
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve programs',
+                'error' => app()->environment('local') ? $e->getMessage() : null
+            ], 500);
+        }
+    }
+
+    /**
+     * Get program statistics
+     * 
+     * @return JsonResponse
+     * 
+     * Cache:  2 hours (statistics change infrequently)
+     */
+    public function statistics(): JsonResponse
+    {
+        try {
+            $stats = $this->programRepository->getStatistics();
 
             return response()->json([
                 'success' => true,
                 'message' => 'Statistics retrieved successfully',
                 'data' => $stats,
+                'meta' => [
+                    'generated_at' => now()->toIso8601String(),
+                    'cache_ttl' => 7200, // 2 hours
+                ]
             ]);
+
         } catch (\Exception $e) {
+            Log::error('Error fetching program statistics', [
+                'error' => $e->getMessage()
+            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to retrieve statistics',
-                'error' => $e->getMessage(),
+                'error' => app()->environment('local') ? $e->getMessage() : null
             ], 500);
         }
     }
 
     /**
-     * ADMIN: Display a listing of programs
+     * Store a newly created program (Admin only)
+     * 
+     * @param Request $request
+     * @return JsonResponse
      */
-    public function adminIndex(Request $request)
-    {
-        try {
-            $query = Program::query();
-
-            // Filter by category
-            if ($request->has('category') && $request->category != '') {
-                $query->byCategory($request->category);
-            }
-
-            // Filter by status
-            if ($request->has('status') && $request->status != '') {
-                $query->byStatus($request->status);
-            }
-
-            // Filter by year
-            if ($request->has('year') && $request->year != '') {
-                $query->byYear($request->year);
-            }
-
-            // Search
-            if ($request->has('search') && $request->search != '') {
-                $search = $request->search;
-                $query->where(function ($q) use ($search) {
-                    $q->where('name', 'LIKE', "%{$search}%")
-                      ->orWhere('location', 'LIKE', "%{$search}%");
-                });
-            }
-
-            // Sort
-            $sortBy = $request->get('sort_by', 'created_at');
-            $sortOrder = $request->get('sort_order', 'desc');
-            $query->orderBy($sortBy, $sortOrder);
-
-            // Get all or paginated
-            if ($request->has('all') && $request->all == 'true') {
-                $programs = $query->get();
-            } else {
-                $perPage = $request->get('per_page', 10);
-                $programs = $query->paginate($perPage);
-            }
-
-            // Transform data
-            $transformedData = $programs instanceof \Illuminate\Pagination\LengthAwarePaginator
-                ? $programs->getCollection()
-                : $programs;
-
-            $transformedData->transform(function ($program) {
-                return [
-                    'id' => $program->id,
-                    'name' => $program->name,
-                    'slug' => $program->slug,
-                    'category' => $program->category,
-                    'location' => $program->location,
-                    'latitude' => $program->latitude,
-                    'longitude' => $program->longitude,
-                    'description' => $program->description,
-                    'facilities' => $program->facilities,
-                    'status' => $program->status,
-                    'year' => $program->year,
-                    'target' => $program->target,
-                    'imageUrl' => $program->image_url_full,
-                    'created_at' => $program->created_at,
-                    'updated_at' => $program->updated_at,
-                ];
-            });
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Programs retrieved successfully',
-                'data' => $programs instanceof \Illuminate\Pagination\LengthAwarePaginator
-                    ? $programs
-                    : ['data' => $programs],
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to retrieve programs',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
-    }
-
-    /**
-     * ADMIN: Store a newly created program
-     */
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse
     {
         try {
             // Validation
-            $validator = Validator::make($request->all(), [
-                'name' => 'required|string|max:255',
-                'category' => 'required|string|in:Kesehatan,Pendidikan,Lingkungan,Ekonomi,Sosial,Infrastruktur',
-                'location' => 'required|string|max:255',
-                'latitude' => 'required|numeric|between:-90,90',
-                'longitude' => 'required|numeric|between:-180,180',
+            $validated = $request->validate([
+                'title' => 'required|string|max:255',
+                'slug' => 'nullable|string|unique:programs,slug',
                 'description' => 'required|string',
-                'facilities' => 'required|array|min:1',
-                'facilities.*' => 'required|string',
-                'status' => 'required|in:Aktif,Selesai,Dalam Proses',
-                'year' => 'required|integer|min:2020|max:2030',
-                'target' => 'nullable|string|max:255',
-                'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120', // 5MB
+                'content' => 'nullable|string',
+                'category_id' => 'required|integer|exists:categories,id',
+                'image' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:5120', // 5MB max
+                'is_published' => 'boolean',
+                'featured' => 'boolean',
+                'meta_title' => 'nullable|string|max:255',
+                'meta_description' => 'nullable|string|max:500',
             ]);
 
-            if ($validator->fails()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Validation error',
-                    'errors' => $validator->errors(),
-                ], 422);
-            }
-
-            // Filter empty facilities
-            $facilities = array_filter($request->facilities, function ($facility) {
-                return !empty(trim($facility));
-            });
-
-            if (empty($facilities)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'At least one facility is required',
-                ], 422);
+            // Auto-generate slug if not provided
+            if (empty($validated['slug'])) {
+                $validated['slug'] = Str::slug($validated['title']);
+                
+                // Ensure unique slug
+                $originalSlug = $validated['slug'];
+                $counter = 1;
+                while (\App\Models\Program::where('slug', $validated['slug'])->exists()) {
+                    $validated['slug'] = $originalSlug .'-' .$counter;
+                    $counter++;
+                }
             }
 
             // Handle image upload
-            $imagePath = null;
             if ($request->hasFile('image')) {
-                $image = $request->file('image');
-                $imageName = time() . '_' . Str::slug($request->name) . '.' . $image->getClientOriginalExtension();
-                $imagePath = $image->storeAs('programs', $imageName, 'public');
+                $imageFile = $request->file('image');
+                $imageFile = $this->imageCompressionService->compress($imageFile, maxWidth: 2000, quality: 80);
+                
+                $imagePath = $imageFile->store('programs', 'public');
+                $validated['image'] = $imagePath;
+
+                // Dispatch async image optimization job
+                \App\Jobs\ProcessImageOptimization::dispatch($imagePath);
             }
 
-            // Create program
-            $program = Program::create([
-                'name' => $request->name,
-                'category' => $request->category,
-                'location' => $request->location,
-                'latitude' => $request->latitude,
-                'longitude' => $request->longitude,
-                'description' => $request->description,
-                'facilities' => array_values($facilities),
-                'status' => $request->status,
-                'year' => $request->year,
-                'target' => $request->target,
-                'image_url' => $imagePath,
-            ]);
+            // Set defaults
+            $validated['is_published'] = $validated['is_published'] ?? false;
+            $validated['featured'] = $validated['featured'] ?? false;
+
+            // Create via repository (auto cache invalidation)
+            $program = $this->programRepository->create($validated);
+
+            // Dispatch async cache clearing for public endpoints
+            ClearCacheJob::dispatch(['programs', 'public']);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Program created successfully',
-                'data' => [
-                    'id' => $program->id,
-                    'name' => $program->name,
-                    'slug' => $program->slug,
-                    'category' => $program->category,
-                    'location' => $program->location,
-                    'latitude' => $program->latitude,
-                    'longitude' => $program->longitude,
-                    'description' => $program->description,
-                    'facilities' => $program->facilities,
-                    'status' => $program->status,
-                    'year' => $program->year,
-                    'target' => $program->target,
-                    'imageUrl' => $program->image_url_full,
-                ],
+                'data' => $program
             ], 201);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+
         } catch (\Exception $e) {
+            Log:: error('Error creating program', [
+                'error' => $e->getMessage(),
+                'data' => $request->all()
+            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to create program',
-                'error' => $e->getMessage(),
+                'error' => app()->environment('local') ? $e->getMessage() : null
             ], 500);
         }
     }
 
     /**
-     * ADMIN: Update the specified program
+     * Update the specified program (Admin only)
+     * 
+     * @param Request $request
+     * @param int $id
+     * @return JsonResponse
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, int $id): JsonResponse
     {
         try {
-            $program = Program::findOrFail($id);
-
             // Validation
-            $validator = Validator::make($request->all(), [
-                'name' => 'required|string|max:255',
-                'category' => 'required|string|in:Kesehatan,Pendidikan,Lingkungan,Ekonomi,Sosial,Infrastruktur',
-                'location' => 'required|string|max:255',
-                'latitude' => 'required|numeric|between:-90,90',
-                'longitude' => 'required|numeric|between:-180,180',
-                'description' => 'required|string',
-                'facilities' => 'required|array|min:1',
-                'facilities.*' => 'required|string',
-                'status' => 'required|in:Aktif,Selesai,Dalam Proses',
-                'year' => 'required|integer|min:2020|max:2030',
-                'target' => 'nullable|string|max:255',
-                'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
-                'remove_image' => 'nullable|boolean',
+            $validated = $request->validate([
+                'title' => 'sometimes|string|max:255',
+                'slug' => 'sometimes|string|unique:programs,slug,' .$id,
+                'description' => 'sometimes|string',
+                'content' => 'nullable|string',
+                'category_id' => 'sometimes|integer|exists:categories,id',
+                'image' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:5120',
+                'is_published' => 'sometimes|boolean',
+                'featured' => 'sometimes|boolean',
+                'meta_title' => 'nullable|string|max:255',
+                'meta_description' => 'nullable|string|max:500',
             ]);
 
-            if ($validator->fails()) {
+            // Check if program exists
+            $program = \App\Models\Program::find($id);
+            if (!$program) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Validation error',
-                    'errors' => $validator->errors(),
-                ], 422);
-            }
-
-            // Filter empty facilities
-            $facilities = array_filter($request->facilities, function ($facility) {
-                return !empty(trim($facility));
-            });
-
-            if (empty($facilities)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'At least one facility is required',
-                ], 422);
+                    'message' => 'Program not found'
+                ], 404);
             }
 
             // Handle image upload
-            $imagePath = $program->image_url;
-
-            // Remove old image if requested
-            if ($request->has('remove_image') && $request->remove_image) {
-                if ($imagePath && Storage::disk('public')->exists($imagePath)) {
-                    Storage::disk('public')->delete($imagePath);
-                }
-                $imagePath = null;
-            }
-
-            // Upload new image
             if ($request->hasFile('image')) {
                 // Delete old image
-                if ($imagePath && Storage::disk('public')->exists($imagePath)) {
-                    Storage::disk('public')->delete($imagePath);
+                if ($program->image) {
+                    Storage::disk('public')->delete($program->image);
+                    
+                    // Also delete optimized versions
+                    $pathInfo = pathinfo($program->image);
+                    $directory = $pathInfo['dirname'];
+                    $filename = $pathInfo['filename'];
+                    
+                    foreach (['thumbnail', 'medium', 'large'] as $size) {
+                        $optimizedPath = $directory .'/' .$filename .'_' .$size .'.' .$pathInfo['extension'];
+                        Storage::disk('public')->delete($optimizedPath);
+                    }
                 }
+
+                // Upload new image
+                $imageFile = $request->file('image');
+                $imageFile = $this->imageCompressionService->compress($imageFile, maxWidth: 2000, quality: 80);
                 
-                $image = $request->file('image');
-                $imageName = time() . '_' . Str::slug($request->name) . '.' . $image->getClientOriginalExtension();
-                $imagePath = $image->storeAs('programs', $imageName, 'public');
+                $imagePath = $imageFile->store('programs', 'public');
+                $validated['image'] = $imagePath;
+
+                // Dispatch async image optimization
+                \App\Jobs\ProcessImageOptimization::dispatch($imagePath);
             }
 
-            // Update program
-            $program->update([
-                'name' => $request->name,
-                'category' => $request->category,
-                'location' => $request->location,
-                'latitude' => $request->latitude,
-                'longitude' => $request->longitude,
-                'description' => $request->description,
-                'facilities' => array_values($facilities),
-                'status' => $request->status,
-                'year' => $request->year,
-                'target' => $request->target,
-                'image_url' => $imagePath,
-            ]);
+            // Update via repository (auto cache invalidation)
+            $updatedProgram = $this->programRepository->update($id, $validated);
+
+            // Dispatch async cache clearing
+            ClearCacheJob::dispatch(['programs', 'public']);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Program updated successfully',
-                'data' => [
-                    'id' => $program->id,
-                    'name' => $program->name,
-                    'slug' => $program->slug,
-                    'category' => $program->category,
-                    'location' => $program->location,
-                    'latitude' => $program->latitude,
-                    'longitude' => $program->longitude,
-                    'description' => $program->description,
-                    'facilities' => $program->facilities,
-                    'status' => $program->status,
-                    'year' => $program->year,
-                    'target' => $program->target,
-                    'imageUrl' => $program->image_url_full,
-                ],
+                'data' => $updatedProgram
             ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+
         } catch (\Exception $e) {
+            Log::error('Error updating program', [
+                'id' => $id,
+                'error' => $e->getMessage(),
+                'data' => $request->all()
+            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to update program',
-                'error' => $e->getMessage(),
+                'error' => app()->environment('local') ? $e->getMessage() : null
             ], 500);
         }
     }
 
     /**
-     * ADMIN: Remove the specified program
+     * Remove the specified program (Admin only)
+     * 
+     * @param int $id
+     * @return JsonResponse
      */
-    public function destroy($id)
+    public function destroy(int $id): JsonResponse
     {
         try {
-            $program = Program::findOrFail($id);
-
-            // Delete image if exists
-            if ($program->image_url && Storage::disk('public')->exists($program->image_url)) {
-                Storage::disk('public')->delete($program->image_url);
+            // Check if program exists
+            $program = \App\Models\Program:: find($id);
+            if (!$program) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Program not found'
+                ], 404);
             }
 
-            $program->delete();
+            // Delete image if exists
+            if ($program->image) {
+                Storage::disk('public')->delete($program->image);
+                
+                // Delete optimized versions
+                $pathInfo = pathinfo($program->image);
+                $directory = $pathInfo['dirname'];
+                $filename = $pathInfo['filename'];
+                
+                foreach (['thumbnail', 'medium', 'large'] as $size) {
+                    $optimizedPath = $directory .'/' .$filename .'_' .$size .'.' .$pathInfo['extension'];
+                    Storage::disk('public')->delete($optimizedPath);
+                }
+            }
+
+            // Delete via repository (auto cache invalidation)
+            $deleted = $this->programRepository->delete($id);
+
+            if (! $deleted) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to delete program'
+                ], 500);
+            }
+
+            // Dispatch async cache clearing
+            ClearCacheJob::dispatch(['programs', 'public']);
 
             return response()->json([
                 'success' => true,
-                'message' => 'Program deleted successfully',
+                'message' => 'Program deleted successfully'
             ]);
+
         } catch (\Exception $e) {
+            Log::error('Error deleting program', [
+                'id' => $id,
+                'error' => $e->getMessage()
+            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to delete program',
-                'error' => $e->getMessage(),
+                'error' => app()->environment('local') ? $e->getMessage() : null
+            ], 500);
+        }
+    }
+
+    /**
+     * Toggle publish status (Admin only)
+     * 
+     * @param int $id
+     * @return JsonResponse
+     */
+    public function togglePublish(int $id): JsonResponse
+    {
+        try {
+            $program = \App\Models\Program::find($id);
+            
+            if (!$program) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Program not found'
+                ], 404);
+            }
+
+            // Toggle status
+            $newStatus = ! $program->is_published;
+            $this->programRepository->update($id, ['is_published' => $newStatus]);
+
+            // Dispatch async cache clearing
+            ClearCacheJob::dispatch(['programs', 'public']);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Program status updated successfully',
+                'data' => [
+                    'id' => $id,
+                    'is_published' => $newStatus
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error toggling program status', [
+                'id' => $id,
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update program status',
+                'error' => app()->environment('local') ? $e->getMessage() : null
             ], 500);
         }
     }

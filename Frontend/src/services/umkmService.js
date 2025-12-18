@@ -119,7 +119,7 @@ export const umkmService = {
     // Admin APIs
     adminGetAllUmkm: async () => {
         try {
-            const response = await apiClient.get('/v1/admin/umkm');
+            const response = await apiClient.get('/admin/umkm');
             return response.data;
         } catch (error) {
             // PERBAIKAN: Cukup lempar objek error Axios
@@ -129,7 +129,7 @@ export const umkmService = {
 
     createUmkm: async (formData) => {
         try {
-            const response = await apiClient.post('/v1/admin/umkm', formData, {
+            const response = await apiClient.post('/admin/umkm', formData, {
                 headers: {
                     // Set Content-Type ke undefined agar Axios/Browser otomatis mengatur boundary
                     'Content-Type': undefined, 
@@ -150,7 +150,7 @@ export const umkmService = {
             // Contoh konvensi Laravel:
             // formData.append('_method', 'PUT'); 
 
-            const response = await apiClient.post(`/v1/admin/umkm/${id}`, formData, {
+            const response = await apiClient.post(`/admin/umkm/${id}`, formData, {
                 headers: {
                     'Content-Type': undefined, 
                 },
@@ -163,7 +163,7 @@ export const umkmService = {
 
     deleteUmkm: async (id) => {
         try {
-            const response = await apiClient.delete(`/v1/admin/umkm/${id}`);
+            const response = await apiClient.delete(`/admin/umkm/${id}`);
             return response.data;
         } catch (error) {
             throw error;
