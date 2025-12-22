@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { FaEdit, FaTrash, FaPlus, FaTimes, FaMapMarkerAlt, FaUsers, FaCheck, FaNewspaper, FaSearch, FaFilter, FaArrowLeft } from 'react-icons/fa';
-import axiosInstance from '../../api/axios'; // ✅ CHANGED: Use centralized axios instance
+import { FaEdit, FaTrash, FaPlus, FaTimes, FaMapMarkerAlt, FaUsers, FaCheck, FaNewspaper, FaSearch, FaFilter, FaArrowLeft, FaCog, FaList, FaSave } from 'react-icons/fa';
+import axiosInstance from '../../api/axios';
 import toast from 'react-hot-toast';
 import MapClickSelector from '../../components/MapClickSelector';
 import PetaImage from '../wk/Peta.png';
-
-// ✅ REMOVED: API_URL constant (handled by axiosInstance)
 
 const ManageWkTjsl = () => {
   const [areas, setAreas] = useState([]);
@@ -18,9 +16,16 @@ const ManageWkTjsl = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [filterActive, setFilterActive] = useState('');
+  const [filterCategory, setFilterCategory] = useState(''); // Filter kategori baru
+
+  // ========== KATEGORI MANAGEMENT STATE ==========
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [categories, setCategories] = useState([]);
+  const [categoryInput, setCategoryInput] = useState('');
+  const [editingCategory, setEditingCategory] = useState(null);
 
   const [formData, setFormData] = useState({
-    area_id: '',
+    area_id:  '',
     name: '',
     position_x: '',
     position_y: '',
@@ -33,13 +38,87 @@ const ManageWkTjsl = () => {
     duration: '',
     impact: '',
     order: 0,
-    is_active: true,
+    is_active:  true,
     related_news_id:  '',
+    category_name: '', // Tambahkan field kategori
   });
 
   const [programInput, setProgramInput] = useState('');
 
-  // ✅ REMOVED: getAuthToken helper (handled by axiosInstance interceptors)
+  // ========== LOAD CATEGORIES FROM LOCALSTORAGE ==========
+  useEffect(() => {
+    const savedCategories = localStorage.getItem('tjsl_categories');
+    if (savedCategories) {
+      setCategories(JSON.parse(savedCategories));
+    } else {
+      // Default categories jika belum ada
+      const defaultCategories = [
+        'Pemberdayaan Masyarakat',
+        'Pendidikan',
+        'Kesehatan',
+        'Lingkungan',
+        'Infrastruktur',
+        'Ekonomi Kreatif'
+      ];
+      setCategories(defaultCategories);
+      localStorage.setItem('tjsl_categories', JSON.stringify(defaultCategories));
+    }
+  }, []);
+
+  // ========== SAVE CATEGORIES TO LOCALSTORAGE ==========
+  const saveCategoriesToStorage = (newCategories) => {
+    localStorage.setItem('tjsl_categories', JSON.stringify(newCategories));
+    setCategories(newCategories);
+  };
+
+  // ========== ADD CATEGORY ==========
+  const handleAddCategory = () => {
+    if (! categoryInput.trim()) {
+      toast.error('Nama kategori tidak boleh kosong! ');
+      return;
+    }
+
+    if (editingCategory !== null) {
+      // Edit mode
+      const updatedCategories = [... categories];
+      updatedCategories[editingCategory] = categoryInput. trim();
+      saveCategoriesToStorage(updatedCategories);
+      toast.success('✅ Kategori berhasil diupdate!');
+      setEditingCategory(null);
+    } else {
+      // Add mode
+      if (categories.includes(categoryInput.trim())) {
+        toast.error('Kategori sudah ada!');
+        return;
+      }
+      const newCategories = [...categories, categoryInput.trim()];
+      saveCategoriesToStorage(newCategories);
+      toast.success('✅ Kategori berhasil ditambahkan!');
+    }
+
+    setCategoryInput('');
+  };
+
+  // ========== EDIT CATEGORY ==========
+  const handleEditCategory = (index) => {
+    setCategoryInput(categories[index]);
+    setEditingCategory(index);
+  };
+
+  // ========== DELETE CATEGORY ==========
+  const handleDeleteCategory = (index) => {
+    if (window.confirm(`Apakah Anda yakin ingin menghapus kategori "${categories[index]}"?`)) {
+      const newCategories = categories.filter((_, i) => i !== index);
+      saveCategoriesToStorage(newCategories);
+      toast.success('✅ Kategori berhasil dihapus!');
+    }
+  };
+
+  // ========== CANCEL EDIT CATEGORY ==========
+  const handleCancelEditCategory = () => {
+    setCategoryInput('');
+    setEditingCategory(null);
+  };
 
   useEffect(() => {
     fetchAreas();
@@ -67,22 +146,27 @@ const ManageWkTjsl = () => {
       result = result.filter(item => item.is_active === false);
     }
 
+    // Filter by category
+    if (filterCategory) {
+      result = result.filter(item => item.category_name === filterCategory);
+    }
+
     setFilteredAreas(result);
-  }, [searchTerm, filterStatus, filterActive, areas]);
+  }, [searchTerm, filterStatus, filterActive, filterCategory, areas]);
 
   const clearFilters = () => {
     setSearchTerm('');
     setFilterStatus('');
     setFilterActive('');
+    setFilterCategory('');
   };
 
-  // ✅ UPDATED: Fetch TJSL areas using axiosInstance
   const fetchAreas = async () => {
     setLoading(true);
     try {
       const response = await axiosInstance.get('/admin/wilayah-kerja', {
         params: {
-          category: 'TJSL',  // ✅ Filter by TJSL
+          category:  'TJSL',
           per_page: 999
         }
       });
@@ -91,23 +175,17 @@ const ManageWkTjsl = () => {
         const data = response.data.data || [];
         setAreas(data);
         setFilteredAreas(data);
-        console.log('✅ TJSL areas loaded:', data.length);
+        console.log('✅ TJSL areas loaded:', data. length);
       }
     } catch (error) {
       console.error('❌ Error fetching TJSL areas:', error);
       const errorMsg = error.response?.data?.message || 'Gagal memuat data program TJSL';
-      toast.error(errorMsg);
-      
-      // 401 handling is now done centrally in axios.js, but explicit check here doesn't hurt
-      if (error.response?.status === 401) {
-        // Redirect handled by interceptor usually
-      }
+      toast. error(errorMsg);
     } finally {
       setLoading(false);
     }
   };
 
-  // ✅ Update fetchBeritaList with better error handling
   const fetchBeritaList = async () => {
     try {
       const response = await axiosInstance.get('/admin/berita', {
@@ -117,16 +195,12 @@ const ManageWkTjsl = () => {
       console.log('📰 Berita response:', response.data);
 
       if (response.data.success) {
-        const beritaData = response.data.data || [];
+        const beritaData = response.data. data || [];
         setBeritaList(beritaData);
         console.log('✅ Berita list loaded:', beritaData.length);
       }
     } catch (error) {
       console.error('❌ Error fetching berita list:', error);
-      console.error('❌ Error response:', error.response?.data);
-      
-      // Don't show error toast - berita is optional
-      // Just log it for debugging
     }
   };
 
@@ -134,7 +208,7 @@ const ManageWkTjsl = () => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]:  type === 'checkbox' ? checked : value
     }));
   };
 
@@ -142,7 +216,7 @@ const ManageWkTjsl = () => {
     setFormData(prev => ({
       ...prev,
       position_x: coordinates.position_x || '',
-      position_y: coordinates. position_y || ''
+      position_y: coordinates.position_y || ''
     }));
   };
 
@@ -150,7 +224,7 @@ const ManageWkTjsl = () => {
     if (programInput.trim()) {
       setFormData(prev => ({
         ...prev,
-        programs: [...prev.programs, programInput.trim()]
+        programs: [... prev.programs, programInput.trim()]
       }));
       setProgramInput('');
     }
@@ -163,42 +237,42 @@ const ManageWkTjsl = () => {
     }));
   };
 
-  // ✅ Update handleSubmit function
   const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (!formData.position_x || !formData.position_y) {
-      toast.error('Silakan pilih posisi pada peta terlebih dahulu! ');
+      toast.error('Silakan pilih posisi pada peta terlebih dahulu!');
+      return;
+    }
+
+    if (! formData.category_name) {
+      toast.error('Silakan pilih kategori program!');
       return;
     }
 
     setLoading(true);
 
     try {
-      // ✅ Clean the data before sending
       const dataWithCategory = {
         ...formData,
-        category: 'TJSL'
+        category:  'TJSL'
       };
 
-      // ✅ Remove related_news_id if it's empty string
-      if (!dataWithCategory.related_news_id || dataWithCategory.related_news_id === '') {
-        delete dataWithCategory.related_news_id;
+      if (! dataWithCategory.related_news_id || dataWithCategory.related_news_id === '') {
+        delete dataWithCategory. related_news_id;
       } else {
-        // ✅ Convert to integer if exists
-        dataWithCategory.related_news_id = parseInt(dataWithCategory.related_news_id);
+        dataWithCategory. related_news_id = parseInt(dataWithCategory.related_news_id);
       }
 
       console.log('📤 Sending data:', dataWithCategory);
 
       const endpoint = editingArea
-        ? `/admin/wilayah-kerja/${editingArea.id}`
+        ? `/admin/wilayah-kerja/${editingArea. id}`
         : '/admin/wilayah-kerja';
 
       const method = editingArea ? 'put' : 'post';
 
-      // ✅ Add category as query param for update
-      const config = editingArea ?  { params: { category: 'TJSL' } } : {};
+      const config = editingArea ? { params: { category: 'TJSL' } } : {};
 
       const response = await axiosInstance[method](endpoint, dataWithCategory, config);
 
@@ -225,11 +299,10 @@ const ManageWkTjsl = () => {
     }
   };
 
-  // ✅ UPDATED: Handle Edit
   const handleEdit = (area) => {
     setEditingArea(area);
     setFormData({
-      area_id: area.area_id,
+      area_id: area. area_id,
       name: area.name,
       position_x: parseFloat(area.position_x),
       position_y: parseFloat(area.position_y),
@@ -239,17 +312,17 @@ const ManageWkTjsl = () => {
       status: area.status,
       beneficiaries: area.beneficiaries || '',
       budget: area.budget || '',
-      duration: area.duration || '',
+      duration: area. duration || '',
       impact: area.impact || '',
       order: area.order || 0,
       is_active: area.is_active,
-      related_news_id:  area.related_news_id || '',
+      related_news_id: area.related_news_id || '',
+      category_name: area.category_name || '',
     });
     setShowForm(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // ✅ UPDATED: Handle Delete using axiosInstance
   const handleDelete = async (id) => {
     if (!window.confirm('Apakah Anda yakin ingin menghapus program TJSL ini?')) {
       return;
@@ -257,7 +330,7 @@ const ManageWkTjsl = () => {
 
     try {
       const response = await axiosInstance.delete(
-        `/admin/wilayah-kerja/${id}?category=TJSL`
+        `/admin/wilayah-kerja/${id}? category=TJSL`
       );
 
       if (response.data.success) {
@@ -288,6 +361,7 @@ const ManageWkTjsl = () => {
       order: 0,
       is_active: true,
       related_news_id: '',
+      category_name:  '',
     });
     setProgramInput('');
   };
@@ -327,18 +401,29 @@ const ManageWkTjsl = () => {
           <p className="text-gray-600 mt-1">Manajemen program tanggung jawab sosial dan lingkungan</p>
         </div>
         {! showForm && (
-          <button
-            onClick={() => setShowForm(true)}
-            className="flex items-center gap-2 bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-blue-700 transition-all transform hover:-translate-y-0.5"
-          >
-            <FaPlus />
-            Tambah Program TJSL Baru
-          </button>
+          <div className="flex gap-3">
+            {/* Tombol Kelola Kategori */}
+            <button
+              onClick={() => setShowCategoryModal(true)}
+              className="flex items-center gap-2 bg-purple-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-purple-700 transition-all transform hover:-translate-y-0.5"
+            >
+              <FaList />
+              Kelola Kategori
+            </button>
+
+            <button
+              onClick={() => setShowForm(true)}
+              className="flex items-center gap-2 bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-blue-700 transition-all transform hover:-translate-y-0.5"
+            >
+              <FaPlus />
+              Tambah Program TJSL Baru
+            </button>
+          </div>
         )}
       </div>
 
       {! showForm && (
-        <div className="grid grid-cols-1 md: grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white">
             <div className="flex items-center justify-between mb-4">
               <div className="p-3 bg-white bg-opacity-20 rounded-lg">
@@ -391,7 +476,7 @@ const ManageWkTjsl = () => {
             <h3 className="text-lg font-semibold text-gray-900">Pencarian & Filter</h3>
           </div>
           
-          <div className="grid grid-cols-1 md: grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="relative">
               <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
               <input
@@ -404,9 +489,20 @@ const ManageWkTjsl = () => {
             </div>
 
             <select
+              value={filterCategory}
+              onChange={(e) => setFilterCategory(e.target. value)}
+              className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+            >
+              <option value="">Semua Kategori</option>
+              {categories.map((cat, index) => (
+                <option key={index} value={cat}>{cat}</option>
+              ))}
+            </select>
+
+            <select
               value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="px-4 py-3 border border-gray-300 rounded-lg focus: ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              onChange={(e) => setFilterStatus(e.target. value)}
+              className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus: ring-blue-500 focus: border-transparent transition-all"
             >
               <option value="">Semua Status</option>
               <option value="Aktif">Aktif</option>
@@ -424,14 +520,14 @@ const ManageWkTjsl = () => {
             </select>
           </div>
 
-          {(searchTerm || filterStatus || filterActive) && (
+          {(searchTerm || filterStatus || filterActive || filterCategory) && (
             <div className="mt-4 flex justify-between items-center">
               <p className="text-sm text-gray-600">
                 Menampilkan <span className="font-semibold text-blue-600">{filteredAreas.length}</span> dari {areas.length} program
               </p>
               <button
                 onClick={clearFilters}
-                className="text-sm text-red-600 hover:text-red-700 font-semibold flex items-center gap-2"
+                className="text-sm text-red-600 hover: text-red-700 font-semibold flex items-center gap-2"
               >
                 <FaTimes />
                 Hapus Filter
@@ -492,12 +588,34 @@ const ManageWkTjsl = () => {
                   <input
                     type="text"
                     name="name"
-                    value={formData. name}
+                    value={formData.name}
                     onChange={handleInputChange}
                     required
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Nama program TJSL"
                   />
+                </div>
+
+                {/* ========== KATEGORI DROPDOWN ========== */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Kategori Program <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    name="category_name"
+                    value={formData.category_name}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">-- Pilih Kategori --</option>
+                    {categories. map((cat, index) => (
+                      <option key={index} value={cat}>{cat}</option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Kategori dapat dikelola melalui tombol "Kelola Kategori"
+                  </p>
                 </div>
 
                 <div>
@@ -506,10 +624,10 @@ const ManageWkTjsl = () => {
                   </label>
                   <select
                     name="status"
-                    value={formData. status}
+                    value={formData.status}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus: ring-blue-500 focus: border-transparent"
                   >
                     <option value="Aktif">Aktif</option>
                     <option value="Non-Aktif">Non-Aktif</option>
@@ -523,9 +641,9 @@ const ManageWkTjsl = () => {
                   <input
                     type="number"
                     name="order"
-                    value={formData. order}
+                    value={formData.order}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus: ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="0"
                   />
                 </div>
@@ -569,7 +687,7 @@ const ManageWkTjsl = () => {
                 imageSrc={PetaImage}
                 onPositionSelect={handlePositionSelect}
                 initialX={formData.position_x}
-                initialY={formData. position_y}
+                initialY={formData.position_y}
                 markerColor={formData.color}
               />
 
@@ -677,7 +795,7 @@ const ManageWkTjsl = () => {
                     name="duration"
                     value={formData.duration}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus: ring-blue-500 focus: border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus: ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Contoh: 2023-2025"
                   />
                 </div>
@@ -810,7 +928,7 @@ const ManageWkTjsl = () => {
                 disabled={loading}
                 className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ?  'Menyimpan...' : editingArea ? 'Update Program TJSL' : 'Simpan Program TJSL'}
+                {loading ?  'Menyimpan.. .' : editingArea ? 'Update Program TJSL' : 'Simpan Program TJSL'}
               </button>
             </div>
           </form>
@@ -825,6 +943,9 @@ const ManageWkTjsl = () => {
                 <tr>
                   <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     ID Area & Nama
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                    Kategori
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Status
@@ -846,30 +967,30 @@ const ManageWkTjsl = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {loading ? (
                   <tr>
-                    <td colSpan="6" className="px-6 py-12 text-center">
+                    <td colSpan="7" className="px-6 py-12 text-center">
                       <div className="flex justify-center items-center">
                         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
                       </div>
                       <p className="mt-4 text-gray-600">Memuat data... </p>
                     </td>
                   </tr>
-                ) : filteredAreas.length === 0 ? (
+                ) : filteredAreas.length === 0 ?  (
                   <tr>
-                    <td colSpan="6" className="px-6 py-16 text-center">
+                    <td colSpan="7" className="px-6 py-16 text-center">
                       <div className="w-20 h-20 bg-gray-200 rounded-full mx-auto mb-4 flex items-center justify-center">
                         <FaMapMarkerAlt className="w-10 h-10 text-gray-400" />
                       </div>
                       <p className="text-gray-500 text-lg font-medium mb-2">
-                        {searchTerm || filterStatus || filterActive
+                        {searchTerm || filterStatus || filterActive || filterCategory
                           ? 'Tidak ada program yang sesuai dengan filter'
                           : 'Belum ada program TJSL'}
                       </p>
                       <p className="text-gray-400 text-sm mb-4">
-                        {searchTerm || filterStatus || filterActive
-                          ? 'Coba ubah kriteria pencarian atau filter'
+                        {searchTerm || filterStatus || filterActive || filterCategory
+                          ?  'Coba ubah kriteria pencarian atau filter'
                           : 'Mulai tambahkan program TJSL pertama'}
                       </p>
-                      {!(searchTerm || filterStatus || filterActive) && (
+                      {!(searchTerm || filterStatus || filterActive || filterCategory) && (
                         <button
                           onClick={() => setShowForm(true)}
                           className="text-blue-600 hover:text-blue-700 font-semibold"
@@ -886,13 +1007,22 @@ const ManageWkTjsl = () => {
                         <div className="flex items-center gap-3">
                           <div 
                             className="w-4 h-4 rounded-full flex-shrink-0" 
-                            style={{ backgroundColor:  area.color }}
+                            style={{ backgroundColor: area.color }}
                           />
                           <div>
                             <div className="text-sm font-semibold text-gray-900">{area. area_id}</div>
                             <div className="text-sm text-gray-500">{area.name}</div>
                           </div>
                         </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {area.category_name ?  (
+                          <span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">
+                            {area.category_name}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400 text-xs">-</span>
+                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
@@ -921,13 +1051,13 @@ const ManageWkTjsl = () => {
                         <div className="flex gap-3">
                           <button
                             onClick={() => handleEdit(area)}
-                            className="text-blue-600 hover: text-blue-900 transition-colors p-2 hover:bg-blue-50 rounded-lg"
+                            className="text-blue-600 hover:text-blue-900 transition-colors p-2 hover:bg-blue-50 rounded-lg"
                             title="Edit"
                           >
                             <FaEdit className="w-5 h-5" />
                           </button>
                           <button
-                            onClick={() => handleDelete(area.id)}
+                            onClick={() => handleDelete(area. id)}
                             className="text-red-600 hover:text-red-900 transition-colors p-2 hover:bg-red-50 rounded-lg"
                             title="Hapus"
                           >
@@ -940,6 +1070,130 @@ const ManageWkTjsl = () => {
                 )}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* ========== MODAL KELOLA KATEGORI ========== */}
+      {showCategoryModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+            {/* Header Modal */}
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center z-10 rounded-t-2xl">
+              <h3 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                <FaList className="text-purple-600" />
+                Kelola Kategori TJSL
+              </h3>
+              <button
+                onClick={() => {
+                  setShowCategoryModal(false);
+                  handleCancelEditCategory();
+                }}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <FaTimes className="w-6 h-6 text-gray-600" />
+              </button>
+            </div>
+
+            {/* Content Modal */}
+            <div className="p-6">
+              {/* Input Kategori */}
+              <div className="mb-6">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  {editingCategory !== null ? 'Edit Kategori' : 'Tambah Kategori Baru'}
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={categoryInput}
+                    onChange={(e) => setCategoryInput(e.target. value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleAddCategory()}
+                    className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    placeholder="Nama kategori (contoh: Pemberdayaan Masyarakat)"
+                  />
+                  {editingCategory !== null && (
+                    <button
+                      type="button"
+                      onClick={handleCancelEditCategory}
+                      className="px-4 py-3 bg-gray-500 text-white font-semibold rounded-lg hover:bg-gray-600 transition-colors"
+                    >
+                      Batal
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={handleAddCategory}
+                    className="px-6 py-3 bg-purple-600 text-white font-semibold rounded-lg hover: bg-purple-700 transition-colors flex items-center gap-2"
+                  >
+                    <FaSave />
+                    {editingCategory !== null ? 'Update' : 'Tambah'}
+                  </button>
+                </div>
+              </div>
+
+              {/* List Kategori */}
+              <div>
+                <h4 className="text-sm font-semibold text-gray-700 mb-3">
+                  Daftar Kategori ({categories.length})
+                </h4>
+                {categories.length === 0 ?  (
+                  <div className="text-center py-12 bg-gray-50 rounded-lg">
+                    <FaList className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                    <p className="text-gray-500 font-medium">Belum ada kategori</p>
+                    <p className="text-gray-400 text-sm">Tambahkan kategori pertama untuk program TJSL</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2 max-h-96 overflow-y-auto">
+                    {categories.map((cat, index) => (
+                      <div
+                        key={index}
+                        className={`flex items-center justify-between p-4 rounded-lg border-2 transition-all ${
+                          editingCategory === index
+                            ? 'bg-purple-50 border-purple-300'
+                            : 'bg-gray-50 border-gray-200 hover:border-purple-200'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                            <span className="text-purple-600 font-bold text-sm">{index + 1}</span>
+                          </div>
+                          <span className="font-medium text-gray-900">{cat}</span>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleEditCategory(index)}
+                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            title="Edit"
+                          >
+                            <FaEdit className="w-5 h-5" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteCategory(index)}
+                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Hapus"
+                          >
+                            <FaTrash className="w-5 h-5" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Footer Modal */}
+            <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 flex justify-end rounded-b-2xl">
+              <button
+                onClick={() => {
+                  setShowCategoryModal(false);
+                  handleCancelEditCategory();
+                }}
+                className="px-6 py-2 bg-white border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-all"
+              >
+                Tutup
+              </button>
+            </div>
           </div>
         </div>
       )}

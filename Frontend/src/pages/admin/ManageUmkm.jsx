@@ -1,24 +1,30 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom'; // <-- Ditambahkan
-import { FaEdit, FaTrash, FaPlus, FaImage, FaTimes, FaStore, FaStar, FaSearch, FaFilter, FaLink, FaPhone, FaMapMarkerAlt, FaUser, FaCalendar, FaTrophy, FaArrowLeft, FaFileExcel } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
+import { FaEdit, FaTrash, FaPlus, FaImage, FaTimes, FaStore, FaStar, FaSearch, FaFilter, FaLink, FaPhone, FaMapMarkerAlt, FaUser, FaCalendar, FaTrophy, FaArrowLeft, FaFileExcel, FaList, FaSave } from 'react-icons/fa'; // <-- Ditambahkan FaList, FaSave
 import { umkmService } from '../../services/umkmService';
 import toast from 'react-hot-toast';
 import * as XLSX from 'xlsx';
 
 const ManageUmkm = () => {
-    const navigate = useNavigate(); // <-- Ditambahkan: Inisialisasi useNavigate
+    const navigate = useNavigate();
     const [umkmList, setUmkmList] = useState([]);
     const [filteredList, setFilteredList] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState(null);
-    const [isSubmitting, setIsSubmitting] = useState(false); // Tambahkan state Submitting
+    const [isSubmitting, setIsSubmitting] = useState(false);
     
     // Search & Filter States
     const [searchTerm, setSearchTerm] = useState('');
     const [filterCategory, setFilterCategory] = useState('');
     const [filterStatus, setFilterStatus] = useState('');
     const [filterFeatured, setFilterFeatured] = useState('');
+
+    // ========== KATEGORI MANAGEMENT STATE (BARU) ==========
+    const [showCategoryModal, setShowCategoryModal] = useState(false);
+    const [categories, setCategories] = useState([]);
+    const [categoryInput, setCategoryInput] = useState('');
+    const [editingCategory, setEditingCategory] = useState(null);
 
     const [formData, setFormData] = useState({
         name: '',
@@ -37,23 +43,89 @@ const ManageUmkm = () => {
         imagePreview: null
     });
 
-    const categories = [
-        'Kuliner',
-        'Kerajinan',
-        'Agribisnis',
-        'Fashion',
-        'Jasa',
-        'Lainnya'
-    ];
-
     const statusOptions = ['Aktif', 'Lulus Binaan', 'Dalam Proses'];
+
+    // ========== LOAD CATEGORIES FROM LOCALSTORAGE ==========
+    useEffect(() => {
+        const savedCategories = localStorage.getItem('umkm_categories');
+        if (savedCategories) {
+            setCategories(JSON.parse(savedCategories));
+        } else {
+            // Default categories jika belum ada
+            const defaultCategories = [
+                'Kuliner',
+                'Kerajinan',
+                'Agribisnis',
+                'Fashion',
+                'Jasa',
+                'Lainnya'
+            ];
+            setCategories(defaultCategories);
+            localStorage.setItem('umkm_categories', JSON.stringify(defaultCategories));
+        }
+    }, []);
+
+    // ========== SAVE CATEGORIES TO LOCALSTORAGE ==========
+    const saveCategoriesToStorage = (newCategories) => {
+        localStorage.setItem('umkm_categories', JSON.stringify(newCategories));
+        setCategories(newCategories);
+    };
+
+    // ========== ADD CATEGORY ==========
+    const handleAddCategory = () => {
+        if (!categoryInput.trim()) {
+            toast.error('Nama kategori tidak boleh kosong!');
+            return;
+        }
+
+        if (editingCategory !== null) {
+            // Edit mode
+            const updatedCategories = [...categories];
+            updatedCategories[editingCategory] = categoryInput.trim();
+            saveCategoriesToStorage(updatedCategories);
+            toast.success('✅ Kategori berhasil diupdate!');
+            setEditingCategory(null);
+        } else {
+            // Add mode
+            if (categories.includes(categoryInput.trim())) {
+                toast.error('Kategori sudah ada!');
+                return;
+            }
+            const newCategories = [...categories, categoryInput.trim()];
+            saveCategoriesToStorage(newCategories);
+            toast.success('✅ Kategori berhasil ditambahkan!');
+        }
+
+        setCategoryInput('');
+    };
+
+    // ========== EDIT CATEGORY ==========
+    const handleEditCategory = (index) => {
+        setCategoryInput(categories[index]);
+        setEditingCategory(index);
+    };
+
+    // ========== DELETE CATEGORY ==========
+    const handleDeleteCategory = (index) => {
+        if (window.confirm(`Apakah Anda yakin ingin menghapus kategori "${categories[index]}"?`)) {
+            const newCategories = categories.filter((_, i) => i !== index);
+            saveCategoriesToStorage(newCategories);
+            toast.success('✅ Kategori berhasil dihapus!');
+        }
+    };
+
+    // ========== CANCEL EDIT CATEGORY ==========
+    const handleCancelEditCategory = () => {
+        setCategoryInput('');
+        setEditingCategory(null);
+    };
 
     // Fetch UMKM data from API
     useEffect(() => {
         fetchUmkmData();
     }, []);
 
-    // Filter & Search Logic (kode ini tetap)
+    // Filter & Search Logic
     useEffect(() => {
         let result = [...umkmList];
 
@@ -92,7 +164,7 @@ const ManageUmkm = () => {
             setLoading(true);
             const response = await umkmService.adminGetAllUmkm();
             
-            if (response && response.success) { // <-- Penanganan Response 200 OK
+            if (response && response.success) {
                 setUmkmList(response.data);
                 setFilteredList(response.data);
             } else {
@@ -101,30 +173,26 @@ const ManageUmkm = () => {
         } catch (error) {
             console.error('Error fetching UMKM:', error);
             
-            // Penanganan Error 401 (Unauthorized)
             if (error.response && error.response.status === 401) {
                 toast.error('Sesi Anda berakhir. Mohon login ulang.');
                 navigate('/tukang-minyak-dan-gas/login');
                 return; 
             }
             
-            // Penanganan error umum
             toast.error('Gagal memuat data UMKM'); 
         } finally {
             setLoading(false);
         }
     };
 
-    // ✅ EXPORT TO EXCEL - OPTIMIZED VERSION (Kode tetap sama)
+    // ✅ EXPORT TO EXCEL
     const exportToExcel = () => {
         try {
-            // Check if data is empty
             if (filteredList.length === 0) {
                 toast.error('⚠️ Tidak ada data untuk diexport!');
                 return;
             }
 
-            // Prepare export data with proper formatting and null safety
             const exportData = filteredList.map((item, index) => ({
                 'No': index + 1,
                 'Nama UMKM': item.name || '-',
@@ -141,50 +209,25 @@ const ManageUmkm = () => {
                 'Featured': item.is_featured ? 'Ya' : 'Tidak',
             }));
 
-            // Create workbook and worksheet
             const wb = XLSX.utils.book_new();
             const ws = XLSX.utils.json_to_sheet(exportData);
 
-            // Set column widths for better readability
             ws['!cols'] = [
-                { wch: 5 },   // No
-                { wch: 35 },  // Nama UMKM
-                { wch: 15 },  // Kategori
-                { wch: 25 },  // Pemilik
-                { wch: 30 },  // Lokasi
-                { wch: 15 },  // Status
-                { wch: 12 },  // Tahun Mulai
-                { wch: 50 },  // Deskripsi
-                { wch: 50 },  // Testimonial
-                { wch: 30 },  // Pencapaian
-                { wch: 35 },  // Link Toko
-                { wch: 18 },  // No. WhatsApp
-                { wch: 10 }   // Featured
+                { wch: 5 }, { wch: 35 }, { wch: 15 }, { wch: 25 }, { wch: 30 },
+                { wch: 15 }, { wch: 12 }, { wch: 50 }, { wch: 50 }, { wch: 30 },
+                { wch: 35 }, { wch: 18 }, { wch: 10 }
             ];
 
-            // Add worksheet to workbook
             XLSX.utils.book_append_sheet(wb, ws, 'Data UMKM Binaan');
-
-            // Generate filename with timestamp
             const timestamp = new Date().toISOString().slice(0, 10);
             const filename = `Data_UMKM_Binaan_MHJ_ONWJ_${timestamp}.xlsx`;
 
-            // Write and download file
             XLSX.writeFile(wb, filename);
-
-            // Success notification with details
-            toast.success(`✅ Data berhasil diexport ke Excel!\n\nFile: ${filename}\nTotal data: ${filteredList.length} UMKM`);
-            
-            console.log('✅ Export Excel berhasil:', {
-                filename,
-                totalRows: filteredList.length,
-                timestamp,
-                exportedData: exportData
-            });
+            toast.success(`✅ Data berhasil diexport ke Excel!\n\nFile: ${filename}`);
 
         } catch (error) {
             console.error('❌ Error exporting to Excel:', error);
-            toast.error(`❌ Gagal export ke Excel!\n\nError: ${error.message}\n\nSilakan coba lagi atau hubungi administrator.`);
+            toast.error(`❌ Gagal export ke Excel!\n\nError: ${error.message}`);
         }
     };
 
@@ -253,7 +296,6 @@ const ManageUmkm = () => {
         setFilterFeatured('');
     };
 
-    // 🔥 FUNGSI HANDLE SUBMIT YANG SUDAH DIPERBAIKI
     const handleSubmit = async (e) => {
         e.preventDefault();
         
@@ -274,17 +316,16 @@ const ManageUmkm = () => {
 
         const submitData = new FormData();
         
-        // MAPPING FIELD DARI camelCase di state ke snake_case di Backend
         submitData.append('name', formData.name);
         submitData.append('category', formData.category);
         submitData.append('owner', formData.owner);
         submitData.append('location', formData.location);
         submitData.append('description', formData.description || '');
         submitData.append('testimonial', formData.testimonial || '');
-        submitData.append('shop_link', formData.shop_link || ''); // ✅ snake_case
-        submitData.append('contact_number', formData.contact_number || ''); // ✅ snake_case
+        submitData.append('shop_link', formData.shop_link || '');
+        submitData.append('contact_number', formData.contact_number || '');
         submitData.append('status', formData.status || 'Aktif');
-        submitData.append('year_started', formData.year_started); // Cek: Jika ini string di state, Laravel akan mengkonversi
+        submitData.append('year_started', formData.year_started);
         submitData.append('achievement', formData.achievement || '');
         submitData.append('is_featured', formData.is_featured ? 1 : 0);
         
@@ -296,18 +337,9 @@ const ManageUmkm = () => {
             setIsSubmitting(true);
             const loadingToast = toast.loading(editingId ? 'Mengupdate UMKM...' : 'Menambahkan UMKM...');
             
-            // DEBUG LOG: MENGIRIM DATA
-            console.log('📤 Submitting UMKM Data: ');
-            for (let [key, value] of submitData.entries()) {
-                console.log(`  ${key}:`, value);
-            }
-
             let response;
             if (editingId) {
-                // Laravel workaround untuk multipart/form-data PUT/PATCH
                 submitData.append('_method', 'POST'); 
-                
-                // Gunakan post, tetapi tambahkan _method: 'PUT'/'PATCH' di formData
                 response = await umkmService.updateUmkm(editingId, submitData); 
             } else {
                 response = await umkmService.createUmkm(submitData);
@@ -322,30 +354,24 @@ const ManageUmkm = () => {
                 setShowForm(false);
                 resetForm();
             } else {
-                // Jika response 200 OK tapi success: false
                 throw new Error(response.message);
             }
         } catch (error) {
             console.error('❌ Full Error:', error);
-            console.error('❌ Error Response:', error.response?.data);
-            
             toast.dismiss(toast.loading());
             
-            // Penanganan 401 (Unauthorized)
             if (error.response && error.response.status === 401) {
                 toast.error('Sesi Anda berakhir. Mohon login ulang.');
                 navigate('/tukang-minyak-dan-gas/login');
                 return;
             }
 
-            // Penanganan 422 (Validation Error)
             if (error.response?.data?.errors) {
                 const errors = error.response.data.errors;
                 Object.keys(errors).forEach(key => {
                     toast.error(`${key}: ${errors[key][0]}`);
                 });
             } else {
-                // Penanganan error umum atau 500
                 const errorMsg = error.message || error.response?.data?.message || 'Gagal menyimpan data UMKM';
                 toast.error(`❌ ${errorMsg}`);
             }
@@ -353,7 +379,6 @@ const ManageUmkm = () => {
             setIsSubmitting(false);
         }
     };
-    // AKHIR DARI FUNGSI HANDLE SUBMIT YANG DIPERBAIKI
 
     const handleEdit = (umkm) => {
         setFormData({
@@ -396,7 +421,6 @@ const ManageUmkm = () => {
         } catch (error) {
             console.error('Error deleting UMKM:', error);
             
-            // Tambahkan penanganan 401 saat delete
             if (error.response && error.response.status === 401) {
                 toast.error('Sesi Anda berakhir. Mohon login ulang.');
                 navigate('/tukang-minyak-dan-gas/login');
@@ -445,13 +469,24 @@ const ManageUmkm = () => {
                     <p className="text-gray-600 mt-1">Manajemen UMKM mitra binaan perusahaan</p>
                 </div>
                 {!showForm && (
-                    <button
-                        onClick={() => setShowForm(true)}
-                        className="flex items-center gap-2 bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-blue-700 transition-all transform hover:-translate-y-0.5"
-                    >
-                        <FaPlus />
-                        Tambah UMKM Baru
-                    </button>
+                    <div className="flex gap-3">
+                         {/* Tombol Kelola Kategori */}
+                         <button
+                            onClick={() => setShowCategoryModal(true)}
+                            className="flex items-center gap-2 bg-purple-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-purple-700 transition-all transform hover:-translate-y-0.5"
+                        >
+                            <FaList />
+                            Kelola Kategori
+                        </button>
+
+                        <button
+                            onClick={() => setShowForm(true)}
+                            className="flex items-center gap-2 bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-blue-700 transition-all transform hover:-translate-y-0.5"
+                        >
+                            <FaPlus />
+                            Tambah UMKM Baru
+                        </button>
+                    </div>
                 )}
             </div>
 
@@ -535,15 +570,15 @@ const ManageUmkm = () => {
                             />
                         </div>
 
-                        {/* Filter Category */}
+                        {/* Filter Category - DYNAMIC */}
                         <select
                             value={filterCategory}
                             onChange={(e) => setFilterCategory(e.target.value)}
                             className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                         >
                             <option value="">Semua Kategori</option>
-                            {categories.map(cat => (
-                                <option key={cat} value={cat}>{cat}</option>
+                            {categories.map((cat, index) => (
+                                <option key={index} value={cat}>{cat}</option>
                             ))}
                         </select>
 
@@ -647,10 +682,13 @@ const ManageUmkm = () => {
                                         required
                                     >
                                         <option value="">Pilih Kategori</option>
-                                        {categories.map(cat => (
-                                            <option key={cat} value={cat}>{cat}</option>
+                                        {categories.map((cat, index) => (
+                                            <option key={index} value={cat}>{cat}</option>
                                         ))}
                                     </select>
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        Kategori dapat dikelola melalui tombol "Kelola Kategori"
+                                    </p>
                                 </div>
 
                                 <div>
@@ -828,7 +866,7 @@ const ManageUmkm = () => {
                                     </label>
                                     <input
                                         type="url"
-                                        name="shop_link" // field name sesuai state
+                                        name="shop_link"
                                         value={formData.shop_link}
                                         onChange={handleInputChange}
                                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
@@ -845,7 +883,7 @@ const ManageUmkm = () => {
                                     </label>
                                     <input
                                         type="tel"
-                                        name="contact_number" // field name sesuai state
+                                        name="contact_number"
                                         value={formData.contact_number}
                                         onChange={handleInputChange}
                                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
@@ -862,7 +900,7 @@ const ManageUmkm = () => {
                                     </label>
                                     <input
                                         type="number"
-                                        name="year_started" // field name sesuai state
+                                        name="year_started"
                                         value={formData.year_started}
                                         onChange={handleInputChange}
                                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
@@ -1082,6 +1120,130 @@ const ManageUmkm = () => {
                             )}
                         </div>
                     )}
+                </div>
+            )}
+
+            {/* ========== MODAL KELOLA KATEGORI ========== */}
+            {showCategoryModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+                        {/* Header Modal */}
+                        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center z-10 rounded-t-2xl">
+                            <h3 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                                <FaList className="text-purple-600" />
+                                Kelola Kategori UMKM
+                            </h3>
+                            <button
+                                onClick={() => {
+                                    setShowCategoryModal(false);
+                                    handleCancelEditCategory();
+                                }}
+                                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                            >
+                                <FaTimes className="w-6 h-6 text-gray-600" />
+                            </button>
+                        </div>
+
+                        {/* Content Modal */}
+                        <div className="p-6">
+                            {/* Input Kategori */}
+                            <div className="mb-6">
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                    {editingCategory !== null ? 'Edit Kategori' : 'Tambah Kategori Baru'}
+                                </label>
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        value={categoryInput}
+                                        onChange={(e) => setCategoryInput(e.target.value)}
+                                        onKeyPress={(e) => e.key === 'Enter' && handleAddCategory()}
+                                        className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                        placeholder="Nama kategori (contoh: Teknologi)"
+                                    />
+                                    {editingCategory !== null && (
+                                        <button
+                                            type="button"
+                                            onClick={handleCancelEditCategory}
+                                            className="px-4 py-3 bg-gray-500 text-white font-semibold rounded-lg hover:bg-gray-600 transition-colors"
+                                        >
+                                            Batal
+                                        </button>
+                                    )}
+                                    <button
+                                        type="button"
+                                        onClick={handleAddCategory}
+                                        className="px-6 py-3 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
+                                    >
+                                        <FaSave />
+                                        {editingCategory !== null ? 'Update' : 'Tambah'}
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* List Kategori */}
+                            <div>
+                                <h4 className="text-sm font-semibold text-gray-700 mb-3">
+                                    Daftar Kategori ({categories.length})
+                                </h4>
+                                {categories.length === 0 ? (
+                                    <div className="text-center py-12 bg-gray-50 rounded-lg">
+                                        <FaList className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                                        <p className="text-gray-500 font-medium">Belum ada kategori</p>
+                                        <p className="text-gray-400 text-sm">Tambahkan kategori pertama untuk UMKM</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-2 max-h-96 overflow-y-auto">
+                                        {categories.map((cat, index) => (
+                                            <div
+                                                key={index}
+                                                className={`flex items-center justify-between p-4 rounded-lg border-2 transition-all ${
+                                                    editingCategory === index
+                                                        ? 'bg-purple-50 border-purple-300'
+                                                        : 'bg-gray-50 border-gray-200 hover:border-purple-200'
+                                                }`}
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                                                        <span className="text-purple-600 font-bold text-sm">{index + 1}</span>
+                                                    </div>
+                                                    <span className="font-medium text-gray-900">{cat}</span>
+                                                </div>
+                                                <div className="flex gap-2">
+                                                    <button
+                                                        onClick={() => handleEditCategory(index)}
+                                                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                        title="Edit"
+                                                    >
+                                                        <FaEdit className="w-5 h-5" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDeleteCategory(index)}
+                                                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                        title="Hapus"
+                                                    >
+                                                        <FaTrash className="w-5 h-5" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Footer Modal */}
+                        <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 flex justify-end rounded-b-2xl">
+                            <button
+                                onClick={() => {
+                                    setShowCategoryModal(false);
+                                    handleCancelEditCategory();
+                                }}
+                                className="px-6 py-2 bg-white border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-all"
+                            >
+                                Tutup
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

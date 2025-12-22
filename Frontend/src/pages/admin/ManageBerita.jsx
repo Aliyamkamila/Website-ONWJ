@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaEdit, FaTrash, FaPlus, FaImage, FaTimes, FaNewspaper, FaCalendar, FaUser, FaEye, FaSave, FaCheck, FaSearch, FaFilter, FaArrowLeft, FaFileExcel, FaSpinner, FaCog, FaGlobe } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaPlus, FaImage, FaTimes, FaNewspaper, FaCalendar, FaUser, FaEye, FaSave, FaCheck, FaSearch, FaFilter, FaArrowLeft, FaFileExcel, FaSpinner, FaCog, FaGlobe, FaList } from 'react-icons/fa'; // <-- Ditambahkan FaList
 import { useNavigate } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 import { beritaAdminApi } from '../../services/BeritaService';
@@ -10,7 +10,7 @@ const ManageBerita = () => {
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState(null);
     
-    // 1. Tambahkan State untuk Preview Modal
+    // State untuk Preview Modal
     const [showPreview, setShowPreview] = useState(false); 
     
     // State untuk data dari API
@@ -23,6 +23,12 @@ const ManageBerita = () => {
     const [filterStatus, setFilterStatus] = useState('');
     const [filteredBerita, setFilteredBerita] = useState([]);
     
+    // ========== KATEGORI MANAGEMENT STATE (BARU) ==========
+    const [showCategoryModal, setShowCategoryModal] = useState(false);
+    const [categories, setCategories] = useState([]);
+    const [categoryInput, setCategoryInput] = useState('');
+    const [editingCategory, setEditingCategory] = useState(null);
+
     const [stats, setStats] = useState({
         total: 0,
         published: 0,
@@ -48,15 +54,80 @@ const ManageBerita = () => {
         pinToHomepage: false
     });
 
-    const categories = [
-        'Sosial',
-        'Lingkungan', 
-        'Energi',
-        'Teknologi',
-        'CSR',
-        'Pendidikan',
-        'Kegiatan Internal'
-    ];
+    // ========== LOAD CATEGORIES FROM LOCALSTORAGE ==========
+    useEffect(() => {
+        const savedCategories = localStorage.getItem('berita_categories');
+        if (savedCategories) {
+            setCategories(JSON.parse(savedCategories));
+        } else {
+            // Default categories jika belum ada di local storage
+            const defaultCategories = [
+                'Sosial',
+                'Lingkungan', 
+                'Energi',
+                'Teknologi',
+                'Pendidikan',
+                'Kegiatan Internal'
+            ];
+            setCategories(defaultCategories);
+            localStorage.setItem('berita_categories', JSON.stringify(defaultCategories));
+        }
+    }, []);
+
+    // ========== SAVE CATEGORIES TO LOCALSTORAGE ==========
+    const saveCategoriesToStorage = (newCategories) => {
+        localStorage.setItem('berita_categories', JSON.stringify(newCategories));
+        setCategories(newCategories);
+    };
+
+    // ========== ADD CATEGORY ==========
+    const handleAddCategory = () => {
+        if (!categoryInput.trim()) {
+            toast.error('Nama kategori tidak boleh kosong!');
+            return;
+        }
+
+        if (editingCategory !== null) {
+            // Edit mode
+            const updatedCategories = [...categories];
+            updatedCategories[editingCategory] = categoryInput.trim();
+            saveCategoriesToStorage(updatedCategories);
+            toast.success('✅ Kategori berhasil diupdate!');
+            setEditingCategory(null);
+        } else {
+            // Add mode
+            if (categories.includes(categoryInput.trim())) {
+                toast.error('Kategori sudah ada!');
+                return;
+            }
+            const newCategories = [...categories, categoryInput.trim()];
+            saveCategoriesToStorage(newCategories);
+            toast.success('✅ Kategori berhasil ditambahkan!');
+        }
+
+        setCategoryInput('');
+    };
+
+    // ========== EDIT CATEGORY ==========
+    const handleEditCategory = (index) => {
+        setCategoryInput(categories[index]);
+        setEditingCategory(index);
+    };
+
+    // ========== DELETE CATEGORY ==========
+    const handleDeleteCategory = (index) => {
+        if (window.confirm(`Apakah Anda yakin ingin menghapus kategori "${categories[index]}"?`)) {
+            const newCategories = categories.filter((_, i) => i !== index);
+            saveCategoriesToStorage(newCategories);
+            toast.success('✅ Kategori berhasil dihapus!');
+        }
+    };
+
+    // ========== CANCEL EDIT CATEGORY ==========
+    const handleCancelEditCategory = () => {
+        setCategoryInput('');
+        setEditingCategory(null);
+    };
 
     // ===== FETCH DATA FROM API =====
     useEffect(() => {
@@ -67,21 +138,15 @@ const ManageBerita = () => {
     const fetchBerita = async () => {
         try {
             setLoading(true);
-            console.log('📥 Fetching berita from admin API...');
-            
             const response = await beritaAdminApi.getAll({
                 per_page: 999,
                 sort_by: 'created_at',
                 sort_order: 'desc'
             });
             
-            console.log('📊 Berita response:', response.data);
-            
             if (response.data.success) {
-                console.log('✅ Berita loaded:', response.data.data.length, 'items');
                 setBeritaList(response.data.data);
             } else {
-                console.warn('⚠️ Response success = false');
                 setBeritaList([]);
             }
         } catch (error) {
@@ -95,11 +160,7 @@ const ManageBerita = () => {
 
     const fetchStatistics = async () => {
         try {
-            console.log('📊 Fetching statistics...');
             const response = await beritaAdminApi.getStatistics();
-            
-            console.log('📈 Statistics response:', response.data);
-            
             if (response.data.success) {
                 setStats(response.data.data);
             }
@@ -141,7 +202,7 @@ const ManageBerita = () => {
     const exportToExcel = () => {
         try {
             if (filteredBerita.length === 0) {
-                toast.error('⚠️ Tidak ada data untuk diexport! ');
+                toast.error('⚠️ Tidak ada data untuk diexport!');
                 return;
             }
 
@@ -178,7 +239,7 @@ const ManageBerita = () => {
 
         } catch (error) {
             console.error('❌ Error exporting to Excel:', error);
-            toast.error('❌ Gagal export ke Excel! ');
+            toast.error('❌ Gagal export ke Excel!');
         }
     };
 
@@ -251,7 +312,7 @@ const ManageBerita = () => {
             return;
         }
 
-        if (!formData.image && !editingId && !formData.imagePreview) { // Cek imagePreview untuk kasus edit tanpa ganti gambar
+        if (!formData.image && !editingId && !formData.imagePreview) {
             toast.error('Mohon upload foto berita!');
             return;
         }
@@ -263,7 +324,7 @@ const ManageBerita = () => {
             const submitData = new FormData();
             submitData.append('title', formData.title);
             submitData.append('date', formData.date);
-            submitData.append('category', formData.category);
+            submitData.append('category', formData.category); // Kategori dikirim sebagai string
             submitData.append('author', formData.author || '');
             submitData.append('short_description', formData.shortDescription || '');
             submitData.append('content', formData.content);
@@ -279,16 +340,14 @@ const ManageBerita = () => {
                 submitData.append('image', formData.image);
             }
             
-            // Tambahkan method PUT/PATCH untuk Laravel (jika menggunakan POST untuk file upload)
             if (editingId) {
                 submitData.append('_method', 'POST'); 
             }
 
             let response;
             if (editingId) {
-                // Gunakan POST jika backend di-handle dengan post() untuk update file, seperti di rute backend Laravel Anda
                 response = await beritaAdminApi.update(editingId, submitData); 
-                toast.success('✅ Berita berhasil diupdate! ');
+                toast.success('✅ Berita berhasil diupdate!');
             } else {
                 response = await beritaAdminApi.create(submitData);
                 toast.success('✅ Berita berhasil ditambahkan!');
@@ -320,7 +379,7 @@ const ManageBerita = () => {
                 category: berita.category,
                 author: berita.author || '',
                 image: null,
-                imagePreview: berita.full_image_url || null, // Menggunakan URL penuh dari API
+                imagePreview: berita.full_image_url || null,
                 shortDescription: berita.short_description || '',
                 content: berita.content || '',
                 status: berita.status,
@@ -344,30 +403,28 @@ const ManageBerita = () => {
                 await beritaAdminApi.delete(id);
                 toast.success('✅ Berita berhasil dihapus!');
                 
-                // Refresh data
                 await fetchBerita();
                 await fetchStatistics();
             } catch (error) {
                 console.error('Error deleting berita:', error);
-                toast.error('❌ Gagal menghapus berita! ');
+                toast.error('❌ Gagal menghapus berita!');
             }
         }
     };
 
     const handleCancel = () => {
-        if (window.confirm('Apakah Anda yakin ingin membatalkan? Data yang belum disimpan akan hilang. ')) {
+        if (window.confirm('Apakah Anda yakin ingin membatalkan? Data yang belum disimpan akan hilang.')) {
             setShowForm(false);
             resetForm();
         }
     };
 
-    // 2. Update handlePreview Function
     const handlePreview = () => {
         if (!formData.title || !formData.content) {
             toast.error('Mohon isi minimal judul dan konten untuk preview!');
             return;
         }
-        setShowPreview(true); // ✅ Buka modal preview
+        setShowPreview(true);
     };
 
     // ===== RENDER =====
@@ -385,7 +442,7 @@ const ManageBerita = () => {
             {showForm && (
                 <button
                     onClick={() => {
-                        handleCancel(); // Memanggil handleCancel agar ada konfirmasi
+                        handleCancel();
                     }}
                     className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg font-semibold transition-all mb-6"
                 >
@@ -402,13 +459,24 @@ const ManageBerita = () => {
                 </div>
                 
                 {!showForm && (
-                    <button
-                        onClick={() => setShowForm(true)}
-                        className="flex items-center gap-2 bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-blue-700 transition-all transform hover:-translate-y-0.5"
-                    >
-                        <FaPlus />
-                        Tambah Berita Baru
-                    </button>
+                    <div className="flex gap-3">
+                        {/* Tombol Kelola Kategori */}
+                        <button
+                            onClick={() => setShowCategoryModal(true)}
+                            className="flex items-center gap-2 bg-purple-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-purple-700 transition-all transform hover:-translate-y-0.5"
+                        >
+                            <FaList />
+                            Kelola Kategori
+                        </button>
+
+                        <button
+                            onClick={() => setShowForm(true)}
+                            className="flex items-center gap-2 bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-blue-700 transition-all transform hover:-translate-y-0.5"
+                        >
+                            <FaPlus />
+                            Tambah Berita Baru
+                        </button>
+                    </div>
                 )}
             </div>
 
@@ -487,14 +555,15 @@ const ManageBerita = () => {
                             />
                         </div>
 
+                        {/* Filter Kategori DYNAMIC */}
                         <select
                             value={filterCategory}
                             onChange={(e) => setFilterCategory(e.target.value)}
                             className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                         >
                             <option value="">Semua Kategori</option>
-                            {categories.map(cat => (
-                                <option key={cat} value={cat}>{cat}</option>
+                            {categories.map((cat, index) => (
+                                <option key={index} value={cat}>{cat}</option>
                             ))}
                         </select>
 
@@ -587,6 +656,7 @@ const ManageBerita = () => {
                                     <label className="block text-sm font-semibold text-gray-700 mb-2">
                                         Kategori <span className="text-red-500">*</span>
                                     </label>
+                                    {/* Input Kategori DYNAMIC */}
                                     <select
                                         name="category"
                                         value={formData.category}
@@ -595,10 +665,13 @@ const ManageBerita = () => {
                                         required
                                     >
                                         <option value="">Pilih Kategori</option>
-                                        {categories.map(cat => (
-                                            <option key={cat} value={cat}>{cat}</option>
+                                        {categories.map((cat, index) => (
+                                            <option key={index} value={cat}>{cat}</option>
                                         ))}
                                     </select>
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        Kategori dapat dikelola melalui tombol "Kelola Kategori"
+                                    </p>
                                 </div>
 
                                 <div className="md:col-span-2">
@@ -1019,11 +1092,10 @@ const ManageBerita = () => {
                 </div>
             )}
             
-            {/* 3. Tambahkan Preview Modal Component */}
+            {/* Preview Modal Component */}
             {showPreview && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
                     <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-                        {/* Header Modal */}
                         <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center z-10">
                             <h3 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
                                 <FaEye className="text-blue-600" />
@@ -1037,9 +1109,7 @@ const ManageBerita = () => {
                             </button>
                         </div>
 
-                        {/* Content Modal */}
                         <div className="p-8">
-                            {/* Header Berita */}
                             <div className="mb-6">
                                 <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600 mb-4">
                                     <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full font-semibold">
@@ -1049,7 +1119,7 @@ const ManageBerita = () => {
                                         <FaCalendar className="w-4 h-4" />
                                         {new Date(formData.date).toLocaleDateString('id-ID', {
                                             day: 'numeric',
-                                            month:  'long',
+                                            month: 'long',
                                             year: 'numeric'
                                         })}
                                     </span>
@@ -1079,7 +1149,6 @@ const ManageBerita = () => {
                                 )}
                             </div>
 
-                            {/* Gambar */}
                             {formData.imagePreview && (
                                 <div className="mb-8">
                                     <img
@@ -1090,16 +1159,14 @@ const ManageBerita = () => {
                                 </div>
                             )}
 
-                            {/* Konten */}
                             <div className="prose prose-lg max-w-none">
                                 <div className="text-gray-800 leading-relaxed whitespace-pre-wrap">
-                                    {formData.content || 'Konten berita... '}
+                                    {formData.content || 'Konten berita...'}
                                 </div>
                             </div>
 
-                            {/* Tags/Badges */}
                             <div className="mt-8 pt-6 border-t border-gray-200">
-                                <h4 className="text-sm font-semibold text-gray-700 mb-3">Distribusi Konten: </h4>
+                                <h4 className="text-sm font-semibold text-gray-700 mb-3">Distribusi Konten:</h4>
                                 <div className="flex flex-wrap gap-2">
                                     {formData.showInTJSL && (
                                         <span className="text-xs bg-purple-100 text-purple-700 px-3 py-1 rounded-full font-semibold">
@@ -1125,7 +1192,6 @@ const ManageBerita = () => {
                             </div>
                         </div>
 
-                        {/* Footer Modal */}
                         <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 flex justify-end gap-3">
                             <button
                                 onClick={() => setShowPreview(false)}
@@ -1136,12 +1202,135 @@ const ManageBerita = () => {
                             <button
                                 onClick={() => {
                                     setShowPreview(false);
-                                    // Auto scroll ke form
                                     window.scrollTo({ top: 0, behavior: 'smooth' });
                                 }}
                                 className="px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-all"
                             >
                                 Edit Berita
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ========== MODAL KELOLA KATEGORI ========== */}
+            {showCategoryModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+                        {/* Header Modal */}
+                        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center z-10 rounded-t-2xl">
+                            <h3 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                                <FaList className="text-purple-600" />
+                                Kelola Kategori Berita
+                            </h3>
+                            <button
+                                onClick={() => {
+                                    setShowCategoryModal(false);
+                                    handleCancelEditCategory();
+                                }}
+                                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                            >
+                                <FaTimes className="w-6 h-6 text-gray-600" />
+                            </button>
+                        </div>
+
+                        {/* Content Modal */}
+                        <div className="p-6">
+                            {/* Input Kategori */}
+                            <div className="mb-6">
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                    {editingCategory !== null ? 'Edit Kategori' : 'Tambah Kategori Baru'}
+                                </label>
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        value={categoryInput}
+                                        onChange={(e) => setCategoryInput(e.target.value)}
+                                        onKeyPress={(e) => e.key === 'Enter' && handleAddCategory()}
+                                        className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                        placeholder="Nama kategori (contoh: Ekonomi)"
+                                    />
+                                    {editingCategory !== null && (
+                                        <button
+                                            type="button"
+                                            onClick={handleCancelEditCategory}
+                                            className="px-4 py-3 bg-gray-500 text-white font-semibold rounded-lg hover:bg-gray-600 transition-colors"
+                                        >
+                                            Batal
+                                        </button>
+                                    )}
+                                    <button
+                                        type="button"
+                                        onClick={handleAddCategory}
+                                        className="px-6 py-3 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
+                                    >
+                                        <FaSave />
+                                        {editingCategory !== null ? 'Update' : 'Tambah'}
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* List Kategori */}
+                            <div>
+                                <h4 className="text-sm font-semibold text-gray-700 mb-3">
+                                    Daftar Kategori ({categories.length})
+                                </h4>
+                                {categories.length === 0 ? (
+                                    <div className="text-center py-12 bg-gray-50 rounded-lg">
+                                        <FaList className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                                        <p className="text-gray-500 font-medium">Belum ada kategori</p>
+                                        <p className="text-gray-400 text-sm">Tambahkan kategori pertama untuk Berita</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-2 max-h-96 overflow-y-auto">
+                                        {categories.map((cat, index) => (
+                                            <div
+                                                key={index}
+                                                className={`flex items-center justify-between p-4 rounded-lg border-2 transition-all ${
+                                                    editingCategory === index
+                                                        ? 'bg-purple-50 border-purple-300'
+                                                        : 'bg-gray-50 border-gray-200 hover:border-purple-200'
+                                                }`}
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                                                        <span className="text-purple-600 font-bold text-sm">{index + 1}</span>
+                                                    </div>
+                                                    <span className="font-medium text-gray-900">{cat}</span>
+                                                </div>
+                                                <div className="flex gap-2">
+                                                    <button
+                                                        onClick={() => handleEditCategory(index)}
+                                                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                        title="Edit"
+                                                    >
+                                                        <FaEdit className="w-5 h-5" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDeleteCategory(index)}
+                                                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                        title="Hapus"
+                                                    >
+                                                        <FaTrash className="w-5 h-5" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Footer Modal */}
+                        <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 flex justify-end rounded-b-2xl">
+                            <button
+                                onClick={() => {
+                                    setShowCategoryModal(false);
+                                    handleCancelEditCategory();
+                                }}
+                                className="px-6 py-2 bg-white border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-all"
+                            >
+                                Tutup
                             </button>
                         </div>
                     </div>
