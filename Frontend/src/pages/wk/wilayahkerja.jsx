@@ -373,9 +373,6 @@ const MapLegend = ({ activeTab, pengeboranData, tjslData }) => (
       </div>
     )}
 
-    <p className="text-xs text-gray-500 mt-3">
-      💡 <strong>Tip:</strong> Hover pada marker untuk melihat nama area.  Klik marker untuk melihat detail lengkap.
-    </p>
   </div>
 );
 

@@ -79,11 +79,6 @@ const StatsCard = ({ title, value, change, color, gradient, isConstant }) => {
             {Math.abs(change).toFixed(2)}%
           </div>
         )}
-        {isConstant && (
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold bg-gray-100 text-gray-600">
-            Konstan
-          </div>
-        )}
       </div>
       <h4 className="text-sm text-gray-500 font-medium mb-2">{title}</h4>
       <div className="flex items-baseline gap-2">
