@@ -76,6 +76,9 @@ const ManageContacts = lazy(() => import('./pages/admin/ManageContacts'));
 // Settings
 const ManageSettings = lazy(() => import('./pages/admin/ManageSettings'));
 
+// Instagram Posts ⭐ BARU
+const ManageInstagram = lazy(() => import('./pages/admin/ManageInstagram'));
+
 // ==== ROUTER ====
 const router = createBrowserRouter([
   {
@@ -170,6 +173,8 @@ const router = createBrowserRouter([
 
       // Settings
       { path: 'manage-settings', element: <Suspense fallback={<LoadingFallback />}><ManageSettings /></Suspense> },
+
+      { path: 'manage-instagram', element: <Suspense fallback={<LoadingFallback />}><ManageInstagram /></Suspense> },
     ],
   },
 ]);

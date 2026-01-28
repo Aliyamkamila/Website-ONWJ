@@ -5,12 +5,8 @@ import heroService from '../../services/heroService';
 // Helper function to get full media URL
 const getMediaUrl = (src) => {
   if (!src) return '';
-  // If it's already a full URL (http/https), return as is
-  if (src.startsWith('http://') || src.startsWith('https://')) {
-    return src;
-  }
-  // Otherwise, it's a storage path - prepend the storage URL
-  return `http://localhost:8000/storage/${src}`;
+  // Return URLs as is (frontend-only mode)
+  return src;
 };
 
 const Hero = () => {
@@ -120,17 +116,15 @@ const Hero = () => {
       try {
         setIsLoading(true);
         const data = await heroService.getHeroSections();
+        
         if (data && data.length > 0) {
-          // Process the data to ensure proper URLs
-          const processedData = data.map(item => ({
-            ...item,
-            src: getMediaUrl(item.src)
-          }));
-          setCarouselItems(processedData);
+          setCarouselItems(data);
+        } else {
+          console.warn('No hero sections found');
         }
-        setIsLoading(false);
       } catch (error) {
-        console.error('Failed to fetch hero sections:', error);
+        console.error('Error fetching hero sections:', error);
+      } finally {
         setIsLoading(false);
       }
     };
@@ -138,143 +132,101 @@ const Hero = () => {
     fetchHeroSections();
   }, []);
 
-  // Show empty state if no items and not loading
-  if (!isLoading && carouselItems.length === 0) {
+  if (isLoading) {
     return (
-      <section 
-        id="hero-section" 
-        className="relative min-h-screen bg-gradient-to-r from-primary-600 to-primary-800 overflow-hidden flex items-center justify-center"
-      >
-        <div className="centered-content text-center text-white">
-          <h1 className="font-heading text-display-lg mb-4">PT Migas Hulu Jabar ONWJ</h1>
-          <p className="text-body-lg text-white/90">Hero sections belum dikonfigurasi.</p>
-        </div>
-      </section>
+      <div className="relative w-full h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-white text-xl">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!currentItem || carouselItems.length === 0) {
+    return (
+      <div className="relative w-full h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-white text-xl">No content available</div>
+      </div>
     );
   }
 
   return (
-    <section 
-      id="hero-section" 
-      className="relative min-h-screen bg-gradient-to-r from-primary-600 to-primary-800 overflow-hidden"
-    >
-      {/* Loading State */}
-      {isLoading && (
-        <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white"></div>
-        </div>
-      )}
-
+    <section id="hero-section" className="relative w-full h-screen overflow-hidden">
       {/* Background Media */}
-      <div className="fixed top-0 left-0 right-0 w-full h-screen z-0">
+      <div className="absolute inset-0">
         {isVideo ? (
           <video
             ref={videoRef}
-            src={currentItem?.src}
+            src={getMediaUrl(currentItem.src)}
             className="w-full h-full object-cover"
-            onTimeUpdate={handleVideoTimeUpdate}
-            onEnded={handleVideoEnd}
             muted
             playsInline
+            onTimeUpdate={handleVideoTimeUpdate}
+            onEnded={handleVideoEnd}
           />
         ) : (
-          <div
-            className="w-full h-full bg-cover bg-center bg-no-repeat"
-            style={{
-              backgroundImage: currentItem?.src ? `url(${currentItem.src})` : 'none',
-              transition: 'background-image 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
-            }}
+          <img
+            src={getMediaUrl(currentItem.src)}
+            alt={currentItem.title}
+            className="w-full h-full object-cover"
           />
         )}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-black/30 to-transparent" />
+        
+        {/* Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-black/60" />
       </div>
 
       {/* Content */}
-      <div className="relative z-10 h-screen w-full flex flex-col">
-        {/* Main Content - Show for all, but different styling for video */}
-        <div className="flex-1 flex items-center">
-          <div className="centered-content w-full transition-opacity duration-300" style={{ opacity: isTransitioning ? 0 : 1 }}>
-            {!isVideo && (
-            <div className="max-w-3xl space-y-grid-4">
-              {/* Heading */}
-              <h1 className="font-heading text-display-sm sm:text-display-lg lg:text-display-xl text-white text-balance animate-slide-up whitespace-pre-line">
-                {currentItem?.title}
-              </h1>
-              
-              {/* Description */}
-              <p className="text-body-md sm:text-body-lg lg:text-body-xl text-white/90 max-w-2xl leading-relaxed animate-slide-up animate-stagger-1">
-                {currentItem?.description}
-              </p>
-
-              {/* CTA Buttons */}
-              <div className="flex flex-wrap gap-grid-3 pt-grid-4 animate-slide-up animate-stagger-2">
-                <Link to="/tentang" className="btn-white btn-lg">
-                  Pelajari Lebih Lanjut
-                </Link>
-                <Link 
-                  to="/kontak" 
-                  className="btn btn-lg bg-transparent text-white border-2 border-white hover:bg-white hover:text-primary-600 transition-all duration-300"
-                >
-                  Hubungi Kami
-                </Link>
-              </div>
-            </div>
-            )}
-          </div>
+      <div className="relative h-full flex items-center justify-center px-4 sm:px-6 lg:px-8">
+        <div className="text-center text-white max-w-4xl mx-auto">
+          <h1 
+            className={`text-4xl sm:text-5xl lg:text-6xl font-bold mb-4 transition-all duration-500 ${
+              isTransitioning ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'
+            }`}
+          >
+            {currentItem.title}
+          </h1>
+          <p 
+            className={`text-lg sm:text-xl lg:text-2xl mb-8 transition-all duration-500 delay-100 ${
+              isTransitioning ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'
+            }`}
+          >
+            {currentItem.description}
+          </p>
+          <Link
+            to={currentItem.link}
+            className={`inline-block bg-primary-600 hover:bg-primary-700 text-white font-semibold px-8 py-3 rounded-lg transition-all duration-300 ${
+              isTransitioning ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'
+            }`}
+          >
+            Learn More
+          </Link>
         </div>
+      </div>
 
-        {/* Bottom Navigation Titles with Reveal Animation */}
-        <div className="pb-8 sm:pb-12 transition-opacity duration-300" style={{ opacity: isTransitioning ? 0 : 1 }}>
-          <div className="centered-content w-full">
-            <div className="flex items-center gap-0 w-full">
-              {carouselItems.map((item, index) => {
-                const revealPosition = index === currentIndex ? progress : 0;
-                return (
-                  <button
-                    key={index}
-                    onClick={() => goToSlide(index)}
-                    className="flex-1 relative group text-center transition-all duration-300"
-                  >
-                    {item.label ? (
-                      <div
-                        className={`font-heading text-label-xs sm:text-label-sm uppercase tracking-wider transition-colors duration-100 relative overflow-hidden ${
-                          index === currentIndex 
-                            ? 'text-white' 
-                            : 'text-white/40 hover:text-white/70'
-                        }`}
-                      >
-                        {/* Base text with initial low opacity */}
-                        <span style={{ opacity: 0.3 }}>{item.label}</span>
-                        
-                        {/* Reveal overlay - left to right on active */}
-                        {index === currentIndex && (
-                          <span
-                            className="absolute inset-0 pointer-events-none"
-                            style={{
-                              backgroundImage: `linear-gradient(
-                                90deg,
-                                rgba(255, 255, 255, 0) 0%,
-                                rgba(255, 255, 255, 0) ${Math.max(0, revealPosition - 10)}%,
-                                rgba(255, 255, 255, 1) ${revealPosition}%,
-                                rgba(255, 255, 255, 1) 100%
-                              )`,
-                              backgroundClip: 'text',
-                              WebkitBackgroundClip: 'text',
-                              WebkitTextFillColor: 'transparent',
-                              backgroundSize: '100% 100%',
-                            }}
-                          >
-                            {item.label}
-                          </span>
-                        )}
-                      </div>
-                    ) : null}
-                  </button>
-                );
-              })}
+      {/* Navigation Dots */}
+      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex gap-2">
+        {carouselItems.map((_, index) => (
+          <button
+            key={index}
+            onClick={() => goToSlide(index)}
+            className="group relative"
+            aria-label={`Go to slide ${index + 1}`}
+          >
+            <div 
+              className={`w-12 h-1.5 rounded-full transition-all duration-300 ${
+                index === currentIndex 
+                  ? 'bg-white' 
+                  : 'bg-white/40 hover:bg-white/60'
+              }`}
+            >
+              {index === currentIndex && (
+                <div 
+                  className="h-full bg-primary-500 rounded-full transition-all duration-100"
+                  style={{ width: `${progress}%` }}
+                />
+              )}
             </div>
-          </div>
-        </div>
+          </button>
+        ))}
       </div>
     </section>
   );

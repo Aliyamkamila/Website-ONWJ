@@ -23,13 +23,8 @@ use App\Http\Controllers\Api\ProduksiBulananController;
 use App\Http\Controllers\Api\GalleryController;
 use App\Http\Controllers\Api\GalleryCategoryController;
 use App\Http\Controllers\Api\ManagementController;
-
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-*/
-
+use App\Http\Controllers\Api\InstagramPostController; 
+// --------------------------------------------------------------------------   
 // ========================================================================
 // GUEST / PUBLIC GENERAL ROUTES
 // ========================================================================
@@ -156,6 +151,16 @@ Route::prefix('v1')->group(function () {
     Route::post('/contact', [ContactController::class, 'store']);
     Route::get('/contact-info', [ContactController::class, 'info']);
 
+    // --- INSTAGRAM POSTS (PUBLIC) ⭐ BARU ---
+    Route::get('/instagram-posts', function () {
+        $posts = App\Models\InstagramPost::where('show_in_media', true)
+                                         ->where('status', 'published')
+                                         ->orderBy('order', 'asc')
+                                         ->orderBy('posted_at', 'desc')
+                                         ->get();
+        return response()->json(['success' => true, 'data' => $posts]);
+    });
+
 });
 
 // ========================================================================
@@ -197,10 +202,10 @@ Route::middleware(['auth:sanctum', 'admin_auth'])->prefix('admin')->group(functi
 
     // --- HERO SECTIONS MANAGEMENT ---
     Route::prefix('hero-sections')->group(function () {
-            Route::get('/', [HeroSectionController::class, 'adminIndex']);
-            Route::get('/{id}', [HeroSectionController::class, 'show']);
+        Route::get('/', [HeroSectionController::class, 'adminIndex']);
+        Route::get('/{id}', [HeroSectionController::class, 'show']);
         Route::post('/', [HeroSectionController::class, 'store']);
-            Route::post('/{id}', [HeroSectionController::class, 'update']); // allow form-data without _method
+        Route::post('/{id}', [HeroSectionController::class, 'update']); // allow form-data without _method
         Route::put('/{id}', [HeroSectionController::class, 'update']);
         Route::delete('/{id}', [HeroSectionController::class, 'destroy']);
         Route::patch('/{id}/toggle-active', [HeroSectionController::class, 'toggleActive']);
@@ -311,6 +316,14 @@ Route::middleware(['auth:sanctum', 'admin_auth'])->prefix('admin')->group(functi
         Route::delete('/{id}', [ContactController::class, 'destroy']);
         Route::patch('/{id}/mark-read', [ContactController::class, 'markAsRead']);
         Route::post('/bulk-delete', [ContactController::class, 'bulkDelete']);
+    });
+
+    // --- INSTAGRAM POSTS MANAGEMENT ⭐ BARU ---
+    Route::prefix('instagram-posts')->group(function () {
+        Route::get('/', [InstagramPostController::class, 'index']);
+        Route::post('/', [InstagramPostController::class, 'store']);
+        Route::put('/{id}', [InstagramPostController::class, 'update']);
+        Route::delete('/{id}', [InstagramPostController::class, 'destroy']);
     });
 
 });

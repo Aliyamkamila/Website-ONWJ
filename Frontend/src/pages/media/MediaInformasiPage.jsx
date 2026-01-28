@@ -1,10 +1,12 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Link, NavLink } from 'react-router-dom'; 
 import PageHero from '../../components/PageHero';
 import bannerImage from '../../assets/hero-bg.png'; 
 import articleImage from '../../assets/rectangle.png'; 
 import logo from '../../assets/logo.webp';
-import { FaHome, FaYoutube, FaInstagram } from 'react-icons/fa'; 
+import { FaHome, FaYoutube, FaInstagram, FaSpinner, FaChevronLeft, FaChevronRight } from 'react-icons/fa'; 
+import instagramService from '../../services/instagramService';
+import toast from 'react-hot-toast';
 
 // Data berita artikel (dari website/internal)
 const beritaArtikel = [
@@ -20,16 +22,6 @@ const beritaArtikel = [
     { id: 10, slug: 'pelatihan-keterampilan-masyarakat', category: 'Sosial', date: 'September 22, 2025', title: 'Pelatihan Keterampilan untuk Masyarakat', description: 'Program pelatihan untuk meningkatkan keterampilan masyarakat.', image: articleImage },
     { id: 11, slug: 'pengurangan-emisi-karbon', category: 'Lingkungan', date: 'September 20, 2025', title: 'Upaya Pengurangan Emisi Karbon', description: 'Strategi pengurangan emisi dalam operasi perusahaan.', image: articleImage },
     { id: 12, slug: 'digital-transformation-oil-gas', category: 'Teknologi', date: 'September 18, 2025', title: 'Transformasi Digital di Industri Migas', description: 'Implementasi teknologi digital dalam operasi.', image: articleImage },
-];
-
-// Data Instagram/Media Sosial (dari Instagram)
-const instagramPosts = [
-    { id: 1, slug: 'instagram-post-1', source: 'Instagram', date: 'November 15, 2025', title: 'Kegiatan Penanaman Mangrove Bersama Masyarakat', image: articleImage, instagramUrl: 'https://instagram.com/p/example1' },
-    { id: 2, slug: 'instagram-post-2', source: 'Instagram', date: 'November 12, 2025', title: 'Serah Terima Bantuan untuk Nelayan Lokal', image: articleImage, instagramUrl: 'https://instagram.com/p/example2' },
-    { id: 3, slug: 'instagram-post-3', source: 'Instagram', date: 'November 10, 2025', title: 'Workshop Kewirausahaan UMKM Binaan', image: articleImage, instagramUrl: 'https://instagram.com/p/example3' },
-    { id: 4, slug: 'instagram-post-4', source: 'Instagram', date: 'November 8, 2025', title: 'Monitoring Lingkungan di Area Operasi', image: articleImage, instagramUrl: 'https://instagram.com/p/example4' },
-    { id: 5, slug: 'instagram-post-5', source: 'Instagram', date: 'November 5, 2025', title: 'Perayaan HUT Perusahaan Bersama Karyawan', image: articleImage, instagramUrl: 'https://instagram.com/p/example5' },
-    { id: 6, slug: 'instagram-post-6', source: 'Instagram', date: 'November 3, 2025', title: 'Kunjungan ke Fasilitas Produksi Migas', image: articleImage, instagramUrl: 'https://instagram.com/p/example6' },
 ];
 
 const videoData = [
@@ -162,12 +154,17 @@ const ArtikelCard = ({ item }) => (
     </article>
 );
 
-// Card untuk Instagram Post
+// Card untuk Instagram Post (dari API)
 const InstagramCard = ({ item }) => (
     <article className="group bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1 flex flex-col">
         <div className="h-48 overflow-hidden relative">
-            <a href={item.instagramUrl} target="_blank" rel="noopener noreferrer">
-                <img src={item.image} alt={item.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" loading="lazy" />
+            <a href={item.instagram_url} target="_blank" rel="noopener noreferrer">
+                <img 
+                    src={item.image_url || articleImage} 
+                    alt={item.caption} 
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" 
+                    loading="lazy" 
+                />
             </a>
             <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm p-2 rounded-full">
                 <FaInstagram className="text-pink-600 h-5 w-5" />
@@ -175,13 +172,19 @@ const InstagramCard = ({ item }) => (
         </div>
         <div className="p-5 flex flex-col flex-grow">
             <p className="text-sm mb-2 text-gray-500">
-                <time dateTime={item.date}>{item.date}</time>
+                <time dateTime={item.posted_at}>
+                    {new Date(item.posted_at).toLocaleDateString('id-ID', {
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric'
+                    })}
+                </time>
             </p>
             <h3 className="text-lg font-bold text-gray-800 mb-4 leading-tight flex-grow line-clamp-2">
-                {item.title}
+                {item.caption || 'Post Instagram'}
             </h3>
             <a 
-                href={item.instagramUrl} 
+                href={item.instagram_url} 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="font-semibold text-pink-600 flex items-center gap-2 group self-start mt-auto text-sm hover:text-pink-700 transition-colors"
@@ -212,39 +215,98 @@ const VideoCard = ({ item }) => (
     </div>
 );
 
-// Komponen Pagination
+// ✅ PAGINATION COMPONENT - IMPROVED & PERFECT
 const Pagination = ({ currentPage, totalPages, onPageChange }) => {
     if (totalPages <= 1) return null;
-    const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
-    
+
+    // Function untuk generate page numbers dengan ellipsis
+    const getPageNumbers = () => {
+        const delta = 2; // Jumlah page di kiri & kanan current page
+        const range = [];
+        const rangeWithDots = [];
+        let l;
+
+        for (let i = 1; i <= totalPages; i++) {
+            if (i === 1 || i === totalPages || (i >= currentPage - delta && i <= currentPage + delta)) {
+                range.push(i);
+            }
+        }
+
+        range.forEach((i) => {
+            if (l) {
+                if (i - l === 2) {
+                    rangeWithDots.push(l + 1);
+                } else if (i - l !== 1) {
+                    rangeWithDots.push('...');
+                }
+            }
+            rangeWithDots.push(i);
+            l = i;
+        });
+
+        return rangeWithDots;
+    };
+
+    const pageNumbers = getPageNumbers();
+
     return (
-        <nav className="flex justify-center items-center space-x-2 py-8" aria-label="Pagination">
+        <nav className="flex justify-center items-center gap-2 py-8" aria-label="Pagination">
+            {/* Previous Button */}
             <button
-                onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+                onClick={() => onPageChange(currentPage - 1)}
                 disabled={currentPage === 1}
-                className="px-3 py-2 hover:bg-gray-100 text-gray-700 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className={`flex items-center justify-center w-10 h-10 rounded-lg font-semibold transition-all ${
+                    currentPage === 1
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-white text-gray-700 hover:bg-blue-600 hover:text-white border border-gray-300 hover:border-blue-600 shadow-sm'
+                }`}
+                aria-label="Previous page"
             >
-                ‹
+                <FaChevronLeft className="w-4 h-4" />
             </button>
-            {pages.map(page => (
-                <button
-                    key={page}
-                    onClick={() => onPageChange(page)}
-                    className={`w-10 h-10 rounded-md font-bold transition-colors ${
-                        page === currentPage 
-                            ? 'bg-blue-600 text-white' 
-                            : 'hover:bg-gray-100 text-gray-700'
-                    }`}
-                >
-                    {page}
-                </button>
-            ))}
+
+            {/* Page Numbers */}
+            {pageNumbers.map((pageNum, index) => {
+                if (pageNum === '...') {
+                    return (
+                        <span
+                            key={`ellipsis-${index}`}
+                            className="flex items-center justify-center w-10 h-10 text-gray-500 font-bold"
+                        >
+                            ...
+                        </span>
+                    );
+                }
+
+                return (
+                    <button
+                        key={pageNum}
+                        onClick={() => onPageChange(pageNum)}
+                        className={`flex items-center justify-center w-10 h-10 rounded-lg font-semibold transition-all ${
+                            pageNum === currentPage
+                                ? 'bg-blue-600 text-white shadow-lg shadow-blue-200'
+                                : 'bg-white text-gray-700 hover:bg-blue-50 border border-gray-300 hover:border-blue-400 shadow-sm'
+                        }`}
+                        aria-label={`Go to page ${pageNum}`}
+                        aria-current={pageNum === currentPage ? 'page' : undefined}
+                    >
+                        {pageNum}
+                    </button>
+                );
+            })}
+
+            {/* Next Button */}
             <button
-                onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
+                onClick={() => onPageChange(currentPage + 1)}
                 disabled={currentPage === totalPages}
-                className="px-3 py-2 hover:bg-gray-100 text-gray-700 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className={`flex items-center justify-center w-10 h-10 rounded-lg font-semibold transition-all ${
+                    currentPage === totalPages
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-white text-gray-700 hover:bg-blue-600 hover:text-white border border-gray-300 hover:border-blue-600 shadow-sm'
+                }`}
+                aria-label="Next page"
             >
-                ›
+                <FaChevronRight className="w-4 h-4" />
             </button>
         </nav>
     );
@@ -301,6 +363,10 @@ const useBeritaFilter = (articles) => {
 };
 
 const MediaInformasiPage = () => {
+    // State untuk Instagram Posts dari API
+    const [instagramPosts, setInstagramPosts] = useState([]);
+    const [instagramLoading, setInstagramLoading] = useState(true);
+
     const {
         paginatedArticles,
         currentPage,
@@ -312,6 +378,31 @@ const MediaInformasiPage = () => {
         searchTerm,
         handleSearch
     } = useBeritaFilter(beritaArtikel);
+
+    // Fetch Instagram Posts dari API
+    useEffect(() => {
+        const fetchInstagramPosts = async () => {
+            try {
+                setInstagramLoading(true);
+                const response = await instagramService.getPublicPosts();
+                
+                if (response.success && response.data) {
+                    // Filter hanya yang show_in_media = true dan status = published
+                    const publishedPosts = response.data.filter(
+                        post => post.show_in_media && post.status === 'published'
+                    );
+                    setInstagramPosts(publishedPosts);
+                }
+            } catch (error) {
+                console.error('Error fetching Instagram posts:', error);
+                // Tidak perlu toast error, biarkan section kosong saja
+            } finally {
+                setInstagramLoading(false);
+            }
+        };
+
+        fetchInstagramPosts();
+    }, []);
 
     return (
         <div className="bg-gray-50 min-h-screen">
@@ -360,49 +451,72 @@ const MediaInformasiPage = () => {
                     />
                 </section>
 
-                {/* Section 2: Instagram Feed (Tanpa Filter) */}
-                <section className="bg-gradient-to-br from-pink-50 to-purple-50 -mx-8 lg:-mx-16 px-8 lg:px-16 py-16">
-                    <div className="container mx-auto">
-                        <div className="flex items-center justify-between mb-8">
-                            <div>
-                                <h2 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-                                    <FaInstagram className="text-pink-600 h-8 w-8" />
-                                    Update dari Instagram
-                                </h2>
-                                <p className="text-gray-600 mt-2">Ikuti kegiatan terbaru kami di media sosial</p>
+                {/* Section 2: Instagram Feed (Dari API Backend) */}
+                {instagramLoading || instagramPosts.length > 0 ? (
+                    <section className="bg-gradient-to-br from-pink-50 to-purple-50 -mx-8 lg:-mx-16 px-8 lg:px-16 py-16">
+                        <div className="container mx-auto">
+                            <div className="flex items-center justify-between mb-8">
+                                <div>
+                                    <h2 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+                                        <FaInstagram className="text-pink-600 h-8 w-8" />
+                                        Update dari Instagram
+                                    </h2>
+                                    <p className="text-gray-600 mt-2">Ikuti kegiatan terbaru kami di media sosial</p>
+                                </div>
+                                <a 
+                                    href="https://instagram.com/yourcompany" 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="hidden md:flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-pink-600 to-purple-600 text-white font-semibold rounded-full hover:from-pink-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl"
+                                >
+                                    <FaInstagram className="h-5 w-5" />
+                                    Follow Kami
+                                </a>
                             </div>
-                            <a 
-                                href="https://instagram.com/yourcompany" 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="hidden md:flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-pink-600 to-purple-600 text-white font-semibold rounded-full hover:from-pink-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl"
-                            >
-                                <FaInstagram className="h-5 w-5" />
-                                Follow Kami
-                            </a>
-                        </div>
-                        
-                        {/* Grid Instagram Posts */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                            {instagramPosts.map((item) => (
-                                <InstagramCard key={item.id} item={item} />
-                            ))}
-                        </div>
+                            
+                            {/* Loading State */}
+                            {instagramLoading && (
+                                <div className="flex justify-center items-center py-16">
+                                    <FaSpinner className="w-12 h-12 text-pink-600 animate-spin" />
+                                </div>
+                            )}
 
-                        {/* Mobile Follow Button */}
-                        <div className="mt-8 flex justify-center md:hidden">
-                            <a 
-                                href="https://instagram.com/yourcompany" 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-pink-600 to-purple-600 text-white font-semibold rounded-full hover:from-pink-700 hover:to-purple-700 transition-all shadow-lg"
-                            >
-                                <FaInstagram className="h-5 w-5" />
-                                Follow Kami di Instagram
-                            </a>
+                            {/* Grid Instagram Posts */}
+                            {!instagramLoading && instagramPosts.length > 0 && (
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                                    {instagramPosts.slice(0, 6).map((item) => (
+                                        <InstagramCard key={item.id} item={item} />
+                                    ))}
+                                </div>
+                            )}
+
+                            {/* Empty State */}
+                            {!instagramLoading && instagramPosts.length === 0 && (
+                                <div className="text-center py-12">
+                                    <FaInstagram className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                                    <p className="text-gray-500 text-lg">
+                                        Belum ada update dari Instagram
+                                    </p>
+                                </div>
+                            )}
+
+                            {/* Mobile Follow Button */}
+                            {!instagramLoading && instagramPosts.length > 0 && (
+                                <div className="mt-8 flex justify-center md:hidden">
+                                    <a 
+                                        href="https://instagram.com/yourcompany" 
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                        className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-pink-600 to-purple-600 text-white font-semibold rounded-full hover:from-pink-700 hover:to-purple-700 transition-all shadow-lg"
+                                    >
+                                        <FaInstagram className="h-5 w-5" />
+                                        Follow Kami di Instagram
+                                    </a>
+                                </div>
+                            )}
                         </div>
-                    </div>
-                </section>
+                    </section>
+                ) : null}
 
                 {/* Section 3: Video Gallery */}
                 <section>

@@ -20,5 +20,5 @@ return [
 
     'max_age' => 0,
 
-    'supports_credentials' => false, // FALSE karena menggunakan token-based
+    'supports_credentials' => true, // ✅ UBAH JADI TRUE
 ];

@@ -5,8 +5,9 @@ import { useToast } from '../../hooks/useToast';
 import logo from '../../assets/LOGO-HD.webp';
 import { 
     FaTachometerAlt, FaSignOutAlt, FaChevronDown, 
-    FaUsers, FaHardHat, FaWallet, FaBuilding, FaFileExcel
+    FaUsers, FaHardHat, FaWallet, FaBuilding, FaFileExcel, FaInstagram, FaFacebook, FaYoutube 
 } from 'react-icons/fa';
+
 
 // Sidebar Link
 const SidebarLink = ({ to, icon, label, badge }) => {
@@ -33,7 +34,6 @@ const SidebarLink = ({ to, icon, label, badge }) => {
 };
 
 // Sidebar Dropdown
-// Sidebar Dropdown
 const SidebarDropdown = ({ title, children }) => {
     const [isOpen, setIsOpen] = useState(false);
 
@@ -41,9 +41,6 @@ const SidebarDropdown = ({ title, children }) => {
         <div>
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                // PERUBAHAN DISINI:
-                // 1. Hapus 'justify-between'
-                // 2. Tambah 'gap-2' (atau gap-3 sesuai selera)
                 className="flex items-center gap-2 px-4 py-3 w-full rounded-lg text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors"
             >
                 <span className="font-medium">{title}</span>
@@ -146,6 +143,18 @@ const AdminLayout = () => {
                         <NavLink to="/tukang-minyak-dan-gas/manage-berita" className={subLinkClasses}>
                             Kelola Berita
                         </NavLink>
+                    <NavLink
+                    to="/tukang-minyak-dan-gas/manage-instagram"
+                    className={({ isActive }) =>
+                        `flex items-center px-4 py-2 rounded-lg text-sm transition-colors ${
+                        isActive
+                            ? 'bg-blue-100 text-blue-700 font-semibold'
+                            : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                        }`
+                    }
+                    >
+                    <span>Instagram Posts</span>
+                    </NavLink>
 
                         <NavLink to="/tukang-minyak-dan-gas/manage-umkm" className={subLinkClasses}>
                             Kelola UMKM Binaan
@@ -219,7 +228,6 @@ const AdminLayout = () => {
                             Kelola Manajemen
                         </NavLink>
 
-                        {/* NEW — PENGATURAN WEBSITE */}
                         <NavLink to="/tukang-minyak-dan-gas/manage-settings" className={subLinkClasses}>
                             Pengaturan Website
                         </NavLink>
