@@ -1,12 +1,12 @@
 import React, { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import profileImage from '../../assets/rectangle.png';
+import profileImage from '../../assets/rectangle.jpg';
 import PemegangSaham1 from '../../assets/PemegangSaham/MUJ.webp';
-import PemegangSaham2 from '../../assets/PemegangSaham/Jakpro.png';
-import PemegangSaham3 from '../../assets/PemegangSaham/Petrogas.png';
-import PemegangSaham4 from '../../assets/PemegangSaham/PTbumi.png';
-import PemegangSaham5 from '../../assets/PemegangSaham/subang.png';
-import PemegangSaham6 from '../../assets/PemegangSaham/bbwm.png';
+import PemegangSaham2 from '../../assets/PemegangSaham/Jakpro.jpg';
+import PemegangSaham3 from '../../assets/PemegangSaham/Petrogas.jpg';
+import PemegangSaham4 from '../../assets/PemegangSaham/PTbumi.jpg';
+import PemegangSaham5 from '../../assets/PemegangSaham/subang.jpg';
+import PemegangSaham6 from '../../assets/PemegangSaham/bbwm.jpg';
 
 // ============================================
 // CONSTANTS

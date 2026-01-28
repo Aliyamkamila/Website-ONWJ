@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import contoh1 from '../../assets/contoh1.png';
-import contoh2 from '../../assets/contoh2.png';
-import contoh3 from '../../assets/contoh3.png';
-import contoh4 from '../../assets/contoh4.png';
+import contoh1 from '../../assets/contoh1.jpg';
+import contoh2 from '../../assets/contoh2.jpg';
+import contoh3 from '../../assets/contoh3.jpg';
+import contoh4 from '../../assets/contoh4.jpg';
 
 /**
  * Constants

@@ -4,15 +4,15 @@ import { Link } from 'react-router-dom';
 // ============================================
 // ASSETS
 // ============================================
-import bisnisBackground from '../../assets/contoh1.png';
-import monitoringBackground from '../../assets/contoh2.png';
-import lokasiBackground from '../../assets/contoh3.png';
-import tjslBackground from '../../assets/contoh4.png';
+import bisnisBackground from '../../assets/contoh1.jpg';
+import monitoringBackground from '../../assets/contoh2.jpg';
+import lokasiBackground from '../../assets/contoh3.jpg';
+import tjslBackground from '../../assets/contoh4.jpg';
 
-import bisnisCard from '../../assets/contoh4.png';
-import monitoringCard from '../../assets/contoh3.png';
-import lokasiCard from '../../assets/contoh2.png';
-import tjslCard from '../../assets/contoh1.png';
+import bisnisCard from '../../assets/contoh4.jpg';
+import monitoringCard from '../../assets/contoh3.jpg';
+import lokasiCard from '../../assets/contoh2.jpg';
+import tjslCard from '../../assets/contoh1.jpg';
 
 // ============================================
 // CLEAN COLOR SYSTEM

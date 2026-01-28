@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { FaHome, FaSpinner } from 'react-icons/fa'; 
 import PageHero from '../components/PageHero';
-import bannerImage from '../assets/hero-bg.png';
+import bannerImage from '../assets/hero-bg.jpg';
 import { beritaApi } from '../services/BeritaService'; 
 import toast from 'react-hot-toast';
 

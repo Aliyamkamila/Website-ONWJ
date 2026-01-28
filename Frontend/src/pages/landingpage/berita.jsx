@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import beritaImage from '../../assets/rectangle.png';
+import beritaImage from '../../assets/rectangle.jpg';
 
 // ============================================
 // CONSTANTS

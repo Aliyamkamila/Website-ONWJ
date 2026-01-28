@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { FaHome, FaTrophy } from 'react-icons/fa';
 import PageHero from '../../components/PageHero';
-import bannerImage from '../../assets/hero-bg.png';
-import awardImage from '../../assets/rectangle.png';
+import bannerImage from '../../assets/hero-bg.jpg';
+import awardImage from '../../assets/rectangle.jpg';
 import penghargaanService from '../../services/penghargaanService';
 import toast from 'react-hot-toast';
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import companyImage from '../../assets/contoh2.png';
+import companyImage from '../../assets/contoh2.jpg';
 import { FaBuilding, FaUsers, FaMapMarkerAlt, FaBolt, FaArrowRight } from 'react-icons/fa';
 
 /**

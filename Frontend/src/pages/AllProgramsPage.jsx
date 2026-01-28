@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import bannerImage from '../assets/hero-bg.png';
-import programImage from '../assets/rectangle.png';
+import bannerImage from '../assets/hero-bg.jpg';
+import programImage from '../assets/rectangle.jpg';
 import logo from '../assets/logo.webp';
 import { FaRegCalendarAlt, FaChartBar, FaUsers, FaStar } from 'react-icons/fa';
 import programService from '../services/programService';

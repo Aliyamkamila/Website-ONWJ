@@ -1,8 +1,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Link, NavLink } from 'react-router-dom'; 
 import PageHero from '../../components/PageHero';
-import bannerImage from '../../assets/hero-bg.png'; 
-import articleImage from '../../assets/rectangle.png'; 
+import bannerImage from '../../assets/hero-bg.jpg'; 
+import articleImage from '../../assets/rectangle.jpg'; 
 import logo from '../../assets/logo.webp';
 import { FaHome, FaYoutube, FaInstagram, FaSpinner, FaChevronLeft, FaChevronRight } from 'react-icons/fa'; 
 import instagramService from '../../services/instagramService';

@@ -1,6 +1,6 @@
 import React from 'react';
 import PageHero from '../../components/PageHero';
-import platformImage from '../../assets/hero-bg.png';
+import platformImage from '../../assets/hero-bg.jpg';
 
 const WHero = () => (
   <PageHero

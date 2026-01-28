@@ -6,30 +6,34 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
-    public function up(): void
+    public function up()
     {
-        // PERHATIKAN: Gunakan Schema::table, BUKAN Schema::create
-        Schema::table('wk_tjsl', function (Blueprint $table) {
-            // Kita hanya menambahkan kolom baru, jangan tulis ulang kolom id, name, dll.
-            $table->unsignedBigInteger('related_news_id')->nullable()->after('is_active');
-            
-            // Opsional: Foreign Key (aktifkan jika perlu)
-            // $table->foreign('related_news_id')->references('id')->on('berita')->nullOnDelete();
-        });
+        // ✅ CEK DULU, KALAU BELUM ADA BARU TAMBAH
+        if (!Schema::hasColumn('wk_tjsl', 'related_news_id')) {
+            Schema::table('wk_tjsl', function (Blueprint $table) {
+                $table->unsignedBigInteger('related_news_id')->nullable()->after('is_active');
+            });
+        }
+        
+        if (!Schema::hasColumn('wk_tekkom', 'related_news_id')) {
+            Schema::table('wk_tekkom', function (Blueprint $table) {
+                $table->unsignedBigInteger('related_news_id')->nullable()->after('is_active');
+            });
+        }
     }
 
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
+    public function down()
     {
-        Schema::table('wk_tjsl', function (Blueprint $table) {
-            // Hapus kolom jika rollback
-            // $table->dropForeign(['related_news_id']); // Hapus ini commentnya jika pakai foreign key
-            $table->dropColumn('related_news_id');
-        });
+        if (Schema::hasColumn('wk_tjsl', 'related_news_id')) {
+            Schema::table('wk_tjsl', function (Blueprint $table) {
+                $table->dropColumn('related_news_id');
+            });
+        }
+        
+        if (Schema::hasColumn('wk_tekkom', 'related_news_id')) {
+            Schema::table('wk_tekkom', function (Blueprint $table) {
+                $table->dropColumn('related_news_id');
+            });
+        }
     }
 };

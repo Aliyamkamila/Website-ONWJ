@@ -18,14 +18,13 @@ class AdminLoginRequest extends FormRequest
         return [
             'email' => [
                 'required',
-                'email:rfc,dns',
+                'email', // ✅ HAPUS :rfc,dns
                 'max:100',
-                'regex:/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/'
             ],
             'password' => [
                 'required',
                 'string',
-                'min:8',
+                'min:6', // ✅ TURUNKAN JADI 6
                 'max:255'
             ],
             'remember' => 'nullable|boolean'
@@ -38,9 +37,8 @@ class AdminLoginRequest extends FormRequest
             'email.required' => 'Email wajib diisi',
             'email.email' => 'Format email tidak valid',
             'email.max' => 'Email maksimal 100 karakter',
-            'email.regex' => 'Format email tidak valid',
             'password.required' => 'Password wajib diisi',
-            'password.min' => 'Password minimal 8 karakter',
+            'password.min' => 'Password minimal 6 karakter',
             'password.max' => 'Password maksimal 255 karakter',
         ];
     }
@@ -59,9 +57,10 @@ class AdminLoginRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         // Sanitize input to prevent XSS
-        $this->merge([
-            'email' => strip_tags($this->email),
-            'password' => $this->password, // Don't strip password
-        ]);
+        if ($this->email) {
+            $this->merge([
+                'email' => strip_tags(trim($this->email)),
+            ]);
+        }
     }
 }

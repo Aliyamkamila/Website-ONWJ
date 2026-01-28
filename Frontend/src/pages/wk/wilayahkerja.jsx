@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { produksiBulananService } from '../../services/ProduksiBulananService';
 import './wilayahkerja.css';
-import Peta from './Peta.png';
+import Peta from './Peta.jpg';
 
 const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
 

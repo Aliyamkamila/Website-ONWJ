@@ -3,7 +3,7 @@ import { FaEdit, FaTrash, FaPlus, FaTimes, FaMapMarkerAlt, FaUsers, FaCheck, FaN
 import axiosInstance from '../../api/axios';
 import toast from 'react-hot-toast';
 import MapClickSelector from '../../components/MapClickSelector';
-import PetaImage from '../wk/Peta.png';
+import PetaImage from '../wk/Peta.jpg';
 
 const ManageWkTjsl = () => {
   const [areas, setAreas] = useState([]);

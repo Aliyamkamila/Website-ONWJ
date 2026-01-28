@@ -3,8 +3,8 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { FaCalendarAlt, FaMapMarkerAlt, FaCheckCircle, FaArrowLeft, FaUsers, FaClock, FaSpinner } from 'react-icons/fa';
 import { beritaApi } from '../services/BeritaService';
 import toast from 'react-hot-toast';
-import bannerImage from '../assets/hero-bg.png';
-import programImage from '../assets/rectangle.png';
+import bannerImage from '../assets/hero-bg.jpg';
+import programImage from '../assets/rectangle.jpg';
 
 const ArtikelPage = () => {
     const { slug } = useParams();

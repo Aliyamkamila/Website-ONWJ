@@ -2,11 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import PageHero from '../components/PageHero';
-import platformImage from '../assets/contoh1.png';
-import programImage from '../assets/rectangle.png';
-import carouselImg1 from '../assets/contoh2.png';
-import carouselImg2 from '../assets/contoh3.png';
-import carouselImg3 from '../assets/contoh4.png';
+import platformImage from '../assets/contoh1.jpg';
+import programImage from '../assets/rectangle.jpg';
+import carouselImg1 from '../assets/contoh2.jpg';
+import carouselImg2 from '../assets/contoh3.jpg';
+import carouselImg3 from '../assets/contoh4.jpg';
 import logo from '../assets/logo.webp';
 import { FaHome, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 

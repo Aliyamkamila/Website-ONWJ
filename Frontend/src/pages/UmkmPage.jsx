@@ -6,9 +6,9 @@ import toast from 'react-hot-toast';
 import PageHero from '../components/PageHero';
 
 // --- Aset Placeholder ---
-import bannerImage from '../assets/hero-bg.png';
-import featuredImage from '../assets/contoh1.png';
-import productImage from '../assets/rectangle.png';
+import bannerImage from '../assets/hero-bg.jpg';
+import featuredImage from '../assets/contoh1.jpg';
+import productImage from '../assets/rectangle.jpg';
 
 // --- SUB-KOMPONEN HALAMAN ---
 const UmkmHero = () => (

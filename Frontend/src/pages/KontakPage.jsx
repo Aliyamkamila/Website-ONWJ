@@ -5,7 +5,7 @@ import toast from 'react-hot-toast';
 import contactService from '../services/contactService';
 import { useSettings } from '../hooks/useSettings';
 import PageHero from '../components/PageHero';
-import bannerImage from '../assets/hero-bg.png';
+import bannerImage from '../assets/hero-bg.jpg';
 
 // --- SUB-KOMPONEN ---
 

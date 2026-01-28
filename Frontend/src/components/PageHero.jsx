@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { FaHome } from 'react-icons/fa';
-import defaultBg from '../assets/hero-bg.png';
+import defaultBg from '../assets/hero-bg.jpg';
 
 const PageHero = ({
   title,

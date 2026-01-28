@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FaHome, FaChevronDown, FaFileDownload, FaFileAlt, FaInfoCircle } from 'react-icons/fa';
 import PageHero from '../../components/PageHero';
-import officeImage from '../../assets/contoh3.png';
+import officeImage from '../../assets/contoh3.jpg';
 
 const TataKelola = () => {
   const [openSection, setOpenSection] = useState(null);

@@ -2,13 +2,13 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { FaHome, FaDownload, FaEye, FaFilePdf } from 'react-icons/fa'; 
 import PageHero from '../../components/PageHero';
-import bannerImage from '../../assets/hero-bg.png';
-import reportCover2022 from '../../assets/contoh1.png';
-import reportCover2021 from '../../assets/contoh2.png';
-import reportCover2020 from '../../assets/contoh3.png'; 
-import reportCover2019 from '../../assets/contoh4.png'; 
-import reportCover2018 from '../../assets/rectangle.png'; 
-import reportCover2017 from '../../assets/contoh1.png'; 
+import bannerImage from '../../assets/hero-bg.jpg';
+import reportCover2022 from '../../assets/contoh1.jpg';
+import reportCover2021 from '../../assets/contoh2.jpg';
+import reportCover2020 from '../../assets/contoh3.jpg'; 
+import reportCover2019 from '../../assets/contoh4.jpg'; 
+import reportCover2018 from '../../assets/rectangle.jpg'; 
+import reportCover2017 from '../../assets/contoh1.jpg'; 
 
 const annualReportsData = [
   { 
