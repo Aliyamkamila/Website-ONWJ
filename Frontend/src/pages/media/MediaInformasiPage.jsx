@@ -6,28 +6,17 @@ import articleImage from '../../assets/rectangle.jpg';
 import logo from '../../assets/logo.webp';
 import { FaHome, FaYoutube, FaInstagram, FaSpinner, FaChevronLeft, FaChevronRight } from 'react-icons/fa'; 
 import instagramService from '../../services/instagramService';
+import { beritaApi } from '../../services/BeritaService';
 import toast from 'react-hot-toast';
 
-// Data berita artikel (dari website/internal)
-const beritaArtikel = [
-    { id: 1, slug: 'social-impact-assessment-and-community-involvement', category: 'Sosial', date: 'October 14, 2025', title: 'Komitmen Kami dalam Penilaian Dampak Sosial', description: 'Program penilaian dampak sosial untuk masyarakat sekitar.', image: articleImage },
-    { id: 2, slug: 'new-tree-planting-initiative-for-greener-future', category: 'Lingkungan', date: 'October 12, 2025', title: 'Inisiatif Penanaman Pohon untuk Masa Depan', description: 'Program penanaman pohon untuk lingkungan yang lebih hijau.', image: articleImage },
-    { id: 3, slug: 'artikel-ketiga-yang-baru', category: 'Energi', date: 'October 10, 2025', title: 'Pengembangan Energi Terbarukan di Wilayah Operasi', description: 'Inovasi dalam pengembangan energi terbarukan.', image: articleImage },
-    { id: 4, slug: 'teknologi-migas-terkini', category: 'Teknologi', date: 'October 8, 2025', title: 'Teknologi Migas Terkini untuk Efisiensi Produksi', description: 'Penerapan teknologi modern dalam industri migas.', image: articleImage },
-    { id: 5, slug: 'program-csr-pemberdayaan-masyarakat', category: 'Sosial', date: 'October 5, 2025', title: 'Program CSR: Pemberdayaan Masyarakat Pesisir', description: 'Memberdayakan masyarakat pesisir melalui program CSR.', image: articleImage },
-    { id: 6, slug: 'inovasi-pengeboran-lepas-pantai', category: 'Teknologi', date: 'October 3, 2025', title: 'Inovasi Pengeboran Lepas Pantai', description: 'Teknologi terbaru dalam pengeboran lepas pantai.', image: articleImage },
-    { id: 7, slug: 'konservasi-laut-dan-ekosistem', category: 'Lingkungan', date: 'September 30, 2025', title: 'Konservasi Laut dan Ekosistem Pesisir', description: 'Upaya pelestarian ekosistem laut dan pesisir.', image: articleImage },
-    { id: 8, slug: 'kemitraan-dengan-umkm-lokal', category: 'Sosial', date: 'September 28, 2025', title: 'Kemitraan dengan UMKM Lokal', description: 'Mendukung pertumbuhan UMKM di sekitar wilayah operasi.', image: articleImage },
-    { id: 9, slug: 'eksplorasi-energi-bersih', category: 'Energi', date: 'September 25, 2025', title: 'Eksplorasi Energi Bersih dan Berkelanjutan', description: 'Komitmen dalam pengembangan energi bersih.', image: articleImage },
-    { id: 10, slug: 'pelatihan-keterampilan-masyarakat', category: 'Sosial', date: 'September 22, 2025', title: 'Pelatihan Keterampilan untuk Masyarakat', description: 'Program pelatihan untuk meningkatkan keterampilan masyarakat.', image: articleImage },
-    { id: 11, slug: 'pengurangan-emisi-karbon', category: 'Lingkungan', date: 'September 20, 2025', title: 'Upaya Pengurangan Emisi Karbon', description: 'Strategi pengurangan emisi dalam operasi perusahaan.', image: articleImage },
-    { id: 12, slug: 'digital-transformation-oil-gas', category: 'Teknologi', date: 'September 18, 2025', title: 'Transformasi Digital di Industri Migas', description: 'Implementasi teknologi digital dalam operasi.', image: articleImage },
-];
-
+// ✅ Video Data (REAL - Bukan Dummy)
 const videoData = [
-    { id: 1, title: "Profil Perusahaan PT Migas Hulu Jabar ONWJ", embedUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ", description: "Mengenal lebih dekat visi, misi, dan operasi PT Migas Hulu Jabar." },
-    { id: 2, title: "Inovasi Teknologi Pengeboran Lepas Pantai", embedUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ", description: "Lihat bagaimana kami menerapkan teknologi terkini untuk memastikan keamanan dan efisiensi." },
-    { id: 3, title: "Program TJSL: Pemberdayaan Masyarakat Pesisir", embedUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ", description: "Kisah sukses program TJSL kami bersama para nelayan dan masyarakat pesisir." },
+    { 
+        id: 1, 
+        title: "Profil Perusahaan PT Migas Hulu Jabar ONWJ", 
+        embedUrl: "https://www.youtube.com/embed/SitSE5Al_sQ", 
+        description: "Mengenal lebih dekat visi, misi, dan operasi PT Migas Hulu Jabar ONWJ dalam pengelolaan minyak dan gas di wilayah Offshore North West Java." 
+    }
 ];
 
 const featuredVideo = videoData[0]; 
@@ -133,20 +122,34 @@ const ArtikelCard = ({ item }) => (
     <article className="group bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1 flex flex-col">
         <div className="h-48 overflow-hidden relative">
             <Link to={`/artikel/${item.slug}`}>
-                <img src={item.image} alt={item.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" loading="lazy" />
+                <img 
+                    src={item.full_image_url || articleImage} 
+                    alt={item.title} 
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" 
+                    loading="lazy" 
+                    onError={(e) => {
+                        e.target.src = articleImage;
+                    }}
+                />
             </Link>
         </div>
         <div className="p-5 flex flex-col flex-grow">
             <p className="text-sm mb-2">
                 <span className="font-semibold text-blue-600">{item.category}</span>
-                <time dateTime={item.date} className="text-gray-400 ml-3">{item.date}</time>
+                <time dateTime={item.published_at || item.created_at} className="text-gray-400 ml-3">
+                    {new Date(item.published_at || item.created_at).toLocaleDateString('id-ID', {
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric'
+                    })}
+                </time>
             </p>
             <h2 className="text-lg font-bold text-gray-800 mb-2 leading-tight flex-grow">
                 <Link to={`/artikel/${item.slug}`} className="hover:text-blue-600 transition-colors line-clamp-2">
                     {item.title}
                 </Link>
             </h2>
-            <p className="text-gray-600 text-sm mb-4 line-clamp-2 flex-grow">{item.description}</p>
+            <p className="text-gray-600 text-sm mb-4 line-clamp-2 flex-grow">{item.excerpt || item.content?.substring(0, 100) + '...'}</p>
             <Link to={`/artikel/${item.slug}`} className="font-semibold text-blue-600 flex items-center group self-start mt-auto text-sm">
                 Baca Selengkapnya <span className="ml-2 transform group-hover:translate-x-1 transition-transform">→</span>
             </Link>
@@ -215,13 +218,12 @@ const VideoCard = ({ item }) => (
     </div>
 );
 
-// ✅ PAGINATION COMPONENT - IMPROVED & PERFECT
+// ✅ PAGINATION COMPONENT
 const Pagination = ({ currentPage, totalPages, onPageChange }) => {
     if (totalPages <= 1) return null;
 
-    // Function untuk generate page numbers dengan ellipsis
     const getPageNumbers = () => {
-        const delta = 2; // Jumlah page di kiri & kanan current page
+        const delta = 2;
         const range = [];
         const rangeWithDots = [];
         let l;
@@ -251,7 +253,6 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
 
     return (
         <nav className="flex justify-center items-center gap-2 py-8" aria-label="Pagination">
-            {/* Previous Button */}
             <button
                 onClick={() => onPageChange(currentPage - 1)}
                 disabled={currentPage === 1}
@@ -265,7 +266,6 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
                 <FaChevronLeft className="w-4 h-4" />
             </button>
 
-            {/* Page Numbers */}
             {pageNumbers.map((pageNum, index) => {
                 if (pageNum === '...') {
                     return (
@@ -295,7 +295,6 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
                 );
             })}
 
-            {/* Next Button */}
             <button
                 onClick={() => onPageChange(currentPage + 1)}
                 disabled={currentPage === totalPages}
@@ -312,23 +311,24 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
     );
 };
 
-// Custom Hook untuk filter dan pagination
+// ✅ Custom Hook untuk filter dan pagination
 const useBeritaFilter = (articles) => {
     const [currentPage, setCurrentPage] = useState(1);
-    const [selectedCategory, setSelectedCategory] = useState('All');
+    const [selectedCategory, setSelectedCategory] = useState('Semua');
     const [searchTerm, setSearchTerm] = useState('');
     const itemsPerPage = 6;
 
-    const categories = ['All', ...new Set(articles.map(a => a.category))];
+    const categories = ['Semua', ...new Set(articles.map(a => a.category).filter(Boolean))];
 
     const filteredArticles = useMemo(() => {
         return articles
             .filter(article => 
-                selectedCategory === 'All' || article.category === selectedCategory
+                selectedCategory === 'Semua' || article.category === selectedCategory
             )
             .filter(article => 
                 article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                article.description.toLowerCase().includes(searchTerm.toLowerCase())
+                (article.excerpt && article.excerpt.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                (article.content && article.content.toLowerCase().includes(searchTerm.toLowerCase()))
             );
     }, [articles, selectedCategory, searchTerm]);
 
@@ -366,6 +366,10 @@ const MediaInformasiPage = () => {
     // State untuk Instagram Posts dari API
     const [instagramPosts, setInstagramPosts] = useState([]);
     const [instagramLoading, setInstagramLoading] = useState(true);
+    
+    // ✅ State untuk Berita dari API (BUKAN DUMMY!)
+    const [beritaArtikel, setBeritaArtikel] = useState([]);
+    const [beritaLoading, setBeritaLoading] = useState(true);
 
     const {
         paginatedArticles,
@@ -379,7 +383,28 @@ const MediaInformasiPage = () => {
         handleSearch
     } = useBeritaFilter(beritaArtikel);
 
-    // Fetch Instagram Posts dari API
+    // ✅ Fetch Berita dari API
+    useEffect(() => {
+        const fetchBerita = async () => {
+            try {
+                setBeritaLoading(true);
+                const response = await beritaApi.getPublishedBerita();
+                
+                if (response.success && response.data) {
+                    setBeritaArtikel(response.data);
+                }
+            } catch (error) {
+                console.error('Error fetching berita:', error);
+                toast.error('Gagal memuat berita');
+            } finally {
+                setBeritaLoading(false);
+            }
+        };
+
+        fetchBerita();
+    }, []);
+
+    // ✅ Fetch Instagram Posts dari API
     useEffect(() => {
         const fetchInstagramPosts = async () => {
             try {
@@ -387,7 +412,6 @@ const MediaInformasiPage = () => {
                 const response = await instagramService.getPublicPosts();
                 
                 if (response.success && response.data) {
-                    // Filter hanya yang show_in_media = true dan status = published
                     const publishedPosts = response.data.filter(
                         post => post.show_in_media && post.status === 'published'
                     );
@@ -395,7 +419,6 @@ const MediaInformasiPage = () => {
                 }
             } catch (error) {
                 console.error('Error fetching Instagram posts:', error);
-                // Tidak perlu toast error, biarkan section kosong saja
             } finally {
                 setInstagramLoading(false);
             }
@@ -411,7 +434,7 @@ const MediaInformasiPage = () => {
             <div className="container mx-auto px-8 lg:px-16 py-16 space-y-16">
                 <FeaturedVideo item={featuredVideo} />
                 
-                {/* Section 1: Berita & Artikel (dengan Filter & Pagination) */}
+                {/* Section 1: Berita & Artikel (dari API) */}
                 <section>
                     <div className="flex items-center justify-between mb-8">
                         <div>
@@ -420,35 +443,51 @@ const MediaInformasiPage = () => {
                         </div>
                     </div>
                     
-                    {/* Filter & Search */}
-                    <BeritaFilter 
-                        categories={categories}
-                        selected={selectedCategory}
-                        onSelect={handleSelectCategory}
-                        searchTerm={searchTerm}
-                        onSearch={handleSearch}
-                    />
-                    
-                    {/* Grid Berita Artikel */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
-                        {paginatedArticles.map((item) => (
-                            <ArtikelCard key={item.id} item={item} />
-                        ))}
-                    </div>
-                    
-                    {/* Empty State */}
-                    {paginatedArticles.length === 0 && (
-                        <p className="text-center text-gray-500 text-lg py-12">
-                            Tidak ada berita yang ditemukan.
-                        </p>
+                    {beritaLoading ? (
+                        <div className="flex justify-center items-center py-16">
+                            <FaSpinner className="w-12 h-12 text-blue-600 animate-spin" />
+                        </div>
+                    ) : (
+                        <>
+                            {/* Filter & Search */}
+                            <BeritaFilter 
+                                categories={categories}
+                                selected={selectedCategory}
+                                onSelect={handleSelectCategory}
+                                searchTerm={searchTerm}
+                                onSearch={handleSearch}
+                            />
+                            
+                            {/* Grid Berita Artikel */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
+                                {paginatedArticles.map((item) => (
+                                    <ArtikelCard key={item.id} item={item} />
+                                ))}
+                            </div>
+                            
+                            {/* Empty State */}
+                            {paginatedArticles.length === 0 && (
+                                <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
+                                    <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+                                    </svg>
+                                    <p className="text-gray-500 text-lg font-medium mb-2">
+                                        Tidak ada berita yang ditemukan
+                                    </p>
+                                    <p className="text-gray-400 text-sm">
+                                        Coba ubah filter atau kata kunci pencarian
+                                    </p>
+                                </div>
+                            )}
+                            
+                            {/* Pagination */}
+                            <Pagination 
+                                currentPage={currentPage}
+                                totalPages={totalPages}
+                                onPageChange={setCurrentPage}
+                            />
+                        </>
                     )}
-                    
-                    {/* Pagination */}
-                    <Pagination 
-                        currentPage={currentPage}
-                        totalPages={totalPages}
-                        onPageChange={setCurrentPage}
-                    />
                 </section>
 
                 {/* Section 2: Instagram Feed (Dari API Backend) */}
@@ -464,7 +503,7 @@ const MediaInformasiPage = () => {
                                     <p className="text-gray-600 mt-2">Ikuti kegiatan terbaru kami di media sosial</p>
                                 </div>
                                 <a 
-                                    href="https://instagram.com/yourcompany" 
+                                    href="https://instagram.com/mhjonwj" 
                                     target="_blank" 
                                     rel="noopener noreferrer"
                                     className="hidden md:flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-pink-600 to-purple-600 text-white font-semibold rounded-full hover:from-pink-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl"
@@ -504,7 +543,7 @@ const MediaInformasiPage = () => {
                             {!instagramLoading && instagramPosts.length > 0 && (
                                 <div className="mt-8 flex justify-center md:hidden">
                                     <a 
-                                        href="https://instagram.com/yourcompany" 
+                                        href="https://instagram.com/mujonwj" 
                                         target="_blank" 
                                         rel="noopener noreferrer"
                                         className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-pink-600 to-purple-600 text-white font-semibold rounded-full hover:from-pink-700 hover:to-purple-700 transition-all shadow-lg"
@@ -519,12 +558,14 @@ const MediaInformasiPage = () => {
                 ) : null}
 
                 {/* Section 3: Video Gallery */}
-                <section>
-                    <h2 className="text-3xl font-bold text-gray-900 mb-8">Galeri Video</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {galleryVideos.map((item) => <VideoCard key={item.id} item={item} />)}
-                    </div>
-                </section>
+                {galleryVideos.length > 0 && (
+                    <section>
+                        <h2 className="text-3xl font-bold text-gray-900 mb-8">Galeri Video</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                            {galleryVideos.map((item) => <VideoCard key={item.id} item={item} />)}
+                        </div>
+                    </section>
+                )}
             </div>
         </div>
     );

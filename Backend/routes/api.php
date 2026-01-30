@@ -24,6 +24,8 @@ use App\Http\Controllers\Api\GalleryController;
 use App\Http\Controllers\Api\GalleryCategoryController;
 use App\Http\Controllers\Api\ManagementController;
 use App\Http\Controllers\Api\InstagramPostController; 
+use App\Http\Controllers\LaporanController;
+
 // --------------------------------------------------------------------------   
 // ========================================================================
 // GUEST / PUBLIC GENERAL ROUTES
@@ -159,6 +161,12 @@ Route::prefix('v1')->group(function () {
                                          ->orderBy('posted_at', 'desc')
                                          ->get();
         return response()->json(['success' => true, 'data' => $posts]);
+    });
+
+    // ✅ LAPORAN PUBLIC ROUTES (MOVED HERE)
+    Route::prefix('laporan')->group(function () {
+        Route::get('/published', [LaporanController::class, 'getPublishedLaporan']);
+        Route::post('/{id}/view', [LaporanController::class, 'viewLaporan']);
     });
 
 });
@@ -318,7 +326,7 @@ Route::middleware(['auth:sanctum', 'admin_auth'])->prefix('admin')->group(functi
         Route::post('/bulk-delete', [ContactController::class, 'bulkDelete']);
     });
 
-    // --- INSTAGRAM POSTS MANAGEMENT ⭐ BARU ---
+    // --- INSTAGRAM POSTS MANAGEMENT BARU ---
     Route::prefix('instagram-posts')->group(function () {
         Route::get('/', [InstagramPostController::class, 'index']);
         Route::post('/', [InstagramPostController::class, 'store']);

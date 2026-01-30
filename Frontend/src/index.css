@@ -534,6 +534,96 @@
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms ! important;
+    transition-duration: 0.01ms !important;
   }
 }
+
+/* ============================================ */
+/* ✅ PDF VIEWER STYLES (NEW)
+/* Security & UX enhancements for PDF display
+/* ============================================ */
+
+/* Disable text selection in PDF */
+.react-pdf__Page__textContent {
+  display: none !important;
+}
+
+.react-pdf__Page__annotations {
+  display: none !important;
+}
+
+/* Disable right click & selection in PDF container */
+.react-pdf__Document {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* Prevent context menu on PDF pages */
+.react-pdf__Page {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* Hide print button in browser when printing PDF */
+@media print {
+  .react-pdf__Document {
+    display: none !important;
+  }
+  
+  body::before {
+    content: "Printing is disabled for security reasons";
+    display: block;
+    text-align: center;
+    padding: 2rem;
+    font-size: 1.5rem;
+    color: #ef4444;
+  }
+}
+
+/* PDF loading animation */
+.react-pdf__Page__canvas {
+  max-width: 100%;
+  height: auto !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* PDF viewer custom scrollbar */
+.pdf-viewer-container::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.pdf-viewer-container::-webkit-scrollbar-track {
+  background: rgba(107, 114, 128, 0.1);
+  border-radius: 4px;
+}
+
+.pdf-viewer-container::-webkit-scrollbar-thumb {
+  background: rgba(107, 114, 128, 0.3);
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+.pdf-viewer-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(107, 114, 128, 0.5);
+}
+
+/* Watermark overlay (optional - uncomment to use) */
+/*
+.pdf-watermark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-45deg);
+  font-size: 4rem;
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.05);
+  pointer-events: none;
+  z-index: 1000;
+  white-space: nowrap;
+}
+*/
