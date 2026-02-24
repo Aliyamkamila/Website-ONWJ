@@ -165,8 +165,8 @@ Route::prefix('v1')->group(function () {
 
     // ✅ LAPORAN PUBLIC ROUTES (MOVED HERE)
     Route::prefix('laporan')->group(function () {
-        Route::get('/published', [LaporanController::class, 'getPublishedLaporan']);
-        Route::post('/{id}/view', [LaporanController::class, 'viewLaporan']);
+        Route::get('/published', [\App\Http\Controllers\Api\LaporanController::class, 'getPublishedLaporan']);
+        Route::post('/{id}/view', [\App\Http\Controllers\Api\LaporanController::class, 'viewLaporan']);
     });
 
 });
@@ -335,10 +335,10 @@ Route::middleware(['auth:sanctum', 'admin_auth'])->prefix('admin')->group(functi
     });
 // --- LAPORAN MANAGEMENT (ADMIN) ---
     Route::prefix('laporan')->group(function () {
-        Route::get('/', [LaporanController::class, 'adminIndex']);
-        Route::post('/', [LaporanController::class, 'store']);
-        Route::put('/{id}', [LaporanController::class, 'update']);
-        Route::delete('/{id}', [LaporanController::class, 'destroy']);
-        Route::patch('/{id}/toggle-publish', [LaporanController::class, 'togglePublish']);
+        Route::get('/', [\App\Http\Controllers\Api\LaporanController::class, 'adminIndex']);
+        Route::post('/', [\App\Http\Controllers\Api\LaporanController::class, 'store']);
+        Route::put('/{id}', [\App\Http\Controllers\Api\LaporanController::class, 'update']);
+        Route::delete('/{id}', [\App\Http\Controllers\Api\LaporanController::class, 'destroy']);
+        Route::patch('/{id}/toggle-publish', [\App\Http\Controllers\Api\LaporanController::class, 'togglePublish']);
     });
 });
