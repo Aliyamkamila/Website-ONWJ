@@ -93,9 +93,10 @@ Route::prefix('v1')->group(function () {
 
     // --- BERITA (NEWS) ---
     Route::get('/berita', [BeritaController::class, 'index']);
+    Route::get('/', [BeritaController::class, 'index']); 
     Route::get('/berita/{slug}', [BeritaController::class, 'show']);
     Route::get('/berita-latest', [BeritaController::class, 'latest']);
-    Route::get('/berita-recent', [BeritaController::class, 'latest']); // Alias for latest
+    Route::get('/berita-recent', [BeritaController::class, 'latest']); 
     Route::get('/berita-categories', [BeritaController::class, 'categories']);
 
     // --- UMKM ---

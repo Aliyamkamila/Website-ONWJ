@@ -5,17 +5,37 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class Berita extends Model
 {
     use HasFactory, SoftDeletes;
 
-    private const FALLBACK_IMAGE = 'data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%22400%22%20height%3D%22300%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23e5e7eb%22/%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20dominant-baseline%3D%22middle%22%20text-anchor%3D%22middle%22%20fill%3D%22%236b7280%22%20font-family%3D%22Arial%2CHelvetica%2Csans-serif%22%20font-size%3D%2220%22%3ENo%20Image%3C/text%3E%3C/svg%3E';
-
     protected $table = 'berita';
 
+    /*
+    |--------------------------------------------------------------------------
+    | FALLBACK IMAGE
+    |--------------------------------------------------------------------------
+    */
+    private const FALLBACK_IMAGE =
+        'data:image/svg+xml;charset=UTF-8,
+        %3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300"%3E
+        %3Crect width="100%25" height="100%25" fill="%23e5e7eb"/%3E
+        %3Ctext x="50%25" y="50%25"
+        dominant-baseline="middle"
+        text-anchor="middle"
+        fill="%236b7280"
+        font-family="Arial"
+        font-size="20"%3ENo Image%3C/text%3E
+        %3C/svg%3E';
+
+    /*
+    |--------------------------------------------------------------------------
+    | MASS ASSIGNMENT
+    |--------------------------------------------------------------------------
+    */
     protected $fillable = [
         'title',
         'slug',
@@ -37,6 +57,11 @@ class Berita extends Model
         'display_order',
     ];
 
+    /*
+    |--------------------------------------------------------------------------
+    | CASTS
+    |--------------------------------------------------------------------------
+    */
     protected $casts = [
         'date' => 'date',
         'show_in_tjsl' => 'boolean',
@@ -45,31 +70,55 @@ class Berita extends Model
         'pin_to_homepage' => 'boolean',
         'views' => 'integer',
         'display_order' => 'integer',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+        'deleted_at' => 'datetime',
     ];
 
-    protected $appends = ['full_image_url', 'formatted_date'];
+    /*
+    |--------------------------------------------------------------------------
+    | APPENDED ATTRIBUTES
+    |--------------------------------------------------------------------------
+    */
+    protected $appends = [
+        'full_image_url',
+        'formatted_date',
+    ];
 
-    // ===== BOOT METHOD =====
+    /*
+    |--------------------------------------------------------------------------
+    | BOOT
+    |--------------------------------------------------------------------------
+    */
     protected static function boot()
     {
         parent::boot();
 
-        // Auto-generate slug
+        // Auto slug
         static::creating(function ($berita) {
             if (empty($berita->slug)) {
-                $berita->slug = static::generateUniqueSlug($berita->title);
+                $berita->slug =
+                    static::generateUniqueSlug($berita->title);
             }
         });
 
-        // Delete image when deleting
+        // Delete image when deleted
         static::deleting(function ($berita) {
-            if ($berita->image_path && Storage::disk('public')->exists($berita->image_path)) {
-                Storage::disk('public')->delete($berita->image_path);
+            if (
+                $berita->image_path &&
+                Storage::disk('public')->exists($berita->image_path)
+            ) {
+                Storage::disk('public')
+                    ->delete($berita->image_path);
             }
         });
     }
 
-    // ===== ACCESSORS =====
+    /*
+    |--------------------------------------------------------------------------
+    | ACCESSORS
+    |--------------------------------------------------------------------------
+    */
     public function getFullImageUrlAttribute()
     {
         if ($this->image_url) {
@@ -77,8 +126,7 @@ class Berita extends Model
         }
 
         if ($this->image_path) {
-            // Return the public URL; storage:link creates symlink from public/storage to storage/app/public
-            return asset('storage/' .$this->image_path);
+            return asset('storage/' . $this->image_path);
         }
 
         return self::FALLBACK_IMAGE;
@@ -86,10 +134,16 @@ class Berita extends Model
 
     public function getFormattedDateAttribute()
     {
-        return $this->date ? $this->date->format('d F Y') : null;
+        return $this->date
+            ? $this->date->format('d F Y')
+            : null;
     }
 
-    // ===== SCOPES =====
+    /*
+    |--------------------------------------------------------------------------
+    | SCOPES
+    |--------------------------------------------------------------------------
+    */
     public function scopePublished($query)
     {
         return $query->where('status', 'published');
@@ -133,20 +187,29 @@ class Berita extends Model
     public function scopeOrdered($query)
     {
         return $query->orderBy('display_order', 'desc')
-                     ->orderBy('date', 'desc')
-                     ->orderBy('created_at', 'desc');
+            ->orderBy('date', 'desc')
+            ->orderBy('created_at', 'desc');
     }
 
-    // ===== HELPER METHODS =====
+    /*
+    |--------------------------------------------------------------------------
+    | HELPERS
+    |--------------------------------------------------------------------------
+    */
     public static function generateUniqueSlug($title, $id = null)
     {
         $slug = Str::slug($title);
         $originalSlug = $slug;
         $count = 1;
 
-        while (static::where('slug', $slug)
-                    ->when($id, fn($q) => $q->where('id', '!=', $id))
-                    ->exists()) {
+        while (
+            static::where('slug', $slug)
+                ->when(
+                    $id,
+                    fn ($q) => $q->where('id', '!=', $id)
+                )
+                ->exists()
+        ) {
             $slug = $originalSlug . '-' . $count++;
         }
 
@@ -161,20 +224,24 @@ class Berita extends Model
     public static function getCategories()
     {
         return static::select('category')
-                     ->distinct()
-                     ->orderBy('category')
-                     ->pluck('category')
-                     ->toArray();
+            ->distinct()
+            ->orderBy('category')
+            ->pluck('category')
+            ->toArray();
     }
 
     public static function getStatistics()
     {
         return [
             'total' => static::count(),
-            'published' => static::where('status', 'published')->count(),
-            'tjsl' => static::where('show_in_tjsl', true)->count(),
-            'pinned' => static::where('pin_to_homepage', true)->count(),
-            'total_views' => static::sum('views'),
+            'published' =>
+                static::where('status', 'published')->count(),
+            'tjsl' =>
+                static::where('show_in_tjsl', true)->count(),
+            'pinned' =>
+                static::where('pin_to_homepage', true)->count(),
+            'total_views' =>
+                static::sum('views'),
         ];
     }
 }
