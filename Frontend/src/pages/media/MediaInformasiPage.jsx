@@ -3,8 +3,7 @@ import { Link, NavLink } from 'react-router-dom';
 import PageHero from '../../components/PageHero';
 import bannerImage from '../../assets/hero-bg.jpg'; 
 import articleImage from '../../assets/rectangle.jpg'; 
-import logo from '../../assets/logo.webp';
-import { FaHome, FaYoutube, FaInstagram, FaSpinner, FaChevronLeft, FaChevronRight } from 'react-icons/fa'; 
+import { FaInstagram, FaSpinner, FaChevronLeft, FaChevronRight } from 'react-icons/fa'; 
 import instagramService from '../../services/instagramService';
 import { beritaApi } from '../../services/BeritaService';
 import toast from 'react-hot-toast';
@@ -117,45 +116,66 @@ const BeritaFilter = ({ categories, selected, onSelect, onSearch, searchTerm }) 
     </div>
 );
 
-// Card untuk Berita Artikel
-const ArtikelCard = ({ item }) => (
-    <article className="group bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1 flex flex-col">
-        <div className="h-48 overflow-hidden relative">
-            <Link to={`/artikel/${item.slug}`}>
-                <img 
-                    src={item.full_image_url || articleImage} 
-                    alt={item.title} 
-                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" 
-                    loading="lazy" 
-                    onError={(e) => {
-                        e.target.src = articleImage;
-                    }}
-                />
-            </Link>
-        </div>
-        <div className="p-5 flex flex-col flex-grow">
-            <p className="text-sm mb-2">
-                <span className="font-semibold text-blue-600">{item.category}</span>
-                <time dateTime={item.published_at || item.created_at} className="text-gray-400 ml-3">
-                    {new Date(item.published_at || item.created_at).toLocaleDateString('id-ID', {
-                        day: 'numeric',
-                        month: 'long',
-                        year: 'numeric'
-                    })}
-                </time>
-            </p>
-            <h2 className="text-lg font-bold text-gray-800 mb-2 leading-tight flex-grow">
-                <Link to={`/artikel/${item.slug}`} className="hover:text-blue-600 transition-colors line-clamp-2">
-                    {item.title}
+// ✅ FIXED: Card untuk Berita Artikel
+const ArtikelCard = ({ item }) => {
+    // Format tanggal dengan fallback
+    const formatDate = (dateString) => {
+        if (!dateString) return 'Tanggal tidak tersedia';
+        try {
+            return new Date(dateString).toLocaleDateString('id-ID', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric'
+            });
+        } catch (error) {
+            return 'Tanggal tidak valid';
+        }
+    };
+
+    // Get excerpt dengan fallback
+    const getExcerpt = () => {
+        if (item.short_description) return item.short_description;
+        if (item.content) return item.content.substring(0, 150) + '...';
+        return 'Tidak ada deskripsi tersedia';
+    };
+
+    return (
+        <article className="group bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1 flex flex-col">
+            <div className="h-48 overflow-hidden relative">
+                <Link to={`/artikel/${item.slug}`}>
+                    <img 
+                        src={item.full_image_url || articleImage} 
+                        alt={item.title} 
+                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" 
+                        loading="lazy" 
+                        onError={(e) => {
+                            e.target.src = articleImage;
+                        }}
+                    />
                 </Link>
-            </h2>
-            <p className="text-gray-600 text-sm mb-4 line-clamp-2 flex-grow">{item.excerpt || item.content?.substring(0, 100) + '...'}</p>
-            <Link to={`/artikel/${item.slug}`} className="font-semibold text-blue-600 flex items-center group self-start mt-auto text-sm">
-                Baca Selengkapnya <span className="ml-2 transform group-hover:translate-x-1 transition-transform">→</span>
-            </Link>
-        </div>
-    </article>
-);
+            </div>
+            <div className="p-5 flex flex-col flex-grow">
+                <p className="text-sm mb-2">
+                    <span className="font-semibold text-blue-600">{item.category || 'Umum'}</span>
+                    <time dateTime={item.date} className="text-gray-400 ml-3">
+                        {formatDate(item.date)}
+                    </time>
+                </p>
+                <h2 className="text-lg font-bold text-gray-800 mb-2 leading-tight flex-grow">
+                    <Link to={`/artikel/${item.slug}`} className="hover:text-blue-600 transition-colors line-clamp-2">
+                        {item.title}
+                    </Link>
+                </h2>
+                <p className="text-gray-600 text-sm mb-4 line-clamp-2 flex-grow">
+                    {getExcerpt()}
+                </p>
+                <Link to={`/artikel/${item.slug}`} className="font-semibold text-blue-600 flex items-center group self-start mt-auto text-sm">
+                    Baca Selengkapnya <span className="ml-2 transform group-hover:translate-x-1 transition-transform">→</span>
+                </Link>
+            </div>
+        </article>
+    );
+};
 
 // Card untuk Instagram Post (dari API)
 const InstagramCard = ({ item }) => (
@@ -163,10 +183,13 @@ const InstagramCard = ({ item }) => (
         <div className="h-48 overflow-hidden relative">
             <a href={item.instagram_url} target="_blank" rel="noopener noreferrer">
                 <img 
-                    src={item.image_url || articleImage} 
-                    alt={item.caption} 
+                    src={item.image_url || item.thumbnail_url || articleImage} 
+                    alt={item.caption || 'Instagram Post'} 
                     className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" 
-                    loading="lazy" 
+                    loading="lazy"
+                    onError={(e) => {
+                        e.target.src = articleImage;
+                    }}
                 />
             </a>
             <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm p-2 rounded-full">
@@ -318,18 +341,25 @@ const useBeritaFilter = (articles) => {
     const [searchTerm, setSearchTerm] = useState('');
     const itemsPerPage = 6;
 
-    const categories = ['Semua', ...new Set(articles.map(a => a.category).filter(Boolean))];
+    const categories = useMemo(() => {
+        const uniqueCategories = [...new Set(articles.map(a => a.category).filter(Boolean))];
+        return ['Semua', ...uniqueCategories];
+    }, [articles]);
 
     const filteredArticles = useMemo(() => {
         return articles
             .filter(article => 
                 selectedCategory === 'Semua' || article.category === selectedCategory
             )
-            .filter(article => 
-                article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                (article.excerpt && article.excerpt.toLowerCase().includes(searchTerm.toLowerCase())) ||
-                (article.content && article.content.toLowerCase().includes(searchTerm.toLowerCase()))
-            );
+            .filter(article => {
+                const searchLower = searchTerm.toLowerCase();
+                return (
+                    article.title?.toLowerCase().includes(searchLower) ||
+                    article.short_description?.toLowerCase().includes(searchLower) ||
+                    article.content?.toLowerCase().includes(searchLower) ||
+                    article.category?.toLowerCase().includes(searchLower)
+                );
+            });
     }, [articles, selectedCategory, searchTerm]);
 
     const totalPages = Math.ceil(filteredArticles.length / itemsPerPage);
@@ -349,6 +379,11 @@ const useBeritaFilter = (articles) => {
         setCurrentPage(1); 
     };
 
+    // Reset to page 1 when filters change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [selectedCategory, searchTerm]);
+
     return {
         paginatedArticles,
         currentPage,
@@ -358,7 +393,8 @@ const useBeritaFilter = (articles) => {
         selectedCategory,
         handleSelectCategory,
         searchTerm,
-        handleSearch
+        handleSearch,
+        totalArticles: filteredArticles.length
     };
 };
 
@@ -367,7 +403,7 @@ const MediaInformasiPage = () => {
     const [instagramPosts, setInstagramPosts] = useState([]);
     const [instagramLoading, setInstagramLoading] = useState(true);
     
-    // ✅ State untuk Berita dari API (BUKAN DUMMY!)
+    // ✅ State untuk Berita dari API
     const [beritaArtikel, setBeritaArtikel] = useState([]);
     const [beritaLoading, setBeritaLoading] = useState(true);
 
@@ -380,22 +416,51 @@ const MediaInformasiPage = () => {
         selectedCategory,
         handleSelectCategory,
         searchTerm,
-        handleSearch
+        handleSearch,
+        totalArticles
     } = useBeritaFilter(beritaArtikel);
 
-    // ✅ Fetch Berita dari API
+    // ✅ FIXED: Fetch Berita dari API
     useEffect(() => {
         const fetchBerita = async () => {
             try {
                 setBeritaLoading(true);
-                const response = await beritaApi.getPublishedBerita();
+                console.log('🔄 Fetching berita...');
                 
-                if (response.success && response.data) {
-                    setBeritaArtikel(response.data);
+                const response = await beritaApi.getAll({
+                    per_page: 100,
+                    status: 'published'
+                });
+                console.log('📥 Berita API Response:', response);
+                
+                // ✅ Handle different response structures
+                let beritaData = [];
+                if (response.data?.success && response.data?.data) {
+                    beritaData = response.data.data;
+                } else if (response.success && response.data) {
+                    beritaData = response.data;
+                } else if (Array.isArray(response.data)) {
+                    beritaData = response.data;
+                } else if (Array.isArray(response)) {
+                    beritaData = response;
+                }
+
+                // ✅ Filter hanya berita yang show_in_media_informasi = true
+                const filteredBerita = beritaData.filter(item => 
+                    item.status === 'published' && item.show_in_media_informasi === true
+                );
+
+                console.log('✅ Berita loaded:', filteredBerita.length, 'items');
+                setBeritaArtikel(filteredBerita);
+                
+                if (filteredBerita.length === 0) {
+                    console.warn('⚠️ No berita found with show_in_media_informasi = true');
                 }
             } catch (error) {
-                console.error('Error fetching berita:', error);
+                console.error('❌ Error fetching berita:', error);
+                console.error('Error details:', error.response?.data);
                 toast.error('Gagal memuat berita');
+                setBeritaArtikel([]);
             } finally {
                 setBeritaLoading(false);
             }
@@ -409,16 +474,23 @@ const MediaInformasiPage = () => {
         const fetchInstagramPosts = async () => {
             try {
                 setInstagramLoading(true);
+                console.log('🔄 Fetching Instagram posts...');
+                
                 const response = await instagramService.getPublicPosts();
+                console.log('📥 Instagram API Response:', response);
                 
                 if (response.success && response.data) {
                     const publishedPosts = response.data.filter(
                         post => post.show_in_media && post.status === 'published'
                     );
+                    console.log('✅ Instagram posts loaded:', publishedPosts.length, 'items');
                     setInstagramPosts(publishedPosts);
+                } else {
+                    setInstagramPosts([]);
                 }
             } catch (error) {
-                console.error('Error fetching Instagram posts:', error);
+                console.error('❌ Error fetching Instagram posts:', error);
+                setInstagramPosts([]);
             } finally {
                 setInstagramLoading(false);
             }
@@ -439,13 +511,33 @@ const MediaInformasiPage = () => {
                     <div className="flex items-center justify-between mb-8">
                         <div>
                             <h2 className="text-3xl font-bold text-gray-900">Berita & Artikel</h2>
-                            <p className="text-gray-600 mt-2">Informasi terkini seputar kegiatan dan perkembangan perusahaan</p>
+                            <p className="text-gray-600 mt-2">
+                                Informasi terkini seputar kegiatan dan perkembangan perusahaan
+                                {!beritaLoading && beritaArtikel.length > 0 && (
+                                    <span className="ml-2 text-blue-600 font-semibold">
+                                        ({totalArticles} berita)
+                                    </span>
+                                )}
+                            </p>
                         </div>
                     </div>
                     
                     {beritaLoading ? (
-                        <div className="flex justify-center items-center py-16">
-                            <FaSpinner className="w-12 h-12 text-blue-600 animate-spin" />
+                        <div className="flex flex-col justify-center items-center py-16">
+                            <FaSpinner className="w-12 h-12 text-blue-600 animate-spin mb-4" />
+                            <p className="text-gray-500">Memuat berita...</p>
+                        </div>
+                    ) : beritaArtikel.length === 0 ? (
+                        <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
+                            <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+                            </svg>
+                            <p className="text-gray-500 text-lg font-medium mb-2">
+                                Belum ada berita tersedia
+                            </p>
+                            <p className="text-gray-400 text-sm">
+                                Berita akan ditampilkan di sini setelah dipublikasikan
+                            </p>
                         </div>
                     ) : (
                         <>
@@ -459,39 +551,49 @@ const MediaInformasiPage = () => {
                             />
                             
                             {/* Grid Berita Artikel */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
-                                {paginatedArticles.map((item) => (
-                                    <ArtikelCard key={item.id} item={item} />
-                                ))}
-                            </div>
-                            
-                            {/* Empty State */}
-                            {paginatedArticles.length === 0 && (
+                            {paginatedArticles.length > 0 ? (
+                                <>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
+                                        {paginatedArticles.map((item) => (
+                                            <ArtikelCard key={item.id} item={item} />
+                                        ))}
+                                    </div>
+                                    
+                                    {/* Pagination */}
+                                    <Pagination 
+                                        currentPage={currentPage}
+                                        totalPages={totalPages}
+                                        onPageChange={setCurrentPage}
+                                    />
+                                </>
+                            ) : (
                                 <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
                                     <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                     </svg>
                                     <p className="text-gray-500 text-lg font-medium mb-2">
                                         Tidak ada berita yang ditemukan
                                     </p>
-                                    <p className="text-gray-400 text-sm">
+                                    <p className="text-gray-400 text-sm mb-4">
                                         Coba ubah filter atau kata kunci pencarian
                                     </p>
+                                    <button
+                                        onClick={() => {
+                                            handleSelectCategory('Semua');
+                                            handleSearch({ target: { value: '' } });
+                                        }}
+                                        className="text-blue-600 hover:text-blue-700 font-semibold"
+                                    >
+                                        Reset Filter
+                                    </button>
                                 </div>
                             )}
-                            
-                            {/* Pagination */}
-                            <Pagination 
-                                currentPage={currentPage}
-                                totalPages={totalPages}
-                                onPageChange={setCurrentPage}
-                            />
                         </>
                     )}
                 </section>
 
                 {/* Section 2: Instagram Feed (Dari API Backend) */}
-                {instagramLoading || instagramPosts.length > 0 ? (
+                {(instagramLoading || instagramPosts.length > 0) && (
                     <section className="bg-gradient-to-br from-pink-50 to-purple-50 -mx-8 lg:-mx-16 px-8 lg:px-16 py-16">
                         <div className="container mx-auto">
                             <div className="flex items-center justify-between mb-8">
@@ -515,8 +617,9 @@ const MediaInformasiPage = () => {
                             
                             {/* Loading State */}
                             {instagramLoading && (
-                                <div className="flex justify-center items-center py-16">
-                                    <FaSpinner className="w-12 h-12 text-pink-600 animate-spin" />
+                                <div className="flex flex-col justify-center items-center py-16">
+                                    <FaSpinner className="w-12 h-12 text-pink-600 animate-spin mb-4" />
+                                    <p className="text-gray-500">Memuat Instagram posts...</p>
                                 </div>
                             )}
 
@@ -531,7 +634,7 @@ const MediaInformasiPage = () => {
 
                             {/* Empty State */}
                             {!instagramLoading && instagramPosts.length === 0 && (
-                                <div className="text-center py-12">
+                                <div className="text-center py-12 bg-white rounded-xl">
                                     <FaInstagram className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                                     <p className="text-gray-500 text-lg">
                                         Belum ada update dari Instagram
@@ -543,7 +646,7 @@ const MediaInformasiPage = () => {
                             {!instagramLoading && instagramPosts.length > 0 && (
                                 <div className="mt-8 flex justify-center md:hidden">
                                     <a 
-                                        href="https://instagram.com/mujonwj" 
+                                        href="https://instagram.com/mhjonwj" 
                                         target="_blank" 
                                         rel="noopener noreferrer"
                                         className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-pink-600 to-purple-600 text-white font-semibold rounded-full hover:from-pink-700 hover:to-purple-700 transition-all shadow-lg"
@@ -555,7 +658,7 @@ const MediaInformasiPage = () => {
                             )}
                         </div>
                     </section>
-                ) : null}
+                )}
 
                 {/* Section 3: Video Gallery */}
                 {galleryVideos.length > 0 && (

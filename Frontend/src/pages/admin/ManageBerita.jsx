@@ -304,70 +304,86 @@ const ManageBerita = () => {
     };
 
     // ===== SUBMIT FORM (CREATE/UPDATE) =====
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+// ===== SUBMIT FORM (CREATE/UPDATE) =====
+const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!formData.title || !formData.date || !formData.category || !formData.content) {
+        toast.error('Mohon lengkapi semua field yang wajib diisi!');
+        return;
+    }
+
+    if (!formData.image && !editingId && !formData.imagePreview) {
+        toast.error('Mohon upload foto berita!');
+        return;
+    }
+
+    try {
+        setSubmitting(true);
+
+        // Prepare FormData
+        const submitData = new FormData();
+        submitData.append('title', formData.title);
+        submitData.append('date', formData.date);
+        submitData.append('category', formData.category);
+        submitData.append('author', formData.author || '');
+        submitData.append('short_description', formData.shortDescription || '');
+        submitData.append('content', formData.content);
+        submitData.append('status', formData.status);
+        submitData.append('display_option', formData.displayOption || '');
+        submitData.append('auto_link', formData.autoLink || 'none');
         
-        if (!formData.title || !formData.date || !formData.category || !formData.content) {
-            toast.error('Mohon lengkapi semua field yang wajib diisi!');
-            return;
+        // ✅ FIX: Kirim boolean langsung (Laravel akan handle conversion)
+        submitData.append('show_in_tjsl', formData.showInTJSL);
+        submitData.append('show_in_media_informasi', formData.showInMediaInformasi);
+        submitData.append('show_in_dashboard', formData.showInDashboard);
+        submitData.append('pin_to_homepage', formData.pinToHomepage);
+
+        if (formData.image) {
+            submitData.append('image', formData.image);
+        }
+        
+        // Debug: Log data yang dikirim (hapus setelah testing)
+        console.log('📤 Sending data:');
+        for (let [key, value] of submitData.entries()) {
+            console.log(`${key}:`, value);
         }
 
-        if (!formData.image && !editingId && !formData.imagePreview) {
-            toast.error('Mohon upload foto berita!');
-            return;
+        let response;
+        if (editingId) {
+            response = await beritaAdminApi.update(editingId, submitData); 
+            toast.success('✅ Berita berhasil diupdate!');
+        } else {
+            response = await beritaAdminApi.create(submitData);
+            toast.success('✅ Berita berhasil ditambahkan!');
         }
-
-        try {
-            setSubmitting(true);
-
-            // Prepare FormData
-            const submitData = new FormData();
-            submitData.append('title', formData.title);
-            submitData.append('date', formData.date);
-            submitData.append('category', formData.category); // Kategori dikirim sebagai string
-            submitData.append('author', formData.author || '');
-            submitData.append('short_description', formData.shortDescription || '');
-            submitData.append('content', formData.content);
-            submitData.append('status', formData.status);
-            submitData.append('display_option', formData.displayOption || '');
-            submitData.append('auto_link', formData.autoLink || 'none');
-            submitData.append('show_in_tjsl', formData.showInTJSL ? '1' : '0');
-            submitData.append('show_in_media_informasi', formData.showInMediaInformasi ? '1' : '0');
-            submitData.append('show_in_dashboard', formData.showInDashboard ? '1' : '0');
-            submitData.append('pin_to_homepage', formData.pinToHomepage ? '1' : '0');
-
-            if (formData.image) {
-                submitData.append('image', formData.image);
-            }
-            
-            if (editingId) {
-                submitData.append('_method', 'POST'); 
-            }
-
-            let response;
-            if (editingId) {
-                response = await beritaAdminApi.update(editingId, submitData); 
-                toast.success('✅ Berita berhasil diupdate!');
-            } else {
-                response = await beritaAdminApi.create(submitData);
-                toast.success('✅ Berita berhasil ditambahkan!');
-            }
 
             // Refresh data
             await fetchBerita();
             await fetchStatistics();
 
-            setShowForm(false);
-            resetForm();
+        setShowForm(false);
+        resetForm();
 
-        } catch (error) {
-            console.error('Error submitting berita:', error);
-            const errorMsg = error.response?.data?.message || 'Gagal menyimpan berita';
+    } catch (error) {
+        console.error('❌ Error submitting berita:', error);
+        console.error('❌ Error response:', error.response?.data);
+        
+        const errorMsg = error.response?.data?.message || 'Gagal menyimpan berita';
+        const errors = error.response?.data?.errors;
+        
+        if (errors) {
+            // Show validation errors
+            Object.keys(errors).forEach(key => {
+                toast.error(`${key}: ${errors[key][0]}`);
+            });
+        } else {
             toast.error(`❌ ${errorMsg}`);
-        } finally {
-            setSubmitting(false);
         }
-    };
+    } finally {
+        setSubmitting(false);
+    }
+};
 
     // ===== EDIT =====
     const handleEdit = (id) => {

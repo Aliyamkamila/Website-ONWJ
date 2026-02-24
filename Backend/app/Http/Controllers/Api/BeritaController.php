@@ -4,26 +4,15 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Berita;
-use App\Jobs\ProcessImageOptimization;
-use App\Jobs\ClearCacheJob;
 use App\Services\ImageCompressionService;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Cache;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use App\Jobs\ProcessImageOptimization;
 
-/**
- * Berita (News) Controller dengan Cache & Async Processing
- * 
- * Features:
- * - Query caching untuk list dan detail
- * - Async image optimization via queue
- * - Async cache invalidation
- * - Pagination support
- * - Search functionality
- */
 class BeritaController extends Controller
 {
     protected ImageCompressionService $imageCompressionService;
@@ -36,7 +25,7 @@ class BeritaController extends Controller
     /**
      * Cache TTL untuk berita (15 minutes)
      */
-    protected int $cacheTTL = 900; // unused in public endpoints after simplification
+    protected int $cacheTTL = 900;
 
     /**
      * Cache tags untuk invalidation
@@ -45,9 +34,6 @@ class BeritaController extends Controller
 
     /**
      * Display a listing of published berita
-     * 
-     * @param Request $request
-     * @return JsonResponse
      */
     public function index(Request $request): JsonResponse
     {
@@ -112,9 +98,6 @@ class BeritaController extends Controller
 
     /**
      * Display the specified berita by slug
-     * 
-     * @param string $slug
-     * @return JsonResponse
      */
     public function show(string $slug): JsonResponse
     {
@@ -123,7 +106,7 @@ class BeritaController extends Controller
                 ->published()
                 ->first();
 
-            if (! $berita) {
+            if (!$berita) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Berita not found'
@@ -139,8 +122,9 @@ class BeritaController extends Controller
                 'category' => $berita->category,
                 'date' => $berita->date,
                 'formatted_date' => $berita->formatted_date,
-                'short_description' => $berita->short_description,
+                'author' => $berita->author,
                 'content' => $berita->content,
+                'short_description' => $berita->short_description,
                 'full_image_url' => $berita->full_image_url,
                 'views' => $berita->views,
             ];
@@ -166,17 +150,14 @@ class BeritaController extends Controller
     }
 
     /**
-     * Get latest berita (for homepage, widgets, etc.)
-     * 
-     * @param Request $request
-     * @return JsonResponse
+     * Get latest berita (public)
      */
     public function latest(Request $request): JsonResponse
     {
         try {
             $limit = (int) $request->input('limit', 5);
 
-            $latest = Berita::published()
+            $berita = Berita::published()
                 ->ordered()
                 ->limit($limit)
                 ->get()
@@ -185,6 +166,8 @@ class BeritaController extends Controller
                         'id' => $b->id,
                         'title' => $b->title,
                         'slug' => $b->slug,
+                        'category' => $b->category,
+                        'date' => $b->date,
                         'formatted_date' => $b->formatted_date,
                         'short_description' => $b->short_description,
                         'full_image_url' => $b->full_image_url,
@@ -194,7 +177,7 @@ class BeritaController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Latest berita retrieved successfully',
-                'data' => $latest
+                'data' => $berita
             ]);
 
         } catch (\Exception $e) {
@@ -211,21 +194,27 @@ class BeritaController extends Controller
     }
 
     /**
-     * Public: list distinct categories
+     * Get berita categories
      */
     public function categories(): JsonResponse
     {
         try {
-            $cats = Berita::getCategories();
+            $categories = Berita::published()
+                ->select('category')
+                ->distinct()
+                ->pluck('category');
+
             return response()->json([
                 'success' => true,
                 'message' => 'Categories retrieved successfully',
-                'data' => array_values(array_filter($cats))
+                'data' => $categories
             ]);
+
         } catch (\Exception $e) {
-            Log::error('Error fetching berita categories', [
-                'error' => $e->getMessage(),
+            Log::error('Error fetching categories', [
+                'error' => $e->getMessage()
             ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to retrieve categories',
@@ -235,123 +224,144 @@ class BeritaController extends Controller
     }
 
     /**
-     * Admin: list all berita (any publish status) without cache.
+     * Get featured berita for homepage
+     */
+    public function featured(): JsonResponse
+    {
+        try {
+            $berita = Berita::published()
+                ->where('pin_to_homepage', true)
+                ->ordered()
+                ->limit(3)
+                ->get()
+                ->map(function (Berita $b) {
+                    return [
+                        'id' => $b->id,
+                        'title' => $b->title,
+                        'slug' => $b->slug,
+                        'category' => $b->category,
+                        'date' => $b->date,
+                        'formatted_date' => $b->formatted_date,
+                        'short_description' => $b->short_description,
+                        'full_image_url' => $b->full_image_url,
+                    ];
+                });
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Featured berita retrieved successfully',
+                'data' => $berita
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error fetching featured berita', [
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve featured berita',
+                'error' => app()->environment('local') ? $e->getMessage() : null
+            ], 500);
+        }
+    }
+
+    /**
+     * ==================== ADMIN ROUTES ====================
+     */
+
+    /**
+     * Get all berita for admin (including draft)
      */
     public function adminIndex(Request $request): JsonResponse
     {
         try {
             $perPage = (int) $request->input('per_page', 15);
             $search = $request->input('search');
-            $status = $request->input('status'); // expect values like published/draft
             $category = $request->input('category');
-            $sortBy = $request->input('sort_by', 'created_at');
-            $sortOrder = strtolower($request->input('sort_order', 'desc')) === 'asc' ? 'asc' : 'desc';
+            $status = $request->input('status');
 
-            // Whitelist sortable columns to avoid SQL errors
-            $allowedSort = ['created_at', 'date', 'title', 'display_order', 'views'];
-            if (! in_array($sortBy, $allowedSort, true)) {
-                $sortBy = 'created_at';
-            }
-
-            $query = Berita::query()->orderBy($sortBy, $sortOrder);
+            $query = Berita::query();
 
             if ($search) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('title', 'LIKE', "%{$search}%")
-                        ->orWhere('author', 'LIKE', "%{$search}%")
-                        ->orWhere('content', 'LIKE', "%{$search}%")
-                        ->orWhere('short_description', 'LIKE', "%{$search}%");
-                });
-            }
-
-            if ($status !== null && $status !== '') {
-                // status column stores strings like published/draft
-                $query->where('status', $status);
+                $query->search($search);
             }
 
             if ($category) {
-                $query->where('category', $category);
+                $query->byCategory($category);
             }
 
-            $berita = $query->paginate($perPage);
+            if ($status) {
+                $query->where('status', $status);
+            }
+
+            $paginator = $query->ordered()->paginate($perPage);
 
             return response()->json([
                 'success' => true,
-                'message' => 'Berita (admin) retrieved successfully',
-                'data' => $berita->items(),
+                'message' => 'Berita retrieved successfully',
+                'data' => $paginator->items(),
                 'meta' => [
-                    'current_page' => $berita->currentPage(),
-                    'last_page' => $berita->lastPage(),
-                    'per_page' => $berita->perPage(),
-                    'total' => $berita->total(),
-                    'search' => $search,
-                    'status' => $status,
-                    'category' => $category,
-                    'sort_by' => $sortBy,
-                    'sort_order' => $sortOrder,
-                ],
+                    'current_page' => $paginator->currentPage(),
+                    'last_page' => $paginator->lastPage(),
+                    'per_page' => $paginator->perPage(),
+                    'total' => $paginator->total(),
+                ]
             ]);
+
         } catch (\Exception $e) {
             Log::error('Error fetching admin berita', [
-                'error' => $e->getMessage(),
-                'params' => $request->all(),
+                'error' => $e->getMessage()
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to retrieve berita (admin)',
-                'error' => app()->environment('local') ? $e->getMessage() : null,
+                'message' => 'Failed to retrieve berita',
+                'error' => app()->environment('local') ? $e->getMessage() : null
             ], 500);
         }
     }
 
     /**
-     * Admin: basic statistics for berita.
+     * Get berita statistics
      */
     public function statistics(): JsonResponse
     {
         try {
-            $total = Berita::count();
-            $published = Berita::where('status', 'published')->count();
-            $draft = Berita::where('status', 'draft')->count();
-            $pinned = Berita::where('pin_to_homepage', true)->count();
-            $tjsl = Berita::where('show_in_tjsl', true)->count();
+            $stats = [
+                'total' => Berita::count(),
+                'published' => Berita::where('status', 'published')->count(),
+                'draft' => Berita::where('status', 'draft')->count(),
+                'total_views' => Berita::sum('views'),
+            ];
 
             return response()->json([
                 'success' => true,
-                'message' => 'Berita statistics retrieved',
-                'data' => [
-                    'total' => $total,
-                    'published' => $published,
-                    'draft' => $draft,
-                    'pinned' => $pinned,
-                    'tjsl' => $tjsl,
-                ],
+                'message' => 'Statistics retrieved successfully',
+                'data' => $stats
             ]);
+
         } catch (\Exception $e) {
             Log::error('Error fetching berita statistics', [
-                'error' => $e->getMessage(),
+                'error' => $e->getMessage()
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to retrieve berita statistics',
-                'error' => app()->environment('local') ? $e->getMessage() : null,
+                'message' => 'Failed to retrieve statistics',
+                'error' => app()->environment('local') ? $e->getMessage() : null
             ], 500);
         }
     }
 
     /**
-     * Store a newly created berita (Admin only)
-     * 
-     * @param Request $request
-     * @return JsonResponse
+     * Store new berita (Admin)
      */
     public function store(Request $request): JsonResponse
     {
         try {
-            // Validation
-            $validated = $request->validate([
+            // ✅ RELAXED VALIDATION - image bisa file atau base64
+            $validator = Validator::make($request->all(), [
                 'title' => 'required|string|max:255',
                 'slug' => 'nullable|string|unique:berita,slug',
                 'category' => 'required|string|max:100',
@@ -359,15 +369,30 @@ class BeritaController extends Controller
                 'author' => 'nullable|string|max:100',
                 'short_description' => 'nullable|string|max:500',
                 'content' => 'required|string',
-                'image' => 'required|image|mimes:jpeg,jpg,png,webp|max:5120',
+                'image' => 'nullable', // ✅ Accept file or base64
                 'status' => 'nullable|in:published,draft',
                 'display_option' => 'nullable|string',
                 'auto_link' => 'nullable|string',
-                'show_in_tjsl' => 'nullable|boolean',
-                'show_in_media_informasi' => 'nullable|boolean',
-                'show_in_dashboard' => 'nullable|boolean',
-                'pin_to_homepage' => 'nullable|boolean',
+                'show_in_tjsl' => 'nullable',
+                'show_in_media_informasi' => 'nullable',
+                'show_in_dashboard' => 'nullable',
+                'pin_to_homepage' => 'nullable',
+            ], [
+                'title.required' => 'Judul berita wajib diisi',
+                'category.required' => 'Kategori wajib diisi',
+                'date.required' => 'Tanggal berita wajib diisi',
+                'content.required' => 'Konten berita wajib diisi',
             ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $validated = $validator->validated();
 
             // Auto-generate slug if not provided
             if (empty($validated['slug'])) {
@@ -376,48 +401,36 @@ class BeritaController extends Controller
                 // Ensure unique slug
                 $originalSlug = $validated['slug'];
                 $counter = 1;
-                while (Berita:: where('slug', $validated['slug'])->exists()) {
-                    $validated['slug'] = $originalSlug .'-' .$counter;
+                while (Berita::where('slug', $validated['slug'])->exists()) {
+                    $validated['slug'] = $originalSlug . '-' . $counter;
                     $counter++;
                 }
             }
 
-            // Handle image upload
-            if ($request->hasFile('image')) {
-                $imageFile = $request->file('image');
-                
-                // Compress image before storing
-                $imageFile = $this->imageCompressionService->compress($imageFile, maxWidth: 2000, quality: 80);
-                
-                $imagePath = $imageFile->store('berita', 'public');
-                $validated['image_path'] = $imagePath;
-
-                // ✅ Dispatch async image optimization (tidak blocking response)
-                ProcessImageOptimization::dispatch($imagePath, [
-                    'thumbnail' => [300, 200],
-                    'medium' => [800, 533],
-                    'large' => [1200, 800],
-                ]);
+            // ✅ Handle IMAGE UPLOAD (file atau base64)
+            if ($request->has('image') && !empty($request->image)) {
+                $imagePath = $this->handleImageUpload($request->image);
+                if ($imagePath) {
+                    $validated['image_path'] = $imagePath;
+                }
             }
 
             // Set defaults
             $validated['status'] = $validated['status'] ?? 'draft';
-            $validated['author'] = $validated['author'] ?? $request->user()->name ?? 'Admin';
+            $validated['author'] = $validated['author'] ?? ($request->user()->name ?? 'Admin');
             
-            // Convert string '1'/'0' to boolean for display flags
-            $validated['show_in_tjsl'] = filter_var($validated['show_in_tjsl'] ?? false, FILTER_VALIDATE_BOOLEAN);
-            $validated['show_in_media_informasi'] = filter_var($validated['show_in_media_informasi'] ?? true, FILTER_VALIDATE_BOOLEAN);
-            $validated['show_in_dashboard'] = filter_var($validated['show_in_dashboard'] ?? false, FILTER_VALIDATE_BOOLEAN);
-            $validated['pin_to_homepage'] = filter_var($validated['pin_to_homepage'] ?? false, FILTER_VALIDATE_BOOLEAN);
+            // Convert to boolean
+            $validated['show_in_tjsl'] = filter_var($request->input('show_in_tjsl', false), FILTER_VALIDATE_BOOLEAN);
+            $validated['show_in_media_informasi'] = filter_var($request->input('show_in_media_informasi', true), FILTER_VALIDATE_BOOLEAN);
+            $validated['show_in_dashboard'] = filter_var($request->input('show_in_dashboard', false), FILTER_VALIDATE_BOOLEAN);
+            $validated['pin_to_homepage'] = filter_var($request->input('pin_to_homepage', false), FILTER_VALIDATE_BOOLEAN);
 
             // Create berita
             $berita = Berita::create($validated);
 
-            // Tags are not used by the current model; skip to avoid relation errors
-
             return response()->json([
                 'success' => true,
-                'message' => 'Berita created successfully. Image optimization in progress.',
+                'message' => 'Berita created successfully',
                 'data' => $berita
             ], 201);
 
@@ -429,172 +442,150 @@ class BeritaController extends Controller
             ], 422);
 
         } catch (\Exception $e) {
-            Log:: error('Error creating berita', [
+            Log::error('Error creating berita', [
                 'error' => $e->getMessage(),
-                'data' => $request->except(['image'])
+                'trace' => $e->getTraceAsString()
             ]);
 
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to create berita',
-                'error' => app()->environment('local') ? $e->getMessage() : null
+                'error' => $e->getMessage()
             ], 500);
         }
     }
 
     /**
-     * Update the specified berita (Admin only)
-     * 
-     * @param Request $request
-     * @param int $id
-     * @return JsonResponse
+     * Update berita (Admin)
      */
     public function update(Request $request, int $id): JsonResponse
     {
         try {
-            $berita = Berita::findOrFail($id);
+            $berita = Berita::find($id);
+
+            if (!$berita) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Berita not found'
+                ], 404);
+            }
 
             // Validation
-            $validated = $request->validate([
-                'title' => 'sometimes|string|max:255',
-                'slug' => 'sometimes|string|unique:berita,slug,' .$id,
-                'category' => 'sometimes|string|max:100',
-                'date' => 'sometimes|date',
+            $validator = Validator::make($request->all(), [
+                'title' => 'required|string|max:255',
+                'slug' => 'nullable|string|unique:berita,slug,' . $id,
+                'category' => 'required|string|max:100',
+                'date' => 'required|date',
                 'author' => 'nullable|string|max:100',
                 'short_description' => 'nullable|string|max:500',
-                'content' => 'sometimes|string',
-                'image' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:5120',
-                'status' => 'sometimes|in:published,draft',
+                'content' => 'required|string',
+                'image' => 'nullable',
+                'status' => 'nullable|in:published,draft',
                 'display_option' => 'nullable|string',
                 'auto_link' => 'nullable|string',
-                'show_in_tjsl' => 'nullable|boolean',
-                'show_in_media_informasi' => 'nullable|boolean',
-                'show_in_dashboard' => 'nullable|boolean',
-                'pin_to_homepage' => 'nullable|boolean',
+                'show_in_tjsl' => 'nullable',
+                'show_in_media_informasi' => 'nullable',
+                'show_in_dashboard' => 'nullable',
+                'pin_to_homepage' => 'nullable',
             ]);
 
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $validated = $validator->validated();
+
+            // Auto-generate slug if changed
+            if (isset($validated['slug']) && empty($validated['slug'])) {
+                $validated['slug'] = Str::slug($validated['title']);
+                
+                $originalSlug = $validated['slug'];
+                $counter = 1;
+                while (Berita::where('slug', $validated['slug'])->where('id', '!=', $id)->exists()) {
+                    $validated['slug'] = $originalSlug . '-' . $counter;
+                    $counter++;
+                }
+            }
+
             // Handle image upload
-            if ($request->hasFile('image')) {
-                // Delete old image and optimized versions
-                if ($berita->image_path) {
+            if ($request->has('image') && !empty($request->image)) {
+                // Delete old image
+                if ($berita->image_path && Storage::disk('public')->exists($berita->image_path)) {
                     Storage::disk('public')->delete($berita->image_path);
-                    
-                    $pathInfo = pathinfo($berita->image_path);
-                    $directory = $pathInfo['dirname'];
-                    $filename = $pathInfo['filename'];
-                    
-                    foreach (['thumbnail', 'medium', 'large'] as $size) {
-                        $optimizedPath = $directory .'/' .$filename .'_' .$size .'.' .$pathInfo['extension'];
-                        Storage::disk('public')->delete($optimizedPath);
-                    }
                 }
 
-                // Compress image before storing
-                $imageFile = $request->file('image');
-                $imageFile = $this->imageCompressionService->compress($imageFile, maxWidth: 2000, quality: 80);
-                
-                // Upload new image
-                $imagePath = $imageFile->store('berita', 'public');
-                $validated['image_path'] = $imagePath;
-
-                // ✅ Dispatch async image optimization
-                ProcessImageOptimization::dispatch($imagePath, [
-                    'thumbnail' => [300, 200],
-                    'medium' => [800, 533],
-                    'large' => [1200, 800],
-                ]);
-            }
-            
-            // Convert string '1'/'0' to boolean for display flags if present
-            if (isset($validated['show_in_tjsl'])) {
-                $validated['show_in_tjsl'] = filter_var($validated['show_in_tjsl'], FILTER_VALIDATE_BOOLEAN);
-            }
-            if (isset($validated['show_in_media_informasi'])) {
-                $validated['show_in_media_informasi'] = filter_var($validated['show_in_media_informasi'], FILTER_VALIDATE_BOOLEAN);
-            }
-            if (isset($validated['show_in_dashboard'])) {
-                $validated['show_in_dashboard'] = filter_var($validated['show_in_dashboard'], FILTER_VALIDATE_BOOLEAN);
-            }
-            if (isset($validated['pin_to_homepage'])) {
-                $validated['pin_to_homepage'] = filter_var($validated['pin_to_homepage'], FILTER_VALIDATE_BOOLEAN);
+                $imagePath = $this->handleImageUpload($request->image);
+                if ($imagePath) {
+                    $validated['image_path'] = $imagePath;
+                }
             }
 
-            // Update berita
+            // Convert to boolean
+            if ($request->has('show_in_tjsl')) {
+                $validated['show_in_tjsl'] = filter_var($request->input('show_in_tjsl'), FILTER_VALIDATE_BOOLEAN);
+            }
+            if ($request->has('show_in_media_informasi')) {
+                $validated['show_in_media_informasi'] = filter_var($request->input('show_in_media_informasi'), FILTER_VALIDATE_BOOLEAN);
+            }
+            if ($request->has('show_in_dashboard')) {
+                $validated['show_in_dashboard'] = filter_var($request->input('show_in_dashboard'), FILTER_VALIDATE_BOOLEAN);
+            }
+            if ($request->has('pin_to_homepage')) {
+                $validated['pin_to_homepage'] = filter_var($request->input('pin_to_homepage'), FILTER_VALIDATE_BOOLEAN);
+            }
+
             $berita->update($validated);
-
-            // Tags are not used by the current model; skip to avoid relation errors
 
             return response()->json([
                 'success' => true,
                 'message' => 'Berita updated successfully',
                 'data' => $berita->fresh()
-            ]);
-
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Berita not found'
-            ], 404);
-
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed',
-                'errors' => $e->errors()
-            ], 422);
+            ], 200);
 
         } catch (\Exception $e) {
-            Log:: error('Error updating berita', [
-                'id' => $id,
-                'error' => $e->getMessage()
+            Log::error('Error updating berita', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
 
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to update berita',
-                'error' => app()->environment('local') ? $e->getMessage() : null
+                'error' => $e->getMessage()
             ], 500);
         }
     }
 
     /**
-     * Remove the specified berita (Admin only)
-     * 
-     * @param int $id
-     * @return JsonResponse
+     * Delete berita (Admin)
      */
     public function destroy(int $id): JsonResponse
     {
         try {
-            $berita = Berita::findOrFail($id);
+            $berita = Berita::find($id);
 
-            // Delete image and optimized versions
-            if ($berita->image_path) {
-                Storage::disk('public')->delete($berita->image_path);
-                
-                $pathInfo = pathinfo($berita->image_path);
-                $directory = $pathInfo['dirname'];
-                $filename = $pathInfo['filename'];
-                
-                foreach (['thumbnail', 'medium', 'large'] as $size) {
-                    $optimizedPath = $directory .'/' .$filename .'_' .$size .'.' .$pathInfo['extension'];
-                    Storage::disk('public')->delete($optimizedPath);
-                }
+            if (!$berita) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Berita not found'
+                ], 404);
             }
 
-            // Delete berita
+            // Delete image file
+            if ($berita->image_path && Storage::disk('public')->exists($berita->image_path)) {
+                Storage::disk('public')->delete($berita->image_path);
+            }
+
             $berita->delete();
 
             return response()->json([
                 'success' => true,
                 'message' => 'Berita deleted successfully'
             ]);
-
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Berita not found'
-            ], 404);
 
         } catch (\Exception $e) {
             Log::error('Error deleting berita', [
@@ -611,33 +602,28 @@ class BeritaController extends Controller
     }
 
     /**
-     * Toggle publish status (Admin only)
-     * 
-     * @param int $id
-     * @return JsonResponse
+     * Toggle publish status (Admin)
      */
     public function togglePublish(int $id): JsonResponse
     {
         try {
-            $berita = Berita::findOrFail($id);
+            $berita = Berita::find($id);
 
-            $newStatus = ! $berita->is_published;
-            $berita->update(['is_published' => $newStatus]);
+            if (!$berita) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Berita not found'
+                ], 404);
+            }
+
+            $newStatus = $berita->status === 'published' ? 'draft' : 'published';
+            $berita->update(['status' => $newStatus]);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Berita status updated successfully',
-                'data' => [
-                    'id' => $id,
-                    'is_published' => $newStatus
-                ]
+                'data' => $berita->fresh()
             ]);
-
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Berita not found'
-            ], 404);
 
         } catch (\Exception $e) {
             Log::error('Error toggling berita status', [
@@ -647,9 +633,62 @@ class BeritaController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to update berita status',
+                'message' => 'Failed to update status',
                 'error' => app()->environment('local') ? $e->getMessage() : null
             ], 500);
+        }
+    }
+
+    /**
+     * ==================== HELPER FUNCTIONS ====================
+     */
+
+    /**
+     * Handle image upload (support File dan Base64)
+     */
+    private function handleImageUpload($image)
+    {
+        try {
+            // Check if it's a file upload
+            if ($image instanceof \Illuminate\Http\UploadedFile) {
+                // Regular file upload
+                if ($image->isValid()) {
+                    $filename = time() . '_' . Str::random(10) . '.' . $image->getClientOriginalExtension();
+                    $path = $image->storeAs('berita', $filename, 'public');
+                    return $path;
+                }
+            }
+            
+            // Check if it's base64
+            if (is_string($image) && str_starts_with($image, 'data:image')) {
+                // Base64 image
+                preg_match('/data:image\/(\w+);base64,/', $image, $matches);
+                $extension = $matches[1] ?? 'png';
+                
+                // Decode base64
+                $imageData = substr($image, strpos($image, ',') + 1);
+                $imageData = base64_decode($imageData);
+                
+                // Generate filename
+                $filename = time() . '_' . Str::random(10) . '.' . $extension;
+                $path = 'berita/' . $filename;
+                
+                // Save to storage
+                Storage::disk('public')->put($path, $imageData);
+                
+                return $path;
+            }
+
+            // If it's already a path string (update scenario)
+            if (is_string($image) && !str_contains($image, 'data:image')) {
+                return $image;
+            }
+
+            return null;
+
+        } catch (\Exception $e) {
+            Log::error('Error handling image upload: ' . $e->getMessage());
+            return null;
         }
     }
 }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import managementService from '../../services/managementService';
-import Cosmas from '../../assets/Manajemen/Cosmas.jpeg';
+import Cosmas from '../../assets/Manajemen/cosmas.jpg';
 
 const Komisaris = () => {
   const [commissioners, setCommissioners] = useState([]);

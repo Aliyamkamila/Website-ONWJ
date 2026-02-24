@@ -333,5 +333,12 @@ Route::middleware(['auth:sanctum', 'admin_auth'])->prefix('admin')->group(functi
         Route::put('/{id}', [InstagramPostController::class, 'update']);
         Route::delete('/{id}', [InstagramPostController::class, 'destroy']);
     });
-
+// --- LAPORAN MANAGEMENT (ADMIN) ---
+    Route::prefix('laporan')->group(function () {
+        Route::get('/', [LaporanController::class, 'adminIndex']);
+        Route::post('/', [LaporanController::class, 'store']);
+        Route::put('/{id}', [LaporanController::class, 'update']);
+        Route::delete('/{id}', [LaporanController::class, 'destroy']);
+        Route::patch('/{id}/toggle-publish', [LaporanController::class, 'togglePublish']);
+    });
 });

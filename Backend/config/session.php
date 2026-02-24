@@ -10,7 +10,7 @@ return [
     |--------------------------------------------------------------------------
     */
 
-    'driver' => env('SESSION_DRIVER', 'redis'),
+    'driver' => env('SESSION_DRIVER', 'file'),
 
     /*
     |--------------------------------------------------------------------------
@@ -60,7 +60,7 @@ return [
     |--------------------------------------------------------------------------
     */
 
-    'store' => env('SESSION_STORE', 'redis'),
+    'store' => env('SESSION_STORE', 'null'),
 
     /*
     |--------------------------------------------------------------------------
@@ -85,7 +85,7 @@ return [
 
     'domain' => env('SESSION_DOMAIN'),
 
-    'secure' => env('SESSION_SECURE_COOKIE', false),
+    'secure' => env('SESSION_SECURE_COOKIE', true),
 
     'http_only' => env('SESSION_HTTP_ONLY', true),
 
