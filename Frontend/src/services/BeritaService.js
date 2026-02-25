@@ -105,7 +105,7 @@ export const beritaApi = {
      * @param {string} slug - Berita slug
      * @returns {Promise}
      */
-    getBySlug:  (slug) => {
+    getBySlug: (slug) => {
         return apiClient.get(`/v1/berita/${slug}`);
     },
 
@@ -114,7 +114,7 @@ export const beritaApi = {
      * @returns {Promise}
      */
     getCategories: () => {
-        return apiClient.get('/v1/berita-categories');
+        return apiClient.get('/v1/berita/categories'); // ✅ FIXED
     },
 
     /**
@@ -123,7 +123,7 @@ export const beritaApi = {
      * @returns {Promise}
      */
     getRecent: (limit = 5) => {
-        return apiClient. get('/v1/berita-recent', { params: { limit } });
+        return apiClient.get('/v1/berita/latest', { params: { limit } }); // ✅ FIXED
     },
 
     /**
@@ -132,7 +132,7 @@ export const beritaApi = {
      * @returns {Promise}
      */
     forMediaInformasi: (params = {}) => {
-        return apiClient.get('/v1/berita/media-informasi', { params });
+        return apiClient.get('/v1/berita', { params }); // ✅ FIXED (pakai endpoint yang sama)
     },
 
     /**
@@ -140,7 +140,29 @@ export const beritaApi = {
      * @returns {Promise}
      */
     forHomepage: () => {
-        return apiClient.get('/v1/berita/homepage');
+        return apiClient.get('/v1/berita/homepage'); // ✅ BENER
+    },
+
+    /**
+     * Get featured berita
+     * @returns {Promise}
+     */
+    getFeatured: () => {
+        return apiClient.get('/v1/berita/featured'); // ✅ BARU
+    },
+
+    /**
+     * Get published berita (alias for getAll with published filter)
+     * @param {Object} params - Query parameters
+     * @returns {Promise}
+     */
+    getPublishedBerita: (params = {}) => {
+        return apiClient.get('/v1/berita', { 
+            params: {
+                ...params,
+                per_page: params.per_page || 100,
+            }
+        });
     },
 };
 

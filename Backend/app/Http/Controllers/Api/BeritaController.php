@@ -227,49 +227,52 @@ public function index(Request $request): JsonResponse
             ], 500);
         }
     }
+public function forHomepage(): JsonResponse
+{
+    try {
+        $berita = Berita::published()
+            ->where('pin_to_homepage', true)
+            ->ordered()
+            ->limit(5)
+            ->get()
+            ->map(function (Berita $b) {
+                return [
+                    'id' => $b->id,
+                    'title' => $b->title,
+                    'slug' => $b->slug,
+                    'category' => $b->category,
+                    'date' => $b->date,
+                    'formatted_date' => $b->formatted_date,
+                    'short_description' => $b->short_description,
+                    'content' => $b->content,
+                    'full_image_url' => $b->full_image_url,
+                    'views' => $b->views,
+                    'status' => $b->status,
+                    'show_in_tjsl' => $b->show_in_tjsl,
+                    'show_in_media_informasi' => $b->show_in_media_informasi,
+                    'show_in_dashboard' => $b->show_in_dashboard,
+                    'pin_to_homepage' => $b->pin_to_homepage,
+                ];
+            });
 
-    /**
-     * Get featured berita for homepage
-     */
-    public function featured(): JsonResponse
-    {
-        try {
-            $berita = Berita::published()
-                ->where('pin_to_homepage', true)
-                ->ordered()
-                ->limit(3)
-                ->get()
-                ->map(function (Berita $b) {
-                    return [
-                        'id' => $b->id,
-                        'title' => $b->title,
-                        'slug' => $b->slug,
-                        'category' => $b->category,
-                        'date' => $b->date,
-                        'formatted_date' => $b->formatted_date,
-                        'short_description' => $b->short_description,
-                        'full_image_url' => $b->full_image_url,
-                    ];
-                });
+        return response()->json([
+            'success' => true,
+            'message' => 'Homepage berita retrieved successfully',
+            'data' => $berita
+        ]);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Featured berita retrieved successfully',
-                'data' => $berita
-            ]);
+    } catch (\Exception $e) {
+        Log::error('Error fetching homepage berita', [
+            'error' => $e->getMessage()
+        ]);
 
-        } catch (\Exception $e) {
-            Log::error('Error fetching featured berita', [
-                'error' => $e->getMessage()
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to retrieve featured berita',
-                'error' => app()->environment('local') ? $e->getMessage() : null
-            ], 500);
-        }
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to retrieve homepage berita',
+            'error' => app()->environment('local') ? $e->getMessage() : null
+        ], 500);
     }
+}
 
     /**
      * ==================== ADMIN ROUTES ====================

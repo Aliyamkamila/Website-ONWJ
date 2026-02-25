@@ -91,14 +91,6 @@ Route::prefix('v1')->group(function () {
     Route::get('/programs/category/{categoryId}', [ProgramController::class, 'byCategory']);
     Route::get('/programs-statistics', [ProgramController::class, 'statistics']);
 
-    // --- BERITA (NEWS) ---
-    Route::get('/berita', [BeritaController::class, 'index']);
-    Route::get('/', [BeritaController::class, 'index']); 
-    Route::get('/berita/{slug}', [BeritaController::class, 'show']);
-    Route::get('/berita-latest', [BeritaController::class, 'latest']);
-    Route::get('/berita-recent', [BeritaController::class, 'latest']); 
-    Route::get('/berita-categories', [BeritaController::class, 'categories']);
-
     // --- UMKM ---
     Route::get('/umkm', [UmkmController::class, 'index']);
     Route::get('/umkm/{id}', [UmkmController::class, 'show']);
@@ -342,4 +334,18 @@ Route::middleware(['auth:sanctum', 'admin_auth'])->prefix('admin')->group(functi
         Route::delete('/{id}', [\App\Http\Controllers\Api\LaporanController::class, 'destroy']);
         Route::patch('/{id}/toggle-publish', [\App\Http\Controllers\Api\LaporanController::class, 'togglePublish']);
     });
+});
+// ========================================================================
+// PUBLIC ROUTES (CACHED)
+// ========================================================================
+
+Route::prefix('v1')->group(function () {
+    Route::prefix('berita')->group(function () {
+        Route::get('/', [BeritaController::class, 'index']);
+        Route::get('/latest', [BeritaController::class, 'latest']);
+        Route::get('/categories', [BeritaController::class, 'categories']);
+        Route::get('/featured', [BeritaController::class, 'featured']);
+        Route::get('/homepage', [BeritaController::class, 'forHomepage']);
+        Route::get('/{slug}', [BeritaController::class, 'show']);
+    }); 
 });
