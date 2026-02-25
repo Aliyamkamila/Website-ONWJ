@@ -420,54 +420,66 @@ const MediaInformasiPage = () => {
         totalArticles
     } = useBeritaFilter(beritaArtikel);
 
-    // ✅ FIXED: Fetch Berita dari API
-    useEffect(() => {
-        const fetchBerita = async () => {
-            try {
-                setBeritaLoading(true);
-                console.log('🔄 Fetching berita...');
-                
-                const response = await beritaApi.getAll({
-                    per_page: 100,
-                    status: 'published'
-                });
-                console.log('📥 Berita API Response:', response);
-                
-                // ✅ Handle different response structures
-                let beritaData = [];
-                if (response.data?.success && response.data?.data) {
-                    beritaData = response.data.data;
-                } else if (response.success && response.data) {
-                    beritaData = response.data;
-                } else if (Array.isArray(response.data)) {
-                    beritaData = response.data;
-                } else if (Array.isArray(response)) {
-                    beritaData = response;
-                }
-
-                // ✅ Filter hanya berita yang show_in_media_informasi = true
-                const filteredBerita = beritaData.filter(item => 
-                    item.status === 'published' && item.show_in_media_informasi === true
-                );
-
-                console.log('✅ Berita loaded:', filteredBerita.length, 'items');
-                setBeritaArtikel(filteredBerita);
-                
-                if (filteredBerita.length === 0) {
-                    console.warn('⚠️ No berita found with show_in_media_informasi = true');
-                }
-            } catch (error) {
-                console.error('❌ Error fetching berita:', error);
-                console.error('Error details:', error.response?.data);
-                toast.error('Gagal memuat berita');
-                setBeritaArtikel([]);
-            } finally {
-                setBeritaLoading(false);
+// ✅ FIXED: Fetch Berita dari API
+useEffect(() => {
+    const fetchBerita = async () => {
+        try {
+            setBeritaLoading(true);
+            console.log('🔄 Fetching berita...');
+            
+            const response = await beritaApi.getAll({
+                per_page: 100,
+                status: 'published'
+            });
+            console.log('📥 Berita API Response:', response);
+            
+            // ✅ Handle different response structures
+            let beritaData = [];
+            if (response.data?.success && response.data?.data) {
+                beritaData = response.data.data;
+            } else if (response.success && response.data) {
+                beritaData = response.data;
+            } else if (Array.isArray(response.data)) {
+                beritaData = response.data;
+            } else if (Array.isArray(response)) {
+                beritaData = response;
             }
-        };
 
-        fetchBerita();
-    }, []);
+            // ✅ FIXED: Filter yang lebih flexible
+            const filteredBerita = beritaData.filter(item => {
+                const isPublished = item.status === 'published';
+                
+                // Accept 1, true, "1" sebagai true
+                const showInMedia = item.show_in_media_informasi === 1 || 
+                                   item.show_in_media_informasi === true || 
+                                   item.show_in_media_informasi === '1';
+                
+                console.log(`📰 "${item.title}": published=${isPublished}, showInMedia=${showInMedia}, value=${item.show_in_media_informasi}`);
+                
+                return isPublished && showInMedia;
+            });
+
+            console.log('✅ Berita loaded:', filteredBerita.length, 'items');
+            console.log('📋 Filtered berita IDs:', filteredBerita.map(b => b.id));
+            
+            setBeritaArtikel(filteredBerita);
+            
+            if (filteredBerita.length === 0) {
+                console.warn('⚠️ No berita found with show_in_media_informasi = true');
+                console.warn('⚠️ Total berita from API:', beritaData.length);
+            }
+        } catch (error) {
+            console.error('❌ Error fetching berita:', error);
+            console.error('Error details:', error.response?.data);
+            toast.error('Gagal memuat berita');
+            setBeritaArtikel([]);
+        } finally {
+            setBeritaLoading(false);
+        }
+    };
+
+    fetchBerita();
+}, []);
 
     // ✅ Fetch Instagram Posts dari API
     useEffect(() => {

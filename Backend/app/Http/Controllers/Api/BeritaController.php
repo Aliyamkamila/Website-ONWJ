@@ -35,66 +35,71 @@ class BeritaController extends Controller
     /**
      * Display a listing of published berita
      */
-    public function index(Request $request): JsonResponse
-    {
-        try {
-            $perPage = (int) $request->input('per_page', 12);
-            $search = $request->input('search');
-            $category = $request->input('category');
+public function index(Request $request): JsonResponse
+{
+    try {
+        $perPage = (int) $request->input('per_page', 12);
+        $search = $request->input('search');
+        $category = $request->input('category');
 
-            $query = Berita::published()->ordered();
+        $query = Berita::published()->ordered();
 
-            if ($search) {
-                $query->search($search);
-            }
-
-            if ($category) {
-                $query->byCategory($category);
-            }
-
-            $paginator = $query->paginate($perPage);
-
-            $items = collect($paginator->items())->map(function (Berita $b) {
-                return [
-                    'id' => $b->id,
-                    'title' => $b->title,
-                    'slug' => $b->slug,
-                    'category' => $b->category,
-                    'date' => $b->date,
-                    'formatted_date' => $b->formatted_date,
-                    'short_description' => $b->short_description,
-                    'full_image_url' => $b->full_image_url,
-                    'views' => $b->views,
-                ];
-            })->toArray();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Berita retrieved successfully',
-                'data' => $items,
-                'meta' => [
-                    'current_page' => $paginator->currentPage(),
-                    'last_page' => $paginator->lastPage(),
-                    'per_page' => $paginator->perPage(),
-                    'total' => $paginator->total(),
-                    'search' => $search,
-                    'category' => $category,
-                ]
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error('Error fetching berita', [
-                'error' => $e->getMessage(),
-                'params' => $request->all()
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to retrieve berita',
-                'error' => app()->environment('local') ? $e->getMessage() : null
-            ], 500);
+        if ($search) {
+            $query->search($search);
         }
+
+        if ($category) {
+            $query->byCategory($category);
+        }
+
+        $paginator = $query->paginate($perPage);
+
+        $items = collect($paginator->items())->map(function (Berita $b) {
+            return [
+                'id' => $b->id,
+                'title' => $b->title,
+                'slug' => $b->slug,
+                'category' => $b->category,
+                'date' => $b->date,
+                'formatted_date' => $b->formatted_date,
+                'short_description' => $b->short_description,
+                'full_image_url' => $b->full_image_url,
+                'views' => $b->views,
+                'status' => $b->status, // ✅ TAMBAHKAN INI
+                'show_in_tjsl' => $b->show_in_tjsl, // ✅ TAMBAHKAN INI
+                'show_in_media_informasi' => $b->show_in_media_informasi, // ✅ TAMBAHKAN INI
+                'show_in_dashboard' => $b->show_in_dashboard, // ✅ TAMBAHKAN INI
+                'pin_to_homepage' => $b->pin_to_homepage, // ✅ TAMBAHKAN INI
+            ];
+        })->toArray();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Berita retrieved successfully',
+            'data' => $items,
+            'meta' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page' => $paginator->lastPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+                'search' => $search,
+                'category' => $category,
+            ]
+        ]);
+
+    } catch (\Exception $e) {
+        Log::error('Error fetching berita', [
+            'error' => $e->getMessage(),
+            'params' => $request->all()
+        ]);
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to retrieve berita',
+            'error' => app()->environment('local') ? $e->getMessage() : null
+        ], 500);
     }
+}
 
     /**
      * Display the specified berita by slug
@@ -356,12 +361,12 @@ class BeritaController extends Controller
 
     /**
      * Store new berita (Admin)
-     */
+        */
     public function store(Request $request): JsonResponse
     {
         try {
-            // ✅ RELAXED VALIDATION - image bisa file atau base64
-            $validator = Validator::make($request->all(), [
+            // ✅ FIXED VALIDATION
+            $validated = $request->validate([
                 'title' => 'required|string|max:255',
                 'slug' => 'nullable|string|unique:berita,slug',
                 'category' => 'required|string|max:100',
@@ -369,30 +374,22 @@ class BeritaController extends Controller
                 'author' => 'nullable|string|max:100',
                 'short_description' => 'nullable|string|max:500',
                 'content' => 'required|string',
-                'image' => 'nullable', // ✅ Accept file or base64
+                'image' => 'required|image|mimes:jpeg,jpg,png,webp|max:5120',
                 'status' => 'nullable|in:published,draft',
                 'display_option' => 'nullable|string',
                 'auto_link' => 'nullable|string',
-                'show_in_tjsl' => 'nullable',
-                'show_in_media_informasi' => 'nullable',
-                'show_in_dashboard' => 'nullable',
-                'pin_to_homepage' => 'nullable',
+                // ✅ GANTI 'boolean' jadi 'in:0,1,true,false'
+                'show_in_tjsl' => 'nullable|in:0,1,true,false',
+                'show_in_media_informasi' => 'nullable|in:0,1,true,false',
+                'show_in_dashboard' => 'nullable|in:0,1,true,false',
+                'pin_to_homepage' => 'nullable|in:0,1,true,false',
+        // ... rest tetap sama
             ], [
                 'title.required' => 'Judul berita wajib diisi',
                 'category.required' => 'Kategori wajib diisi',
                 'date.required' => 'Tanggal berita wajib diisi',
                 'content.required' => 'Konten berita wajib diisi',
             ]);
-
-            if ($validator->fails()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Validation failed',
-                    'errors' => $validator->errors()
-                ], 422);
-            }
-
-            $validated = $validator->validated();
 
             // Auto-generate slug if not provided
             if (empty($validated['slug'])) {
@@ -458,46 +455,30 @@ class BeritaController extends Controller
     /**
      * Update berita (Admin)
      */
-    public function update(Request $request, int $id): JsonResponse
-    {
-        try {
-            $berita = Berita::find($id);
+public function update(Request $request, int $id): JsonResponse
+{
+    try {
+        $berita = Berita::findOrFail($id);
 
-            if (!$berita) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Berita not found'
-                ], 404);
-            }
-
-            // Validation
-            $validator = Validator::make($request->all(), [
-                'title' => 'required|string|max:255',
-                'slug' => 'nullable|string|unique:berita,slug,' . $id,
-                'category' => 'required|string|max:100',
-                'date' => 'required|date',
-                'author' => 'nullable|string|max:100',
-                'short_description' => 'nullable|string|max:500',
-                'content' => 'required|string',
-                'image' => 'nullable',
-                'status' => 'nullable|in:published,draft',
-                'display_option' => 'nullable|string',
-                'auto_link' => 'nullable|string',
-                'show_in_tjsl' => 'nullable',
-                'show_in_media_informasi' => 'nullable',
-                'show_in_dashboard' => 'nullable',
-                'pin_to_homepage' => 'nullable',
-            ]);
-
-            if ($validator->fails()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Validation failed',
-                    'errors' => $validator->errors()
-                ], 422);
-            }
-
-            $validated = $validator->validated();
+        // ✅ FIXED VALIDATION
+        $validated = $request->validate([
+            'title' => 'sometimes|string|max:255',
+            'slug' => 'sometimes|string|unique:berita,slug,' .$id,
+            'category' => 'sometimes|string|max:100',
+            'date' => 'sometimes|date',
+            'author' => 'nullable|string|max:100',
+            'short_description' => 'nullable|string|max:500',
+            'content' => 'sometimes|string',
+            'image' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:5120',
+            'status' => 'sometimes|in:published,draft',
+            'display_option' => 'nullable|string',
+            'auto_link' => 'nullable|string',
+            // ✅ GANTI validation
+            'show_in_tjsl' => 'nullable|in:0,1,true,false',
+            'show_in_media_informasi' => 'nullable|in:0,1,true,false',
+            'show_in_dashboard' => 'nullable|in:0,1,true,false',
+            'pin_to_homepage' => 'nullable|in:0,1,true,false',
+        ]);
 
             // Auto-generate slug if changed
             if (isset($validated['slug']) && empty($validated['slug'])) {

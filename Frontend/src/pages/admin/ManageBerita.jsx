@@ -332,12 +332,11 @@ const handleSubmit = async (e) => {
         submitData.append('status', formData.status);
         submitData.append('display_option', formData.displayOption || '');
         submitData.append('auto_link', formData.autoLink || 'none');
-        
-        // ✅ FIX: Kirim boolean langsung (Laravel akan handle conversion)
-        submitData.append('show_in_tjsl', formData.showInTJSL);
-        submitData.append('show_in_media_informasi', formData.showInMediaInformasi);
-        submitData.append('show_in_dashboard', formData.showInDashboard);
-        submitData.append('pin_to_homepage', formData.pinToHomepage);
+                
+        submitData.append('show_in_tjsl', formData.showInTJSL ? '1' : '0');
+        submitData.append('show_in_media_informasi', formData.showInMediaInformasi ? '1' : '0');
+        submitData.append('show_in_dashboard', formData.showInDashboard ? '1' : '0');
+        submitData.append('pin_to_homepage', formData.pinToHomepage ? '1' : '0');
 
         if (formData.image) {
             submitData.append('image', formData.image);
