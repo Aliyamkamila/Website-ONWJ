@@ -7,7 +7,9 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000
 const apiClient = axios.create({
     baseURL: API_BASE_URL,
     headers: {
-        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        // ❌ JANGAN set 'Content-Type' di sini!
+        // Biar axios auto-detect (FormData = multipart, Object = json)
     },
 });
 
@@ -18,6 +20,16 @@ apiClient.interceptors.request.use(
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
+
+        // ✅ DEBUG LOG
+        console.log('🚀 API Request:', {
+            url: config.url,
+            method: config.method,
+            hasToken: !!token,
+            contentType: config.headers['Content-Type'],
+            isFormData: config.data instanceof FormData,
+        });
+
         return config;
     },
     (error) => Promise.reject(error)
@@ -25,8 +37,20 @@ apiClient.interceptors.request.use(
 
 // Response interceptor untuk handle errors
 apiClient.interceptors.response.use(
-    (response) => response,
+    (response) => {
+        console.log('✅ API Response:', {
+            url: response.config.url,
+            status: response.status,
+        });
+        return response;
+    },
     (error) => {
+        console.error('❌ API Error:', {
+            url: error.config?.url,
+            status: error.response?.status,
+            message: error.response?.data?.message,
+        });
+
         if (error.response?.status === 401) {
             Cookies.remove('admin_token');
             window.location.href = '/login';
@@ -43,6 +67,7 @@ export const instagramService = {
             const response = await apiClient.get('/v1/instagram-posts');
             return response.data;
         } catch (error) {
+            console.error('Error fetching public Instagram posts:', error);
             throw error;
         }
     },
@@ -53,26 +78,40 @@ export const instagramService = {
             const response = await apiClient.get('/admin/instagram-posts');
             return response.data;
         } catch (error) {
+            console.error('Error fetching Instagram posts:', error);
             throw error;
         }
     },
 
     // Admin API - Create Instagram post
-    createPost: async (data) => {
+    createPost: async (formData) => {
         try {
-            const response = await apiClient.post('/admin/instagram-posts', data);
+            console.log('📤 Creating Instagram post with FormData...');
+            
+            // ✅ Axios akan auto-detect FormData dan set Content-Type: multipart/form-data
+            const response = await apiClient.post('/admin/instagram-posts', formData);
+            
+            console.log('✅ Instagram post created successfully');
             return response.data;
         } catch (error) {
+            console.error('❌ Error creating Instagram post:', error);
             throw error;
         }
     },
 
     // Admin API - Update Instagram post
-    updatePost: async (id, data) => {
+    updatePost: async (id, formData) => {
         try {
-            const response = await apiClient.put(`/admin/instagram-posts/${id}`, data);
+            console.log(`📤 Updating Instagram post #${id} with FormData...`);
+            
+            // ✅ PAKAI POST (bukan PUT) karena FormData
+            // Laravel akan terima via _method=PUT yang sudah ditambahkan di frontend
+            const response = await apiClient.post(`/admin/instagram-posts/${id}`, formData);
+            
+            console.log('✅ Instagram post updated successfully');
             return response.data;
         } catch (error) {
+            console.error(`❌ Error updating Instagram post #${id}:`, error);
             throw error;
         }
     },
@@ -80,9 +119,14 @@ export const instagramService = {
     // Admin API - Delete Instagram post
     deletePost: async (id) => {
         try {
+            console.log(`🗑️ Deleting Instagram post #${id}...`);
+            
             const response = await apiClient.delete(`/admin/instagram-posts/${id}`);
+            
+            console.log('✅ Instagram post deleted successfully');
             return response.data;
         } catch (error) {
+            console.error(`❌ Error deleting Instagram post #${id}:`, error);
             throw error;
         }
     },

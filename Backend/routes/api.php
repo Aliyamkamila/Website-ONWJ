@@ -26,6 +26,7 @@ use App\Http\Controllers\Api\ManagementController;
 use App\Http\Controllers\Api\InstagramPostController; 
 use App\Http\Controllers\LaporanController;
 
+
 // --------------------------------------------------------------------------   
 // ========================================================================
 // GUEST / PUBLIC GENERAL ROUTES
@@ -319,14 +320,18 @@ Route::middleware(['auth:sanctum', 'admin_auth'])->prefix('admin')->group(functi
         Route::post('/bulk-delete', [ContactController::class, 'bulkDelete']);
     });
 
-    // --- INSTAGRAM POSTS MANAGEMENT BARU ---
+    // --- INSTAGRAM POSTS MANAGEMENT (FIXED ROUTES) ---
     Route::prefix('instagram-posts')->group(function () {
-        Route::get('/', [InstagramPostController::class, 'index']);
-        Route::post('/', [InstagramPostController::class, 'store']);
-        Route::put('/{id}', [InstagramPostController::class, 'update']);
-        Route::delete('/{id}', [InstagramPostController::class, 'destroy']);
+        Route::get('/', [InstagramPostController::class, 'index']);          // GET all posts
+        Route::post('/', [InstagramPostController::class, 'store']);         // POST create new (with file)
+        Route::post('/{id}', [InstagramPostController::class, 'update']);    // POST update with file (using _method=PUT)
+        Route::delete('/{id}', [InstagramPostController::class, 'destroy']); // DELETE post
+        
+        // ✅ Route khusus untuk fetch data dari Instagram (tidak perlu auth? tapi kita taruh di sini)
+        Route::post('/fetch-data', [InstagramPostController::class, 'fetchInstagramData']);
     });
-// --- LAPORAN MANAGEMENT (ADMIN) ---
+
+    // --- LAPORAN MANAGEMENT (ADMIN) ---
     Route::prefix('laporan')->group(function () {
         Route::get('/', [\App\Http\Controllers\Api\LaporanController::class, 'adminIndex']);
         Route::post('/', [\App\Http\Controllers\Api\LaporanController::class, 'store']);
@@ -335,6 +340,7 @@ Route::middleware(['auth:sanctum', 'admin_auth'])->prefix('admin')->group(functi
         Route::patch('/{id}/toggle-publish', [\App\Http\Controllers\Api\LaporanController::class, 'togglePublish']);
     });
 });
+
 // ========================================================================
 // PUBLIC ROUTES (CACHED)
 // ========================================================================

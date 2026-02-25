@@ -9,6 +9,11 @@ const ManageInstagram = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingPost, setEditingPost] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [fetchingData, setFetchingData] = useState(false);
+  
+  // State untuk upload file
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
 
   const [formData, setFormData] = useState({
     instagram_url: '',
@@ -61,39 +66,71 @@ const ManageInstagram = () => {
     }));
   };
 
+  // Handle submit with FormData for file upload
   const handleSubmit = async (e) => {
-    e.preventDefault(); // ✅ PENTING: Prevent default form behavior
+    e.preventDefault();
     
     if (!formData.instagram_url) {
       toast.error('URL Instagram wajib diisi!');
       return;
     }
 
+    if (!editingPost && !imageFile) {
+      toast.error('Thumbnail wajib diupload!');
+      return;
+    }
+
     setSubmitting(true);
 
     try {
+      // Pakai FormData untuk upload file
+      const submitData = new FormData();
+      submitData.append('instagram_url', formData.instagram_url);
+      submitData.append('caption', formData.caption || '');
+      submitData.append('media_type', formData.media_type);
+      submitData.append('posted_at', formData.posted_at);
+      submitData.append('show_in_media', formData.show_in_media ? '1' : '0');
+      submitData.append('status', formData.status);
+      submitData.append('order', formData.order.toString());
+
+      // Upload thumbnail
+      if (imageFile) {
+        submitData.append('thumbnail', imageFile);
+      }
+
+      // DEBUG: Log FormData
+      console.log('📤 Submitting data:');
+      for (let [key, value] of submitData.entries()) {
+        if (key === 'thumbnail') {
+          console.log(`  ${key}:`, value.name, `(${value.type}, ${value.size} bytes)`);
+        } else {
+          console.log(`  ${key}:`, value);
+        }
+      }
+
       if (editingPost) {
-        await instagramService.updatePost(editingPost.id, formData);
+        // Tambah _method untuk PUT via POST (karena Laravel)
+        submitData.append('_method', 'PUT');
+        console.log(`  _method: PUT (untuk update)`);
+        
+        await instagramService.updatePost(editingPost.id, submitData);
         toast.success('✅ Instagram post berhasil diupdate!');
       } else {
-        await instagramService.createPost(formData);
+        await instagramService.createPost(submitData);
         toast.success('✅ Instagram post berhasil ditambahkan!');
       }
       
-      await fetchPosts(); // ✅ Refresh data
-      
-      // ✅ Reset form TANPA confirm dialog
+      await fetchPosts();
       resetForm();
     } catch (error) {
-      console.error('Error saving Instagram post:', error);
+      console.error('❌ Error saving Instagram post:', error);
+      console.error('Response data:', error.response?.data);
       
-      // ✅ Tampilkan error detail untuk debugging
       const errorMsg = error.response?.data?.message || '❌ Gagal menyimpan Instagram post';
       const errorDetails = error.response?.data?.errors;
       
       if (errorDetails) {
         console.log('Validation errors:', errorDetails);
-        // Tampilkan error validasi pertama
         const firstError = Object.values(errorDetails)[0];
         toast.error(Array.isArray(firstError) ? firstError[0] : errorMsg);
       } else {
@@ -104,6 +141,7 @@ const ManageInstagram = () => {
     }
   };
 
+  // Handle edit with file preview
   const handleEdit = (post) => {
     setEditingPost(post);
     setFormData({
@@ -116,6 +154,8 @@ const ManageInstagram = () => {
       status: post.status,
       order: post.order || 0,
     });
+    setImageFile(null); // Reset upload file
+    setImagePreview(null); // Reset preview
     setShowForm(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -133,10 +173,12 @@ const ManageInstagram = () => {
     }
   };
 
-  // ✅ Function untuk reset form (dipanggil setelah submit berhasil)
+  // Reset form with file states
   const resetForm = () => {
     setShowForm(false);
     setEditingPost(null);
+    setImageFile(null);
+    setImagePreview(null);
     setFormData({
       instagram_url: '',
       caption: '',
@@ -149,13 +191,13 @@ const ManageInstagram = () => {
     });
   };
 
-  // ✅ Function untuk cancel (dengan confirm dialog)
+  // Function untuk cancel (dengan confirm dialog)
   const handleCancel = () => {
     // Cek apakah ada perubahan data
     const hasChanges = 
       formData.instagram_url !== '' ||
       formData.caption !== '' ||
-      formData.image_url !== '';
+      imageFile !== null;
 
     if (hasChanges) {
       if (window.confirm('Apakah Anda yakin ingin membatalkan? Data yang belum disimpan akan hilang.')) {
@@ -256,7 +298,7 @@ const ManageInstagram = () => {
             </div>
           </div>
 
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} encType="multipart/form-data">
             {/* Section 1: Informasi Dasar */}
             <div className="mb-8">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
@@ -267,6 +309,62 @@ const ManageInstagram = () => {
               </h3>
               
               <div className="grid grid-cols-1 gap-6">
+                
+                {/* 1️⃣ UPLOAD THUMBNAIL (WAJIB) */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Upload Thumbnail <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/jpg,image/png,image/webp"
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (file) {
+                        // Validasi size (max 5MB)
+                        if (file.size > 5 * 1024 * 1024) {
+                          toast.error('Ukuran file maksimal 5MB!');
+                          e.target.value = null;
+                          return;
+                        }
+                        
+                        setImageFile(file);
+                        setImagePreview(URL.createObjectURL(file));
+                      }
+                    }}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                    required={!editingPost} // Wajib saat create, optional saat edit
+                  />
+                  <p className="text-sm text-gray-500 mt-1">
+                    📸 Screenshot atau download gambar dari Instagram post (max 5MB)
+                  </p>
+                  
+                  {/* Preview */}
+                  {(imagePreview || (editingPost && formData.image_url)) && (
+                    <div className="mt-3">
+                      <p className="text-sm font-semibold text-gray-700 mb-2">Preview:</p>
+                      <img 
+                        src={imagePreview || formData.image_url} 
+                        alt="Preview" 
+                        className="w-40 h-40 object-cover rounded-lg border-2 border-blue-300 shadow-md"
+                      />
+                      {imagePreview && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setImageFile(null);
+                            setImagePreview(null);
+                          }}
+                          className="mt-2 text-sm text-red-600 hover:text-red-800 font-semibold"
+                        >
+                          🗑️ Hapus gambar
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* 2️⃣ URL INSTAGRAM (WAJIB - untuk link "Lihat di Instagram") */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
                     URL Post Instagram <span className="text-red-500">*</span>
@@ -281,10 +379,11 @@ const ManageInstagram = () => {
                     required
                   />
                   <p className="text-sm text-gray-500 mt-1">
-                    Copy URL post dari Instagram (contoh: https://www.instagram.com/p/ABC123/)
+                    🔗 URL ini akan dipakai untuk tombol "Lihat di Instagram" di website
                   </p>
                 </div>
 
+                {/* 3️⃣ CAPTION (OPTIONAL - input manual) */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
                     Caption
@@ -295,27 +394,14 @@ const ManageInstagram = () => {
                     onChange={handleInputChange}
                     rows={4}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                    placeholder="Caption dari post Instagram..."
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    URL Gambar
-                  </label>
-                  <input
-                    type="url"
-                    name="image_url"
-                    value={formData.image_url}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                    placeholder="https://instagram.com/.../image.jpg"
+                    placeholder="Copy paste caption dari Instagram (optional)..."
                   />
                   <p className="text-sm text-gray-500 mt-1">
-                    Optional: URL gambar dari Instagram (atau biarkan kosong)
+                    💬 Caption akan ditampilkan di card Instagram di website
                   </p>
                 </div>
 
+                {/* 4️⃣ MEDIA TYPE & TANGGAL POST */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -327,9 +413,9 @@ const ManageInstagram = () => {
                       onChange={handleInputChange}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     >
-                      <option value="IMAGE">Gambar</option>
-                      <option value="VIDEO">Video</option>
-                      <option value="CAROUSEL_ALBUM">Album</option>
+                      <option value="IMAGE">📷 Gambar</option>
+                      <option value="VIDEO">🎥 Video</option>
+                      <option value="CAROUSEL_ALBUM">🖼️ Album</option>
                     </select>
                   </div>
 
@@ -372,8 +458,8 @@ const ManageInstagram = () => {
                     onChange={handleInputChange}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                   >
-                    <option value="draft">Draft (Belum Dipublikasi)</option>
-                    <option value="published">Published (Tampilkan di Website)</option>
+                    <option value="draft">📝 Draft (Belum Dipublikasi)</option>
+                    <option value="published">✅ Published (Tampilkan di Website)</option>
                   </select>
                 </div>
 
@@ -390,6 +476,9 @@ const ManageInstagram = () => {
                     min="0"
                     placeholder="0"
                   />
+                  <p className="text-sm text-gray-500 mt-1">
+                    Post dengan urutan lebih kecil akan ditampilkan lebih dulu
+                  </p>
                 </div>
               </div>
             </div>
@@ -416,7 +505,7 @@ const ManageInstagram = () => {
                     className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 mt-0.5"
                   />
                   <div>
-                    <span className="text-sm font-semibold text-gray-900 block">Media & Informasi</span>
+                    <span className="text-sm font-semibold text-gray-900 block">📱 Media & Informasi</span>
                     <span className="text-xs text-gray-600">Tampil di halaman /media-informasi</span>
                   </div>
                 </label>
