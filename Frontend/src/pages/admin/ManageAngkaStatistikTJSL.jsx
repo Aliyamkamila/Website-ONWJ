@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 const iconComponents = {
     users: FaUsers,
     building: FaBuilding,
-    solar:  FaSolarPanel,
+    solar: FaSolarPanel,
     book: FaBook,
     hands: FaHandsHelping,
     default: FaUsers // Fallback icon
@@ -19,7 +19,7 @@ const colorClasses = {
     blue: { bg: 'bg-blue-50', icon: 'text-blue-600', border: 'border-blue-200', focus: 'focus:ring-blue-500' },
     green: { bg: 'bg-green-50', icon: 'text-green-600', border: 'border-green-200', focus: 'focus:ring-green-500' },
     purple: { bg: 'bg-purple-50', icon: 'text-purple-600', border: 'border-purple-200', focus: 'focus:ring-purple-500' },
-    default: { bg: 'bg-gray-50', icon: 'text-gray-600', border:  'border-gray-200', focus: 'focus:ring-gray-500' }
+    default: { bg: 'bg-gray-50', icon: 'text-gray-600', border: 'border-gray-200', focus: 'focus:ring-gray-500' }
 };
 
 const ManageAngkaStatistikTJSL = () => {
@@ -36,32 +36,35 @@ const ManageAngkaStatistikTJSL = () => {
     const fetchStatistics = async () => {
         try {
             setLoading(true);
-            // ✅ FIXED: Use getAllStatistics instead of getStatistik
-            const response = await tjslService.getAllStatistics(); 
+            console.log('📞 Fetching TJSL statistics...');
             
-            // ✅ Service mengembalikan response. data, jadi langsung cek response. success
+            const response = await tjslService.getAllStatistics(); 
+            console.log('📦 Response:', response);
+            
             if (response && response.success) {
                 const data = response.data;
-                const transformedData = {};
+                console.log('✅ Data received:', data);
                 
-                // Normalisasi data (Array vs Object)
-                if (Array.isArray(data)) {
-                    data.forEach(item => {
-                        transformedData[item. key] = item;
-                    });
-                } else {
-                    Object.entries(data).forEach(([key, item]) => {
-                        transformedData[key] = { ... item, key:  item.key || key };
-                    });
-                }
-
-                setFormData(transformedData);
-                setOriginalData(JSON. parse(JSON.stringify(transformedData)));
+                // ✅ Data sudah dalam format object {key: {...}}
+                // No transformation needed - langsung set data
+                setFormData(data);
+                setOriginalData(JSON.parse(JSON.stringify(data)));
+                
+                // Log the structure to verify keys
+                console.log('📊 Available statistic keys:', Object.keys(data));
+            } else {
+                throw new Error(response.message || 'Failed to fetch');
             }
         } catch (error) {
             console.error('❌ Error fetching statistics:', error);
+            console.error('❌ Error response:', error.response?.data);
+            
             const errorMsg = error.response?.data?.message || 'Gagal memuat data statistik';
             toast.error(`❌ ${errorMsg}`);
+            
+            // Set empty object as fallback
+            setFormData({});
+            setOriginalData({});
         } finally {
             setLoading(false);
         }
@@ -82,12 +85,12 @@ const ManageAngkaStatistikTJSL = () => {
     };
 
     const handleSave = async () => {
-        if (! hasChanges) {
+        if (!hasChanges) {
             toast.error('Tidak ada perubahan untuk disimpan');
             return;
         }
 
-        if (! window.confirm('Simpan perubahan statistik TJSL?')) {
+        if (!window.confirm('Simpan perubahan statistik TJSL?')) {
             return;
         }
 
@@ -100,11 +103,13 @@ const ManageAngkaStatistikTJSL = () => {
                 value: item.value
             }));
 
+            console.log('📤 Saving payload:', statisticsPayload);
+
             // ✅ Panggil bulkUpdateStatistics (sesuai service yang baru)
             const response = await tjslService.bulkUpdateStatistics(statisticsPayload);
 
             if (response && response.success) {
-                toast.success('✅ Statistik TJSL berhasil diupdate! ');
+                toast.success('✅ Statistik TJSL berhasil diupdate!');
                 setHasChanges(false);
                 setOriginalData(JSON.parse(JSON.stringify(formData)));
             } else {
@@ -126,11 +131,13 @@ const ManageAngkaStatistikTJSL = () => {
         
         try {
             setSaving(true);
+            console.log('🔄 Resetting statistics to default...');
+            
             // ✅ Panggil resetStatistics (sesuai service yang baru)
             const response = await tjslService.resetStatistics();
             
             if (response && response.success) {
-                toast. success('✅ Nilai berhasil direset ke default');
+                toast.success('✅ Nilai berhasil direset ke default');
                 await fetchStatistics(); // Refresh data
                 setHasChanges(false);
             }
@@ -187,9 +194,9 @@ const ManageAngkaStatistikTJSL = () => {
                     </button>
                     <button
                         onClick={handleSave}
-                        disabled={! hasChanges || saving}
+                        disabled={!hasChanges || saving}
                         className={`flex items-center gap-2 px-6 py-3 font-semibold rounded-lg shadow-md transition-all ${
-                            hasChanges && ! saving
+                            hasChanges && !saving
                                 ? 'bg-blue-600 text-white hover:bg-blue-700 transform hover:-translate-y-0.5'
                                 : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                         }`}
@@ -213,10 +220,10 @@ const ManageAngkaStatistikTJSL = () => {
                 <div className="mb-8 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg">
                     <div className="flex items-center gap-3">
                         <svg className="w-5 h-5 text-yellow-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M8. 257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                            <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                         </svg>
                         <p className="text-sm font-medium text-yellow-800">
-                            Ada perubahan yang belum disimpan.  Klik "Simpan Perubahan" untuk menyimpan.
+                            Ada perubahan yang belum disimpan. Klik "Simpan Perubahan" untuk menyimpan.
                         </p>
                     </div>
                 </div>
@@ -239,15 +246,15 @@ const ManageAngkaStatistikTJSL = () => {
                                     </div>
                                     <div>
                                         <h3 className="text-sm font-bold text-gray-900">{item.label}</h3>
-                                        <p className="text-xs text-gray-600">{item. unit || 'Unit'}</p>
+                                        <p className="text-xs text-gray-600">{item.unit || 'Unit'}</p>
                                     </div>
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs font-semibold text-gray-700 mb-2">Nilai:  </label>
+                                    <label className="block text-xs font-semibold text-gray-700 mb-2">Nilai:</label>
                                     <input
                                         type="number"
-                                        value={item. value}
+                                        value={item.value}
                                         onChange={(e) => handleChange(key, e.target.value)}
                                         className={`w-full px-4 py-3 text-2xl font-bold border-2 ${colors.border} rounded-lg ${colors.focus} transition-all bg-white`}
                                         min="0"
@@ -257,18 +264,18 @@ const ManageAngkaStatistikTJSL = () => {
                                 </div>
 
                                 <div className="mt-4 pt-4 border-t border-gray-200">
-                                    <p className="text-xs text-gray-600 mb-1">Preview di Website: </p>
+                                    <p className="text-xs text-gray-600 mb-1">Preview di Website:</p>
                                     <p className="text-3xl font-extrabold text-gray-900">
-                                        {item.value. toLocaleString('id-ID')}+
+                                        {item.value?.toLocaleString('id-ID') || 0}+
                                     </p>
                                 </div>
 
-                                {originalData[key] && item.value !== originalData[key]. value && (
+                                {originalData[key] && item.value !== originalData[key].value && (
                                     <div className="mt-3 text-xs text-orange-600 font-semibold flex items-center gap-1">
                                         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" />
                                         </svg>
-                                        Sebelumnya: {originalData[key].value.toLocaleString('id-ID')}
+                                        Sebelumnya: {originalData[key].value?.toLocaleString('id-ID') || 0}
                                     </div>
                                 )}
                             </div>

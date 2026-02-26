@@ -7,6 +7,7 @@ use App\Models\TjslStatistic;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
+
 class TjslStatisticController extends Controller
 {
     // ===== PUBLIC ROUTES (untuk TJSLPage. jsx) =====
