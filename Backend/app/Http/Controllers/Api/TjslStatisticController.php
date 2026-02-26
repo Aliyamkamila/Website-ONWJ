@@ -6,11 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\TjslStatistic;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-
+use Illuminate\Support\Facades\Log;
 
 class TjslStatisticController extends Controller
 {
-    // ===== PUBLIC ROUTES (untuk TJSLPage. jsx) =====
+    // ===== PUBLIC ROUTES (untuk TJSLPage.jsx) =====
 
     /**
      * Get TJSL statistics for public display
@@ -27,6 +27,8 @@ class TjslStatisticController extends Controller
             ], 200);
 
         } catch (\Exception $e) {
+            Log::error('Failed to retrieve TJSL statistics: ' . $e->getMessage());
+            
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to retrieve TJSL statistics',
@@ -72,9 +74,41 @@ class TjslStatisticController extends Controller
             ], 200);
 
         } catch (\Exception $e) {
+            Log::error('Failed to retrieve admin statistics: ' . $e->getMessage());
+            
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to retrieve statistics',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Get single statistic by key
+     */
+    public function show($key)
+    {
+        try {
+            $statistic = TjslStatistic::where('key', $key)->firstOrFail();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Statistic retrieved successfully',
+                'data' => $statistic,
+            ], 200);
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Statistic not found',
+            ], 404);
+        } catch (\Exception $e) {
+            Log::error('Failed to retrieve statistic: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve statistic',
                 'error' => $e->getMessage(),
             ], 500);
         }
@@ -92,6 +126,9 @@ class TjslStatisticController extends Controller
                 'value' => 'required|integer|min:0',
                 'label' => 'sometimes|required|string|max:255',
                 'unit' => 'nullable|string|max:100',
+                'icon_name' => 'nullable|string|max:100',
+                'color' => 'nullable|string|max:50',
+                'is_active' => 'sometimes|boolean',
             ]);
 
             if ($validator->fails()) {
@@ -102,7 +139,8 @@ class TjslStatisticController extends Controller
                 ], 422);
             }
 
-            $statistic->update($request->only(['value', 'label', 'unit']));
+            $updateData = $request->only(['value', 'label', 'unit', 'icon_name', 'color', 'is_active']);
+            $statistic->update($updateData);
 
             return response()->json([
                 'success' => true,
@@ -116,6 +154,8 @@ class TjslStatisticController extends Controller
                 'message' => 'Statistic not found',
             ], 404);
         } catch (\Exception $e) {
+            Log::error('Failed to update statistic: ' . $e->getMessage());
+            
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to update statistic',
@@ -132,7 +172,7 @@ class TjslStatisticController extends Controller
         try {
             $validator = Validator::make($request->all(), [
                 'statistics' => 'required|array',
-                'statistics. *.key' => 'required|string',
+                'statistics.*.key' => 'required|string',
                 'statistics.*.value' => 'required|integer|min:0',
             ]);
 
@@ -145,11 +185,17 @@ class TjslStatisticController extends Controller
             }
 
             foreach ($request->statistics as $item) {
-                // Convert camelCase key to snake_case
-                $snakeKey = strtolower(preg_replace('/([a-z])([A-Z])/', '$1_$2', $item['key']));
+                // Convert camelCase key to snake_case jika perlu
+                $snakeKey = isset($item['key']) ? strtolower(preg_replace('/([a-z])([A-Z])/', '$1_$2', $item['key'])) : null;
                 
-                TjslStatistic::where('key', $snakeKey)
-                            ->update(['value' => $item['value']]);
+                // Coba cari berdasarkan key asli atau snake_case
+                $statistic = TjslStatistic::where('key', $item['key'])
+                                ->orWhere('key', $snakeKey)
+                                ->first();
+                
+                if ($statistic) {
+                    $statistic->update(['value' => $item['value']]);
+                }
             }
 
             // Get updated data
@@ -162,6 +208,8 @@ class TjslStatisticController extends Controller
             ], 200);
 
         } catch (\Exception $e) {
+            Log::error('Failed to bulk update statistics: ' . $e->getMessage());
+            
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to update statistics',
@@ -176,7 +224,7 @@ class TjslStatisticController extends Controller
     public function reset()
     {
         try {
-            // Default values
+            // Default values sesuai dengan database
             $defaults = [
                 'penerimaan_manfaat' => 99500,
                 'infrastruktur' => 4,
@@ -198,6 +246,8 @@ class TjslStatisticController extends Controller
             ], 200);
 
         } catch (\Exception $e) {
+            Log::error('Failed to reset statistics: ' . $e->getMessage());
+            
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to reset statistics',

@@ -7,68 +7,56 @@ use App\Models\TjslStatistic;
 
 class TjslStatisticSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
         $statistics = [
             [
-                'key' => 'penerimaan_manfaat',
-                'label' => 'Penerima Manfaat',
-                'unit' => 'Jiwa',
-                'value' => 99500,
-                'display_order' => 1,
-                'icon_name' => 'users',
-                'color' => 'orange',
-                'is_active' => true,
-            ],
-            [
-                'key' => 'infrastruktur',
-                'label' => 'Infrastruktur',
-                'unit' => 'terbangun',
-                'value' => 4,
-                'display_order' => 2,
-                'icon_name' => 'building',
-                'color' => 'blue',
-                'is_active' => true,
-            ],
-            [
-                'key' => 'ebtke',
-                'label' => 'Unit EBTKE',
-                'unit' => '',
-                'value' => 8,
-                'display_order' => 3,
-                'icon_name' => 'solar',
-                'color' => 'green',
-                'is_active' => true,
-            ],
-            [
-                'key' => 'paket_pendidikan',
-                'label' => 'Paket Pendidikan',
-                'unit' => '',
-                'value' => 800,
-                'display_order' => 4,
+                'key' => 'program_count',
+                'value' => 150,
+                'label' => 'Program Terlaksana',
+                'unit' => 'Program',
                 'icon_name' => 'book',
-                'color' => 'purple',
+                'color' => 'blue',
+                'display_order' => 1,
                 'is_active' => true,
             ],
             [
-                'key' => 'kelompok_binaan',
-                'label' => 'Kelompok Binaan',
-                'unit' => '',
-                'value' => 3,
-                'display_order' => 5,
-                'icon_name' => 'hands',
+                'key' => 'beneficiary_count',
+                'value' => 5000,
+                'label' => 'Penerima Manfaat',
+                'unit' => 'Orang',
+                'icon_name' => 'users',
+                'color' => 'green',
+                'display_order' => 2,
+                'is_active' => true,
+            ],
+            [
+                'key' => 'village_count',
+                'value' => 25,
+                'label' => 'Desa Dampingan',
+                'unit' => 'Desa',
+                'icon_name' => 'building',
                 'color' => 'orange',
+                'display_order' => 3,
+                'is_active' => true,
+            ],
+            [
+                'key' => 'fund_allocated',
+                'value' => 10000000000,
+                'label' => 'Dana Tersalurkan',
+                'unit' => 'Rupiah',
+                'icon_name' => 'hands',
+                'color' => 'purple',
+                'display_order' => 4,
                 'is_active' => true,
             ],
         ];
 
         foreach ($statistics as $stat) {
-            TjslStatistic::create($stat);
+            TjslStatistic::updateOrCreate(
+                ['key' => $stat['key']],
+                $stat
+            );
         }
-
-        $this->command->info('✅ TJSL Statistics seeded successfully!');
     }
 }
