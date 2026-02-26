@@ -13,8 +13,8 @@ return new class extends Migration
             $table->string('key')->unique();
             $table->text('value')->nullable();
             $table->string('type')->default('text'); // text, textarea, image, url, email, tel
-            $table->string('category'); // company, social_media, contact, seo, footer, logo
-            $table->string('label');
+            $table->string('category')->nullable(); // ✅ TAMBAHKAN ->nullable()
+            $table->string('label')->nullable(); // ✅ TAMBAHKAN ->nullable() juga
             $table->text('description')->nullable();
             $table->integer('order')->default(0);
             $table->timestamps();
