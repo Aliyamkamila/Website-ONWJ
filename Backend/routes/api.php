@@ -97,12 +97,6 @@ Route::prefix('v1')->group(function () {
         Route::get('/{slug}', [BeritaController::class, 'show']);
     });
 
-    // --- ARTICLES (Jika ada controller ArticleController) ---
-    Route::prefix('articles')->group(function () {
-        Route::get('/', [ArticleController::class, 'index'])->name('articles.index');
-        Route::get('/{slug}', [ArticleController::class, 'show'])->name('articles.show');
-    });
-
     // --- TESTIMONIALS ---
     Route::get('/testimonials', [TestimonialController::class, 'index']);
     Route::get('/testimonials/featured', [TestimonialController::class, 'getFeatured']);
@@ -142,11 +136,6 @@ Route::prefix('v1')->group(function () {
     Route::get('/instagram', [InstagramPostController::class, 'public']);
     Route::get('/instagram-posts', [InstagramPostController::class, 'public']); // Alias
 
-    // --- LAPORAN PUBLIC ROUTES ---
-    Route::prefix('laporan')->group(function () {
-        Route::get('/published', [LaporanController::class, 'getPublishedLaporan']);
-        Route::post('/{id}/view', [LaporanController::class, 'viewLaporan']);
-    });
 });
 
 // ========================================================================
@@ -211,13 +200,6 @@ Route::middleware(['auth:sanctum', 'admin_auth'])->prefix('admin')->group(functi
     // Backward compatibility
     Route::get('/berita-statistics', [BeritaController::class, 'statistics']);
 
-    // ===== ARTICLES MANAGEMENT (Jika ada) =====
-    Route::prefix('articles')->group(function () {
-        Route::get('/', [ArticleController::class, 'adminIndex']);
-        Route::post('/', [ArticleController::class, 'store']);
-        Route::put('/{id}', [ArticleController::class, 'update']);
-        Route::delete('/{id}', [ArticleController::class, 'destroy']);
-    });
 
     // ===== UMKM MANAGEMENT =====
     Route::prefix('umkm')->group(function () {
@@ -350,12 +332,4 @@ Route::middleware(['auth:sanctum', 'admin_auth'])->prefix('admin')->group(functi
         Route::post('/fetch-data', [InstagramPostController::class, 'fetchInstagramData']);
     });
 
-    // ===== LAPORAN MANAGEMENT =====
-    Route::prefix('laporan')->group(function () {
-        Route::get('/', [LaporanController::class, 'adminIndex']);
-        Route::post('/', [LaporanController::class, 'store']);
-        Route::put('/{id}', [LaporanController::class, 'update']);
-        Route::delete('/{id}', [LaporanController::class, 'destroy']);
-        Route::patch('/{id}/toggle-publish', [LaporanController::class, 'togglePublish']);
-    });
 }); 

@@ -5,7 +5,7 @@ import Cookies from 'js-cookie'; // ✅ TAMBAHKAN INI
 import { wilayahKerjaService } from '../../services/WilayahKerjaService'; // ✅ Import service
 import { produksiBulananService } from '../../services/ProduksiBulananService';
 import MapClickSelector from '../../components/MapClickSelector';
-import PetaImage from '../wk/Peta.jpg';
+import PetaImage from '../wk/Peta.png';
 
 const ManageWkTekkom = () => {
   const [areas, setAreas] = useState([]);
